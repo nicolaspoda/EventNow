@@ -1,5 +1,7 @@
 # EventNow - Plateforme de Billetterie Événementielle
 
+[![CI Pipeline](https://github.com/nicolaspoda/EventNow/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolaspoda/EventNow/actions/workflows/ci.yml)
+
 > Projet de certification RNCP39583 "Expert en développement logiciel" - Niveau 7
 
 ## Description
