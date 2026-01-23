@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ORGANIZER
+  STAFF
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  organizedEvents Event[]
+  bookings        Booking[]
+  orders          Order[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  location    String
+  imageUrl    String?  @map("image_url")
+  eventDate   DateTime @map("event_date")
+  organizerId String   @map("organizer_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  organizer        User             @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  ticketCategories TicketCategory[]
+
+  @@index([organizerId])
+  @@index([eventDate])
+  @@map("events")
+}
+
+model TicketCategory {
+  id           String   @id @default(uuid())
+  eventId      String   @map("event_id")
+  name         String
+  description  String?
+  price        Decimal  @db.Decimal(10, 2)
+  initialStock Int      @map("initial_stock")
+  currentStock Int      @map("current_stock")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  event    Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  tickets  Ticket[]
+
+  @@index([eventId])
+  @@index([eventId, currentStock])
+  @@map("ticket_categories")
+}
+
+model Booking {
+  id               String        @id @default(uuid())
+  userId           String        @map("user_id")
+  ticketCategoryId String        @map("ticket_category_id")
+  quantity         Int
+  status           BookingStatus @default(PENDING)
+  expiresAt        DateTime      @map("expires_at")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketCategory TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([ticketCategoryId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("bookings")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  totalAmount     Decimal     @map("total_amount") @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDING)
+  paymentIntentId String?     @map("payment_intent_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentIntentId])
+  @@map("orders")
+}
+
+model Ticket {
+  id               String    @id @default(uuid())
+  orderId          String    @map("order_id")
+  ticketCategoryId String    @map("ticket_category_id")
+  qrCode           String    @unique @map("qr_code")
+  validatedAt      DateTime? @map("validated_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketCategory TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([qrCode])
+  @@index([validatedAt])
+  @@map("tickets")
+}
