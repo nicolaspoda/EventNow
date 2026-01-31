@@ -4,6 +4,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import { Role } from '@prisma/client';
 
 jest.mock('bcrypt');
@@ -12,6 +13,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let prisma: PrismaService;
   let jwtService: JwtService;
+  let redis: RedisService;
 
   const mockPrismaService = {
     user: {
@@ -23,6 +25,11 @@ describe('AuthService', () => {
   const mockJwtService = {
     signAsync: jest.fn(),
     verifyAsync: jest.fn(),
+  };
+
+  const mockRedisService = {
+    blacklistToken: jest.fn(),
+    isTokenBlacklisted: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -37,12 +44,17 @@ describe('AuthService', () => {
           provide: JwtService,
           useValue: mockJwtService,
         },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
+        },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
     prisma = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
+    redis = module.get<RedisService>(RedisService);
   });
 
   afterEach(() => {
@@ -186,6 +198,7 @@ describe('AuthService', () => {
         updatedAt: new Date(),
       };
 
+      mockRedisService.isTokenBlacklisted.mockResolvedValue(false);
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       mockJwtService.signAsync.mockResolvedValueOnce('new-access-token');
@@ -197,10 +210,21 @@ describe('AuthService', () => {
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
       });
+      expect(redis.isTokenBlacklisted).toHaveBeenCalledWith(refreshToken);
+    });
+
+    it('should throw UnauthorizedException if token is blacklisted', async () => {
+      const refreshToken = 'blacklisted-token';
+      mockRedisService.isTokenBlacklisted.mockResolvedValue(true);
+
+      await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if token is invalid', async () => {
       const refreshToken = 'invalid-token';
+      mockRedisService.isTokenBlacklisted.mockResolvedValue(false);
       mockJwtService.verifyAsync.mockRejectedValue(new Error('Invalid token'));
 
       await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
@@ -216,12 +240,42 @@ describe('AuthService', () => {
         role: Role.CLIENT,
       };
 
+      mockRedisService.isTokenBlacklisted.mockResolvedValue(false);
       mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(service.refreshTokens(refreshToken)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('logout', () => {
+    it('should blacklist the refresh token', async () => {
+      const refreshToken = 'valid-refresh-token';
+      const mockPayload = {
+        sub: '1',
+        email: 'test@example.com',
+        role: Role.CLIENT,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+
+      mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
+      mockRedisService.blacklistToken.mockResolvedValue(undefined);
+
+      await service.logout(refreshToken);
+
+      expect(redis.blacklistToken).toHaveBeenCalledWith(
+        refreshToken,
+        expect.any(Number),
+      );
+    });
+
+    it('should not throw if token is invalid', async () => {
+      const refreshToken = 'invalid-token';
+      mockJwtService.verifyAsync.mockRejectedValue(new Error('Invalid'));
+
+      await expect(service.logout(refreshToken)).resolves.not.toThrow();
     });
   });
 });

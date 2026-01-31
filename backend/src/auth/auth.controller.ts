@@ -7,6 +7,7 @@ import {
   UseGuards,
   Get,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -18,12 +19,14 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -32,6 +35,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshTokens(refreshToken);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  async logout(@Body('refreshToken') refreshToken: string) {
+    await this.authService.logout(refreshToken);
+    return { message: 'Déconnexion réussie' };
   }
 
   @Get('me')

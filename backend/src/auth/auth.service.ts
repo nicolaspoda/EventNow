@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import { RegisterDto, LoginDto } from './dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -14,6 +15,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private redis: RedisService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -97,6 +99,11 @@ export class AuthService {
 
   async refreshTokens(refreshToken: string) {
     try {
+      const isBlacklisted = await this.redis.isTokenBlacklisted(refreshToken);
+      if (isBlacklisted) {
+        throw new UnauthorizedException('Token révoqué');
+      }
+
       const payload = await this.jwtService.verifyAsync<JwtPayload>(
         refreshToken,
       );
@@ -112,6 +119,21 @@ export class AuthService {
       return this.generateTokens(user.id, user.email, user.role);
     } catch {
       throw new UnauthorizedException('Invalid token');
+    }
+  }
+
+  async logout(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+      );
+      const ttl = payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 604800;
+      
+      if (ttl > 0) {
+        await this.redis.blacklistToken(refreshToken, ttl);
+      }
+    } catch {
+      return;
     }
   }
 }
