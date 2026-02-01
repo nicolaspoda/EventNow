@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
-import { useAuth } from '../utils/AuthContext';
+import { useAuth } from '../utils/useAuth';
 import { Role } from '../types/auth';
 import { AuthLayout } from '../components/AuthLayout';
 import { Alert } from '../components/Alert';

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../utils/AuthContext';
+import { useAuth } from '../utils/useAuth';
 import { api } from '../services/api';
 import type { User } from '../types/auth';
 
