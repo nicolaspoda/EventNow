@@ -1,33 +1,11 @@
 import { useAuth } from '../utils/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { AppNavbar } from '../components/AppNavbar';
 
 export function DashboardPage() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppNavbar
-        rightContent={
-          <>
-            <span className="text-gray-700">{user?.email}</span>
-            <button
-              onClick={handleLogout}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
-            >
-              Déconnexion
-            </button>
-          </>
-        }
-      />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
             Tableau de bord
@@ -43,7 +21,7 @@ export function DashboardPage() {
             <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-6 text-white">
               <h3 className="text-lg font-semibold mb-2">Statut</h3>
               <p className="text-pink-100">Connecté</p>
-              <p className="text-pink-100">ID: {user?.id.slice(0, 8)}...</p>
+              <p className="text-pink-100">ID: {user?.id?.slice(0, 8)}...</p>
             </div>
 
             <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-6 text-white">
@@ -73,7 +51,7 @@ export function DashboardPage() {
             </p>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

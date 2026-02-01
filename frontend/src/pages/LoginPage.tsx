@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { useAuth } from '../utils/useAuth';
 import { AuthLayout } from '../components/AuthLayout';
@@ -13,7 +13,9 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { setUser } = useAuth();
+  const registered = location.state && typeof location.state === 'object' && 'registered' in location.state && location.state.registered;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -44,6 +46,9 @@ export function LoginPage() {
   return (
     <AuthLayout subtitle="Connectez-vous à votre compte">
       <form onSubmit={handleSubmit} className="space-y-6">
+        {registered && (
+          <Alert message="Inscription réussie. Connectez-vous avec vos identifiants." variant="success" />
+        )}
         {error && <Alert message={error} />}
 
         <FormField

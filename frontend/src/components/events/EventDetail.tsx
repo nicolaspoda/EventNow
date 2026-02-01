@@ -1,19 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { Event } from '../../types/event.types';
+import type { Event, TicketCategory } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import BookingModal from '../bookings/BookingModal';
 
 interface EventDetailProps {
   event: Event;
-  onBooking?: () => void;
+  onBooking?: (categoryId: string, quantity: number) => Promise<void>;
 }
 
 const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
+  const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
   const eventDate = new Date(event.eventDate);
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
   const isSoldOut = totalStock === 0;
+
+  const handleCategorySelect = (category: TicketCategory) => {
+    if (category.currentStock > 0) {
+      setSelectedCategory(category);
+    }
+  };
+
+  const handleConfirmBooking = async (quantity: number) => {
+    if (selectedCategory && onBooking) {
+      await onBooking(selectedCategory.id, quantity);
+      setSelectedCategory(null);
+    }
+  };
 
   const getStockIndicator = (currentStock: number, initialStock: number) => {
     const percentage = (currentStock / initialStock) * 100;
@@ -86,6 +101,9 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Disponibilité
                   </th>
+                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -104,6 +122,16 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getStockIndicator(category.currentStock, category.initialStock)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={category.currentStock === 0}
+                        onClick={() => handleCategorySelect(category)}
+                      >
+                        {category.currentStock === 0 ? 'Épuisé' : 'Réserver'}
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -133,25 +161,21 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            variant="primary"
-            size="lg"
-            disabled={isSoldOut}
-            onClick={onBooking}
-            fullWidth
-            aria-label={isSoldOut ? 'Réservation impossible, événement complet' : 'Réserver des billets'}
-          >
-            {isSoldOut ? 'Complet' : 'Réserver'}
-          </Button>
-        </div>
-
         {isSoldOut && (
           <p className="mt-4 text-center text-sm text-red-600" role="alert">
             Toutes les places pour cet événement sont épuisées
           </p>
         )}
       </div>
+
+      {selectedCategory && (
+        <BookingModal
+          category={selectedCategory}
+          eventTitle={event.title}
+          onClose={() => setSelectedCategory(null)}
+          onConfirm={handleConfirmBooking}
+        />
+      )}
     </article>
   );
 };
