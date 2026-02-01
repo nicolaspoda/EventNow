@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -13,6 +13,12 @@ interface BookingCardProps {
 }
 
 const BookingCard: React.FC<BookingCardProps> = ({ booking, onConfirm, onCancel }) => {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
   const getStatusBadge = () => {
     switch (booking.status) {
       case 'PENDING':
@@ -29,7 +35,7 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onConfirm, onCancel 
   };
 
   const expiresAt = new Date(booking.expiresAt);
-  const isExpiringSoon = booking.status === 'PENDING' && expiresAt.getTime() - Date.now() < 300000;
+  const isExpiringSoon = booking.status === 'PENDING' && expiresAt.getTime() - now < 300000;
   const totalPrice = Number(booking.ticketCategory?.price || 0) * booking.quantity;
 
   return (
