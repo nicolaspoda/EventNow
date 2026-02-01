@@ -75,7 +75,6 @@ const BookingCard: React.FC<BookingCardProps> = ({ booking, onConfirm, onCancel 
         {booking.status === 'PENDING' && (
           <div className={`p-3 rounded-lg mb-4 ${isExpiringSoon ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'}`}>
             <p className={`text-sm ${isExpiringSoon ? 'text-red-800' : 'text-yellow-800'}`}>
-              {isExpiringSoon ? '⚠️ ' : '⏱️ '}
               Expire le {format(expiresAt, 'dd/MM/yyyy à HH:mm', { locale: fr })}
             </p>
           </div>
