@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
-import { useAuth } from '../utils/useAuth';
 import { Role } from '../types/auth';
 import { AuthLayout } from '../components/AuthLayout';
 import { Alert } from '../components/Alert';
@@ -22,7 +21,6 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -41,9 +39,8 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await authService.register({ email, password, role });
-      setUser(response.user);
-      navigate('/dashboard');
+      await authService.register({ email, password, role });
+      navigate('/login', { state: { registered: true } });
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Erreur lors de l’inscription');
     } finally {

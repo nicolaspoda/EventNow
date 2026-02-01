@@ -1,8 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 
 export function NavbarLinks() {
+  const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   if (isAuthenticated) {
     return (
@@ -21,7 +27,7 @@ export function NavbarLinks() {
         </Link>
         <button
           type="button"
-          onClick={() => void logout()}
+          onClick={() => void handleLogout()}
           className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
         >
           Déconnexion
