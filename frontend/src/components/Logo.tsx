@@ -34,7 +34,7 @@ export function Logo({ variant = 'auth', showText = true }: LogoProps) {
 
   if (variant === 'nav') {
     return (
-      <Link to="/dashboard" className="flex items-center">
+      <Link to="/events" className="flex items-center">
         {content}
       </Link>
     );
