@@ -6,13 +6,8 @@ import { AuthService } from '../auth.service';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private authService: AuthService) {
-    const clientID = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    if (!clientID || !clientSecret) {
-      throw new Error(
-        'Google OAuth: GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET doivent être définis (backend/.env ou variables d’environnement du conteneur).',
-      );
-    }
+    const clientID = process.env.GOOGLE_CLIENT_ID ?? '';
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET ?? '';
     super({
       clientID,
       clientSecret,
