@@ -8,18 +8,24 @@ import {
   Get,
   Req,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto';
+import { RedisService } from '../redis/redis.service';
+import { RegisterDto, LoginDto, ExchangeCodeDto } from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private redis: RedisService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -69,9 +75,30 @@ export class AuthController {
       user.role,
     );
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}&user=${encodeURIComponent(JSON.stringify({ id: user.id, email: user.email, role: user.role }))}`;
+    const userPayload = { id: user.id, email: user.email, role: user.role };
+    const code = randomUUID();
+    await this.redis.setOAuthCode(code, {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: userPayload,
+    });
 
-    res.redirect(redirectUrl);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/callback?code=${code}`);
+  }
+
+  @Post('google/exchange')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  async googleExchange(@Body() dto: ExchangeCodeDto) {
+    const data = await this.redis.getAndDeleteOAuthCode(dto.code);
+    if (!data || typeof data !== 'object' || !('accessToken' in data)) {
+      throw new UnauthorizedException('Code invalide ou expiré');
+    }
+    return data as {
+      accessToken: string;
+      refreshToken: string;
+      user: { id: string; email: string; role: string };
+    };
   }
 }

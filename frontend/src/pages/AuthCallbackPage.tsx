@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
+import { api } from '../services/api';
+import type { User } from '../types/auth';
 
 export default function AuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -8,31 +10,33 @@ export default function AuthCallbackPage() {
   const { setUser } = useAuth();
 
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
-    const userStr = searchParams.get('user');
+    const code = searchParams.get('code');
 
-    if (accessToken && refreshToken && userStr) {
+    if (!code) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    const exchange = async () => {
       try {
-        const user = JSON.parse(decodeURIComponent(userStr));
-        
-        // Sauvegarder les tokens et l'utilisateur
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        // Mettre à jour le contexte
-        setUser(user);
-        
-        // Rediriger vers le dashboard
+        const { data } = await api.post<{
+          accessToken: string;
+          refreshToken: string;
+          user: { id: string; email: string; role: string };
+        }>('/auth/google/exchange', { code });
+
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user as User);
         navigate('/dashboard', { replace: true });
-      } catch (error) {
-        console.error('Erreur lors du traitement de la callback OAuth:', error);
+      } catch (err) {
+        console.error('Erreur lors de l’échange du code OAuth:', err);
         navigate('/login', { replace: true });
       }
-    } else {
-      navigate('/login', { replace: true });
-    }
+    };
+
+    exchange();
   }, [searchParams, navigate, setUser]);
 
   return (

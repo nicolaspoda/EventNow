@@ -21,6 +21,26 @@ export class RedisService implements OnModuleDestroy {
     return result !== null;
   }
 
+  private static readonly OAUTH_CODE_PREFIX = 'oauth:code:';
+  private static readonly OAUTH_CODE_TTL_SECONDS = 60;
+
+  async setOAuthCode(code: string, data: object): Promise<void> {
+    const key = `${RedisService.OAUTH_CODE_PREFIX}${code}`;
+    await this.client.setex(
+      key,
+      RedisService.OAUTH_CODE_TTL_SECONDS,
+      JSON.stringify(data),
+    );
+  }
+
+  async getAndDeleteOAuthCode(code: string): Promise<object | null> {
+    const key = `${RedisService.OAUTH_CODE_PREFIX}${code}`;
+    const value = await this.client.get(key);
+    if (value === null) return null;
+    await this.client.del(key);
+    return JSON.parse(value) as object;
+  }
+
   async onModuleDestroy() {
     await this.client.quit();
   }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { RedisService } from '../redis/redis.service';
 import { Role } from '@prisma/client';
 
 describe('AuthController', () => {
@@ -13,6 +14,11 @@ describe('AuthController', () => {
     refreshTokens: jest.fn(),
   };
 
+  const mockRedisService = {
+    setOAuthCode: jest.fn(),
+    getAndDeleteOAuthCode: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -20,6 +26,10 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: mockAuthService,
+        },
+        {
+          provide: RedisService,
+          useValue: mockRedisService,
         },
       ],
     }).compile();
