@@ -2,7 +2,7 @@ export interface TicketCategory {
   id: string;
   name: string;
   description?: string;
-  price: number;
+  price: number | string;
   initialStock: number;
   currentStock: number;
 }

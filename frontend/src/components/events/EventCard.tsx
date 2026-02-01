@@ -12,7 +12,7 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
-  const minPrice = Math.min(...event.ticketCategories.map(cat => cat.price));
+  const minPrice = Math.min(...event.ticketCategories.map(cat => Number(cat.price)));
   const eventDate = new Date(event.eventDate);
   
   const getStockBadge = () => {

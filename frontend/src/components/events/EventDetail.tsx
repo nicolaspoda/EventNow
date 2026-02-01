@@ -99,7 +99,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {category.price.toFixed(2)} €
+                        {Number(category.price).toFixed(2)} €
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
