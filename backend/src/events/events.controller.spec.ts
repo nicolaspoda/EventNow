@@ -95,10 +95,10 @@ describe('EventsController', () => {
     it('should return all events', async () => {
       mockEventsService.findAll.mockResolvedValue([mockEvent]);
 
-      const result = await controller.findAll();
+      const result = await controller.findAll({});
 
       expect(result).toEqual([mockEvent]);
-      expect(service.findAll).toHaveBeenCalled();
+      expect(service.findAll).toHaveBeenCalledWith({});
     });
   });
 
