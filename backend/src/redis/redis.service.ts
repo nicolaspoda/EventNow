@@ -41,6 +41,35 @@ export class RedisService implements OnModuleDestroy {
     return JSON.parse(value) as object;
   }
 
+  async acquireLock(key: string, ttl: number = 10): Promise<boolean> {
+    const result = await this.client.set(`lock:${key}`, '1', 'EX', ttl, 'NX');
+    return result === 'OK';
+  }
+
+  async releaseLock(key: string): Promise<void> {
+    await this.client.del(`lock:${key}`);
+  }
+
+  async withLock<T>(
+    key: string,
+    callback: () => Promise<T>,
+    ttl: number = 10,
+  ): Promise<T> {
+    const lockAcquired = await this.acquireLock(key, ttl);
+
+    if (!lockAcquired) {
+      throw new Error(
+        "Impossible d'acquérir le lock - trop de demandes simultanées",
+      );
+    }
+
+    try {
+      return await callback();
+    } finally {
+      await this.releaseLock(key);
+    }
+  }
+
   async onModuleDestroy() {
     await this.client.quit();
   }

@@ -78,7 +78,10 @@ export class EventsService {
 
     if (filters?.location?.trim()) {
       andConditions.push({
-        location: { contains: filters.location.trim(), mode: 'insensitive' as const },
+        location: {
+          contains: filters.location.trim(),
+          mode: 'insensitive' as const,
+        },
       });
     }
 

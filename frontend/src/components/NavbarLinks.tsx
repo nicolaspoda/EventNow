@@ -8,6 +8,12 @@ export function NavbarLinks() {
     return (
       <>
         <Link
+          to="/bookings"
+          className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+        >
+          Mes réservations
+        </Link>
+        <Link
           to="/dashboard"
           className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
         >

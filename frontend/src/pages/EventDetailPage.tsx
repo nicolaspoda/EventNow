@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Event } from '../types/event.types';
 import { eventService } from '../services/eventService';
+import { bookingService } from '../services/bookingService';
+import { useAuth } from '../utils/useAuth';
 import EventDetail from '../components/events/EventDetail';
 import Button from '../components/ui/Button';
 
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +42,20 @@ const EventDetailPage: React.FC = () => {
     fetchEvent();
   }, [id]);
 
-  const handleBooking = () => {
-    console.log('Réservation pour l\'événement:', id);
+  const handleBooking = async (categoryId: string, quantity: number) => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/events/${id}` } });
+      return;
+    }
+
+    try {
+      await bookingService.createBooking({ ticketCategoryId: categoryId, quantity });
+      alert('Réservation créée avec succès ! Vous avez 10 minutes pour finaliser le paiement.');
+      navigate('/bookings');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de la réservation';
+      alert(message);
+    }
   };
 
   if (loading) {
