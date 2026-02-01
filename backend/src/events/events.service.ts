@@ -55,13 +55,49 @@ export class EventsService {
     });
   }
 
-  async findAll() {
+  async findAll(filters?: {
+    search?: string;
+    location?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const now = new Date();
+    const andConditions: Array<Record<string, unknown>> = [
+      { eventDate: { gte: now } },
+    ];
+
+    if (filters?.search?.trim()) {
+      const term = filters.search.trim();
+      andConditions.push({
+        OR: [
+          { title: { contains: term, mode: 'insensitive' as const } },
+          { description: { contains: term, mode: 'insensitive' as const } },
+        ],
+      });
+    }
+
+    if (filters?.location?.trim()) {
+      andConditions.push({
+        location: { contains: filters.location.trim(), mode: 'insensitive' as const },
+      });
+    }
+
+    if (filters?.dateFrom) {
+      const dateFrom = new Date(filters.dateFrom);
+      if (!isNaN(dateFrom.getTime())) {
+        andConditions.push({ eventDate: { gte: dateFrom } });
+      }
+    }
+
+    if (filters?.dateTo) {
+      const dateTo = new Date(filters.dateTo);
+      if (!isNaN(dateTo.getTime())) {
+        andConditions.push({ eventDate: { lte: dateTo } });
+      }
+    }
+
     return this.prisma.event.findMany({
-      where: {
-        eventDate: {
-          gte: new Date(),
-        },
-      },
+      where: { AND: andConditions },
       include: {
         ticketCategories: {
           select: {

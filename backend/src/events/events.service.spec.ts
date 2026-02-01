@@ -120,7 +120,7 @@ describe('EventsService', () => {
       expect(mockPrismaService.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            eventDate: expect.any(Object),
+            AND: expect.any(Array),
           }),
         }),
       );

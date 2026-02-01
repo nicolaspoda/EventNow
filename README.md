@@ -38,11 +38,12 @@ EventNow est une plateforme de billetterie en ligne permettant la vente de bille
 
 ## Prérequis
 
-- Node.js 20+
-- Docker Desktop
+- **Docker Desktop**
 - Git
 
-## Installation
+## Lancer le projet
+
+Tout tourne dans Docker. Aucun service (backend, frontend, Postgres, Redis) ne tourne sur la machine : uniquement Docker.
 
 ### 1. Cloner le projet
 ```bash
@@ -50,22 +51,29 @@ git clone https://github.com/nicolaspoda/EventNow.git
 cd EventNow
 ```
 
-### 2. Créer le fichier .env
+### 2. Fichier .env du backend
 ```bash
 cp .env.example .env
+cp .env backend/.env
 ```
+Édite `backend/.env` si besoin (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET pour l’auth Google). Les variables de base (DATABASE_URL, REDIS_HOST) sont définies dans `docker-compose.yml` : ne pas les modifier pour l’usage Docker.
 
-### 3. Lancer avec Docker
+### 3. Démarrer l’application
 ```bash
-docker-compose up -d
+docker-compose up --build
 ```
+Ou en arrière-plan : `docker-compose up -d --build`.
 
-### 4. Accéder à l'application
+### 4. (Optionnel) Remplir la base avec des données de démo
+```bash
+docker-compose exec backend npx prisma db seed
+```
+Cela crée un compte organisateur et 4 événements à venir. Compte : `organizer@eventnow.fr` / `Organizer123!`
+
+### 5. Accéder à l’application
 
 - **Frontend** : http://localhost:5173
 - **Backend API** : http://localhost:3000
-- **PostgreSQL** : localhost:5432
-- **Redis** : localhost:6379
 
 ## Structure du Projet
 ```
@@ -86,34 +94,15 @@ EventNow/
 └── docker-compose.yml   # Configuration Docker
 ```
 
-## Développement
+## Commandes Docker (usage classique)
 
-### Lancer en mode dev (sans Docker)
-
-**Backend** :
-```bash
-cd backend
-npm install
-npm run start:dev
-```
-
-**Frontend** :
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Arrêter Docker
-```bash
-docker-compose down
-```
-
-### Voir les logs
-```bash
-docker-compose logs -f backend
-docker-compose logs -f frontend
-```
+| Commande | Description |
+|----------|-------------|
+| `docker-compose up --build` | Démarrer tous les services (logs dans le terminal) |
+| `docker-compose up -d --build` | Démarrer en arrière-plan |
+| `docker-compose down` | Arrêter tous les services |
+| `docker-compose logs -f backend` | Voir les logs du backend |
+| `docker-compose logs -f frontend` | Voir les logs du frontend |
 
 ## Compétences RNCP Couvertes
 

@@ -9,9 +9,11 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { EventsService } from './events.service';
-import { CreateEventDto, UpdateEventDto } from './dto';
+import { CreateEventDto, UpdateEventDto, GetEventsQueryDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -30,12 +32,14 @@ export class EventsController {
   }
 
   @Get()
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
-  findAll() {
-    return this.eventsService.findAll();
+  findAll(@Query() query: GetEventsQueryDto) {
+    return this.eventsService.findAll(query);
   }
 
   @Get(':id')
+  @SkipThrottle()
   @HttpCode(HttpStatus.OK)
   findOne(@Param('id') id: string) {
     return this.eventsService.findOne(id);
