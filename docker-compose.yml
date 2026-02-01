@@ -29,8 +29,12 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - ./backend/.env
     environment:
       DATABASE_URL: postgresql://eventnow:eventnow_dev_password@postgres:5432/eventnow_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       REDIS_URL: redis://redis:6379
       JWT_SECRET: your-super-secret-jwt-key-change-in-production
       NODE_ENV: development

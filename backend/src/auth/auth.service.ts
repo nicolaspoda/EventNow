@@ -76,7 +76,7 @@ export class AuthService {
     };
   }
 
-  private async generateTokens(userId: string, email: string, role: string) {
+  async generateTokens(userId: string, email: string, role: string) {
     const payload: JwtPayload = {
       sub: userId,
       email,
@@ -135,5 +135,48 @@ export class AuthService {
     } catch {
       return;
     }
+  }
+
+  async validateGoogleUser(googleUser: {
+    googleId: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  }) {
+    let user = await this.prisma.user.findUnique({
+      where: { googleId: googleUser.googleId },
+    });
+
+    if (user) {
+      return user;
+    }
+
+    user = await this.prisma.user.findUnique({
+      where: { email: googleUser.email },
+    });
+
+    if (user) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: googleUser.googleId,
+          firstName: googleUser.firstName,
+          lastName: googleUser.lastName,
+        },
+      });
+      return user;
+    }
+
+    user = await this.prisma.user.create({
+      data: {
+        email: googleUser.email,
+        googleId: googleUser.googleId,
+        firstName: googleUser.firstName,
+        lastName: googleUser.lastName,
+        role: 'CLIENT',
+      },
+    });
+
+    return user;
   }
 }
