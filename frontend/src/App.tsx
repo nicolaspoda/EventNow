@@ -9,6 +9,10 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import BookingsPage from './pages/BookingsPage';
+import CheckoutPage from './pages/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage';
+import MyTicketsPage from './pages/MyTicketsPage';
+import MyOrdersPage from './pages/MyOrdersPage';
 
 function App() {
   return (
@@ -26,6 +30,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <BookingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders/:orderId/success"
+            element={
+              <ProtectedRoute>
+                <OrderSuccessPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-tickets"
+            element={
+              <ProtectedRoute>
+                <MyTicketsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-orders"
+            element={
+              <ProtectedRoute>
+                <MyOrdersPage />
               </ProtectedRoute>
             }
           />

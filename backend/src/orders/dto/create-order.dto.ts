@@ -1,4 +1,4 @@
-import { IsUUID } from 'class-validator';
+import { IsString, IsUUID } from 'class-validator';
 
 export class CreateOrderDto {
   @IsUUID()
@@ -9,6 +9,6 @@ export class ConfirmPaymentDto {
   @IsUUID()
   bookingId: string;
 
-  @IsUUID()
+  @IsString()
   paymentId: string;
 }
