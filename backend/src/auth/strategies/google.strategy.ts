@@ -16,7 +16,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID,
       clientSecret,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
+      callbackURL:
+        process.env.GOOGLE_CALLBACK_URL ||
+        'http://localhost:3000/auth/google/callback',
       scope: ['email', 'profile'],
       passReqToCallback: false,
     });
@@ -29,7 +31,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     const { id, emails, name } = profile;
-    
+
     const user = await this.authService.validateGoogleUser({
       googleId: id,
       email: emails[0].value,

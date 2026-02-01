@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import type { User } from '../types/auth';
 import { authService } from '../services/auth.service';
 
@@ -12,14 +12,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const storedUser = authService.getUser();
-    if (storedUser) {
-      setUser(storedUser);
-    }
-  }, []);
+  const [user, setUser] = useState<User | null>(() => authService.getUser());
 
   const logout = async () => {
     await authService.logout();

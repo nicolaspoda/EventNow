@@ -24,8 +24,13 @@ export function LoginPage() {
       const response = await authService.login({ email, password });
       setUser(response.user);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Email ou mot de passe incorrect');
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data
+              ?.message
+          : undefined;
+      setError(message || 'Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
     }

@@ -44,8 +44,8 @@ export function RegisterPage() {
       const response = await authService.register({ email, password, role });
       setUser(response.user);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l’inscription');
+    } catch (err: unknown) {
+      setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Erreur lors de l’inscription');
     } finally {
       setLoading(false);
     }

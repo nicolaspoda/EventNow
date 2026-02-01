@@ -104,9 +104,8 @@ export class AuthService {
         throw new UnauthorizedException('Token révoqué');
       }
 
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(
-        refreshToken,
-      );
+      const payload =
+        await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
@@ -124,11 +123,12 @@ export class AuthService {
 
   async logout(refreshToken: string) {
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(
-        refreshToken,
-      );
-      const ttl = payload.exp ? payload.exp - Math.floor(Date.now() / 1000) : 604800;
-      
+      const payload =
+        await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
+      const ttl = payload.exp
+        ? payload.exp - Math.floor(Date.now() / 1000)
+        : 604800;
+
       if (ttl > 0) {
         await this.redis.blacklistToken(refreshToken, ttl);
       }

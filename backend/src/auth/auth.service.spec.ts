@@ -12,7 +12,6 @@ jest.mock('bcrypt');
 describe('AuthService', () => {
   let service: AuthService;
   let prisma: PrismaService;
-  let jwtService: JwtService;
   let redis: RedisService;
 
   const mockPrismaService = {
@@ -53,7 +52,7 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     prisma = module.get<PrismaService>(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
+    module.get<JwtService>(JwtService);
     redis = module.get<RedisService>(RedisService);
   });
 
