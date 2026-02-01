@@ -4,6 +4,7 @@ import type { Event } from '../types/event.types';
 import { eventService } from '../services/eventService';
 import { bookingService } from '../services/bookingService';
 import { useAuth } from '../utils/useAuth';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import EventDetail from '../components/events/EventDetail';
 import Button from '../components/ui/Button';
 
@@ -53,8 +54,7 @@ const EventDetailPage: React.FC = () => {
       alert('Réservation créée avec succès ! Vous avez 10 minutes pour finaliser le paiement.');
       navigate('/bookings');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de la réservation';
-      alert(message);
+      alert(getApiErrorMessage(err, 'Erreur lors de la réservation'));
     }
   };
 

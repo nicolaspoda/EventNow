@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Booking } from '../types/booking.types';
 import { bookingService } from '../services/bookingService';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import BookingCard from '../components/bookings/BookingCard';
 import Button from '../components/ui/Button';
 
@@ -19,8 +20,7 @@ const BookingsPage: React.FC = () => {
       const data = await bookingService.getUserBookings();
       setBookings(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors du chargement des réservations';
-      setError(message);
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement des réservations'));
     } finally {
       setLoading(false);
     }
@@ -35,8 +35,7 @@ const BookingsPage: React.FC = () => {
       await bookingService.confirmBooking(bookingId);
       await fetchBookings();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de la confirmation';
-      alert(message);
+      alert(getApiErrorMessage(err, 'Erreur lors de la confirmation'));
     }
   };
 
@@ -49,8 +48,7 @@ const BookingsPage: React.FC = () => {
       await bookingService.cancelBooking(bookingId);
       await fetchBookings();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de l\'annulation';
-      alert(message);
+      alert(getApiErrorMessage(err, 'Erreur lors de l\'annulation'));
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { TicketCategory } from '../../types/event.types';
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 import Button from '../ui/Button';
 
 interface BookingModalProps {
@@ -30,8 +31,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     try {
       await onConfirm(quantity);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erreur lors de la réservation';
-      setError(message);
+      setError(getApiErrorMessage(err, 'Erreur lors de la réservation'));
     } finally {
       setLoading(false);
     }
