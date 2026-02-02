@@ -163,6 +163,34 @@ describe('OrdersService', () => {
         service.confirmPayment('booking-1', 'payment-1', 'user-1'),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should throw if booking not owned by user', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.booking.findUnique.mockResolvedValue({
+        ...mockBooking,
+        userId: 'other-user',
+      });
+
+      await expect(
+        service.confirmPayment('booking-1', 'payment-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if booking status not PENDING', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.booking.findUnique.mockResolvedValue({
+        ...mockBooking,
+        status: BookingStatus.CONFIRMED,
+      });
+
+      await expect(
+        service.confirmPayment('booking-1', 'payment-1', 'user-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 
   describe('refundOrder', () => {
@@ -223,6 +251,102 @@ describe('OrdersService', () => {
 
       await expect(service.refundOrder('order-1', 'user-1')).rejects.toThrow(
         'événement dans moins de 7 jours',
+      );
+    });
+
+    it('should throw if order not found', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.order.findUnique.mockResolvedValue(null);
+
+      await expect(service.refundOrder('order-1', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw if order not owned by user', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.order.findUnique.mockResolvedValue({
+        ...mockOrder,
+        userId: 'other-user',
+        tickets: [],
+      });
+
+      await expect(service.refundOrder('order-1', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw if order already refunded', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.order.findUnique.mockResolvedValue({
+        ...mockOrder,
+        status: OrderStatus.REFUNDED,
+        tickets: [],
+      });
+
+      await expect(service.refundOrder('order-1', 'user-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('getUserOrders', () => {
+    it('should return all orders for user', async () => {
+      const orders = [mockOrder, { ...mockOrder, id: 'order-2' }];
+      mockPrismaService.order.findMany.mockResolvedValue(orders);
+
+      const result = await service.getUserOrders('user-1');
+
+      expect(result).toEqual(orders);
+      expect(mockPrismaService.order.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+        include: expect.any(Object),
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it('should return empty array if no orders', async () => {
+      mockPrismaService.order.findMany.mockResolvedValue([]);
+
+      const result = await service.getUserOrders('user-1');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getOrderById', () => {
+    it('should return order if owned by user', async () => {
+      const orderWithTickets = {
+        ...mockOrder,
+        tickets: [{ id: 'ticket-1' }],
+      };
+      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+
+      const result = await service.getOrderById('order-1', 'user-1');
+
+      expect(result).toEqual(orderWithTickets);
+    });
+
+    it('should throw NotFoundException if order not found', async () => {
+      mockPrismaService.order.findUnique.mockResolvedValue(null);
+
+      await expect(service.getOrderById('nonexistent', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw NotFoundException if order belongs to another user', async () => {
+      const otherUserOrder = { ...mockOrder, userId: 'other-user' };
+      mockPrismaService.order.findUnique.mockResolvedValue(otherUserOrder);
+
+      await expect(service.getOrderById('order-1', 'user-1')).rejects.toThrow(
+        NotFoundException,
       );
     });
   });

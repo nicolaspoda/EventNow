@@ -21,7 +21,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  private readonly eventsService: EventsService;
+
+  constructor(eventsService: EventsService) {
+    this.eventsService = eventsService;
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

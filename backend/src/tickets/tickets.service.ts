@@ -7,7 +7,11 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TicketsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly prisma: PrismaService;
+
+  constructor(prisma: PrismaService) {
+    this.prisma = prisma;
+  }
 
   async validateTicket(qrCode: string, staffUserId: string) {
     const staff = await this.prisma.user.findUnique({

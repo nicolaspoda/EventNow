@@ -9,7 +9,11 @@ import { CreateEventDto, UpdateEventDto } from './dto';
 
 @Injectable()
 export class EventsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly prisma: PrismaService;
+
+  constructor(prisma: PrismaService) {
+    this.prisma = prisma;
+  }
 
   async create(userId: string, createEventDto: CreateEventDto) {
     const eventDate = new Date(createEventDto.event_date);

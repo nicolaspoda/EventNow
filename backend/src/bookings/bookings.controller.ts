@@ -21,7 +21,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @Controller('bookings')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  private readonly bookingsService: BookingsService;
+
+  constructor(bookingsService: BookingsService) {
+    this.bookingsService = bookingsService;
+  }
 
   @Post()
   @Roles('CLIENT')

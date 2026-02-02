@@ -22,10 +22,13 @@ import { CurrentUser } from './decorators/current-user.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private redis: RedisService,
-  ) {}
+  private readonly authService: AuthService;
+  private readonly redis: RedisService;
+
+  constructor(authService: AuthService, redis: RedisService) {
+    this.authService = authService;
+    this.redis = redis;
+  }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)

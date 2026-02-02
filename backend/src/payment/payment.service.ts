@@ -4,7 +4,11 @@ import { BookingStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentService {
-  constructor(private prisma: PrismaService) {}
+  private readonly prisma: PrismaService;
+
+  constructor(prisma: PrismaService) {
+    this.prisma = prisma;
+  }
 
   async createPaymentIntent(bookingId: string, userId: string) {
     const booking = await this.prisma.booking.findUnique({

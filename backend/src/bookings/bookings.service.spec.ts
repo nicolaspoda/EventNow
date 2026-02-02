@@ -139,6 +139,21 @@ describe('BookingsService', () => {
         service.createBooking('user-1', { ...createDto, quantity: 5 }),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should throw if stock depleted during transaction', async () => {
+      mockRedisService.withLock.mockImplementation((key, callback) =>
+        callback(),
+      );
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.ticketCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.ticketCategory.update.mockResolvedValue(null);
+
+      await expect(
+        service.createBooking('user-1', createDto),
+      ).rejects.toThrow('Stock épuisé pendant la réservation');
+    });
   });
 
   describe('confirmBooking', () => {
@@ -226,6 +241,31 @@ describe('BookingsService', () => {
         service.cancelBooking('booking-1', 'user-1'),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should throw if booking not found during cancel', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.booking.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.cancelBooking('booking-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if booking not owned by user during cancel', async () => {
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.booking.findUnique.mockResolvedValue({
+        ...mockBooking,
+        userId: 'other-user',
+      });
+
+      await expect(
+        service.cancelBooking('booking-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('expireOldBookings', () => {
@@ -251,6 +291,30 @@ describe('BookingsService', () => {
       expect(mockPrismaService.ticketCategory.update).toHaveBeenCalledWith({
         where: { id: 'category-1' },
         data: { currentStock: { increment: 2 } },
+      });
+    });
+
+    it('should return zero if no expired bookings', async () => {
+      mockPrismaService.booking.findMany.mockResolvedValue([]);
+
+      const result = await service.expireOldBookings();
+
+      expect(result.expired).toBe(0);
+    });
+  });
+
+  describe('getUserBookings', () => {
+    it('should return all bookings for user', async () => {
+      const bookings = [mockBooking, { ...mockBooking, id: 'booking-2' }];
+      mockPrismaService.booking.findMany.mockResolvedValue(bookings);
+
+      const result = await service.getUserBookings('user-1');
+
+      expect(result).toEqual(bookings);
+      expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+        include: expect.any(Object),
+        orderBy: { createdAt: 'desc' },
       });
     });
   });
