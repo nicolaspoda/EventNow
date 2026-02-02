@@ -17,7 +17,11 @@ export class EncryptionService {
 
   encrypt(text: string): string {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(this.algorithm, this.secretKey, iv);
+    const cipher = crypto.createCipheriv(
+      this.algorithm,
+      this.secretKey,
+      iv,
+    ) as crypto.Cipher & { getAuthTag(): Buffer };
 
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
@@ -37,7 +41,7 @@ export class EncryptionService {
       this.algorithm,
       this.secretKey,
       iv,
-    );
+    ) as crypto.Decipher & { setAuthTag(tag: Buffer): crypto.Decipher };
     decipher.setAuthTag(authTag);
 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
