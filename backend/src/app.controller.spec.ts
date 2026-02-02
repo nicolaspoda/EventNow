@@ -32,6 +32,5 @@ describe('AppController', () => {
       const ctrl = app.get<AppController>(AppController);
       expect(ctrl.getHello()).toBe('Custom message');
     });
-
   });
 });

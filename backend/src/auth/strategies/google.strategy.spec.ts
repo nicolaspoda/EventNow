@@ -77,7 +77,12 @@ describe('GoogleStrategy', () => {
 
       const done = jest.fn();
 
-      await strategy.validate('access-token', 'refresh-token', mockProfile, done);
+      await strategy.validate(
+        'access-token',
+        'refresh-token',
+        mockProfile,
+        done,
+      );
 
       expect(authService.validateGoogleUser).toHaveBeenCalledWith({
         googleId: 'google-123',

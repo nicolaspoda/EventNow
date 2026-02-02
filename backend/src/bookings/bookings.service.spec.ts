@@ -147,12 +147,14 @@ describe('BookingsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
-      mockPrismaService.ticketCategory.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.ticketCategory.findUnique.mockResolvedValue(
+        mockCategory,
+      );
       mockPrismaService.ticketCategory.update.mockResolvedValue(null);
 
-      await expect(
-        service.createBooking('user-1', createDto),
-      ).rejects.toThrow('Stock épuisé pendant la réservation');
+      await expect(service.createBooking('user-1', createDto)).rejects.toThrow(
+        'Stock épuisé pendant la réservation',
+      );
     });
   });
 

@@ -7,9 +7,7 @@ describe('UpdateEventDto', () => {
   it('should validate with optional ticket_categories', async () => {
     const plain = {
       title: 'Updated',
-      ticket_categories: [
-        { name: 'VIP', price: 100, initial_stock: 50 },
-      ],
+      ticket_categories: [{ name: 'VIP', price: 100, initial_stock: 50 }],
     };
     const dto = plainToClass(UpdateEventDto, plain);
     const errors = await validate(dto);

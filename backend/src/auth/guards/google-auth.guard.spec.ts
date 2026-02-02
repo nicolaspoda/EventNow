@@ -67,7 +67,9 @@ describe('GoogleAuthGuard', () => {
       process.env.GOOGLE_CLIENT_ID = 'client-id';
       process.env.GOOGLE_CLIENT_SECRET = 'client-secret';
 
-      jest.spyOn(Object.getPrototypeOf(guard), 'canActivate').mockResolvedValue(true);
+      jest
+        .spyOn(Object.getPrototypeOf(guard), 'canActivate')
+        .mockResolvedValue(true);
 
       const context = createMockContext();
 
@@ -104,9 +106,7 @@ describe('GoogleAuthGuard', () => {
       const parentProto = Object.getPrototypeOf(GoogleAuthGuard.prototype) as {
         canActivate: (ctx: ExecutionContext) => Promise<boolean>;
       };
-      jest
-        .spyOn(parentProto, 'canActivate')
-        .mockRejectedValue('string error');
+      jest.spyOn(parentProto, 'canActivate').mockRejectedValue('string error');
 
       const context = createMockContext();
 

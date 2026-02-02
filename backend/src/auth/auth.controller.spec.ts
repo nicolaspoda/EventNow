@@ -194,7 +194,9 @@ describe('AuthController', () => {
       await controller.googleAuthCallback(mockReq, mockRes);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
-        expect.stringMatching(/^http:\/\/localhost:5173\/auth\/callback\?code=/),
+        expect.stringMatching(
+          /^http:\/\/localhost:5173\/auth\/callback\?code=/,
+        ),
       );
       if (origFrontend !== undefined) process.env.FRONTEND_URL = origFrontend;
     });
@@ -217,7 +219,9 @@ describe('AuthController', () => {
       await controller.googleAuthCallback(mockReq, mockRes);
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
-        expect.stringMatching(/^https:\/\/app\.example\.com\/auth\/callback\?code=/),
+        expect.stringMatching(
+          /^https:\/\/app\.example\.com\/auth\/callback\?code=/,
+        ),
       );
       delete process.env.FRONTEND_URL;
     });

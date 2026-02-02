@@ -6,7 +6,6 @@ import { BookingStatus } from '@prisma/client';
 
 describe('PaymentService', () => {
   let service: PaymentService;
-  let prisma: PrismaService;
 
   const mockPrisma = {
     booking: {
@@ -23,7 +22,6 @@ describe('PaymentService', () => {
     }).compile();
 
     service = module.get<PaymentService>(PaymentService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {
@@ -46,7 +44,10 @@ describe('PaymentService', () => {
 
       mockPrisma.booking.findUnique.mockResolvedValue(mockBooking);
 
-      const result = await service.createPaymentIntent('booking-123', 'user-123');
+      const result = await service.createPaymentIntent(
+        'booking-123',
+        'user-123',
+      );
 
       expect(result).toEqual({
         paymentId: expect.stringMatching(/^sim_\d+_[a-z0-9]+$/),

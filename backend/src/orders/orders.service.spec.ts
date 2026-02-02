@@ -336,9 +336,9 @@ describe('OrdersService', () => {
     it('should throw NotFoundException if order not found', async () => {
       mockPrismaService.order.findUnique.mockResolvedValue(null);
 
-      await expect(service.getOrderById('nonexistent', 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getOrderById('nonexistent', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if order belongs to another user', async () => {

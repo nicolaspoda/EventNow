@@ -276,7 +276,9 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
-      mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({
+        count: 1,
+      });
       mockPrismaService.event.update.mockResolvedValue(mockEvent);
 
       const result = await service.update('event-1', 'user-1', {
