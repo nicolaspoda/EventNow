@@ -24,21 +24,30 @@ export function FormField({
   label,
   id,
   error,
+  required,
   className = '',
   ...props
 }: InputFieldProps) {
+  const errorId = error ? `${id}-error` : undefined;
+  
   return (
     <div>
       <label htmlFor={id} className={labelClassName}>
         {label}
+        {required && (
+          <span aria-label="requis" className="text-red-500 ml-1">*</span>
+        )}
       </label>
       <input
         id={id}
         className={`${inputClassName} ${className}`}
+        aria-required={required}
+        aria-invalid={!!error}
+        aria-describedby={errorId}
         {...props}
       />
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
           {error}
         </p>
       )}
@@ -51,17 +60,26 @@ export function FormSelect({
   id,
   options,
   error,
+  required,
   className = '',
   ...props
 }: SelectFieldProps) {
+  const errorId = error ? `${id}-error` : undefined;
+  
   return (
     <div>
       <label htmlFor={id} className={labelClassName}>
         {label}
+        {required && (
+          <span aria-label="requis" className="text-red-500 ml-1">*</span>
+        )}
       </label>
       <select
         id={id}
         className={`${inputClassName} ${className}`}
+        aria-required={required}
+        aria-invalid={!!error}
+        aria-describedby={errorId}
         {...props}
       >
         {options.map((opt) => (
@@ -71,7 +89,7 @@ export function FormSelect({
         ))}
       </select>
       {error && (
-        <p className="mt-1 text-sm text-red-600" role="alert">
+        <p id={errorId} className="mt-1 text-sm text-red-600" role="alert">
           {error}
         </p>
       )}

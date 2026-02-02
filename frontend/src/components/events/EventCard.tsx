@@ -27,24 +27,31 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
   return (
     <article 
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-full"
-      aria-label={`Événement: ${event.title}`}
+      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col h-full focus-within:ring-2 focus-within:ring-blue-500"
     >
-      {event.imageUrl && (
+      {event.imageUrl ? (
         <img
           src={event.imageUrl}
-          alt={`Image de ${event.title}`}
+          alt={`Affiche de l'événement ${event.title} qui se déroulera le ${format(eventDate, "d MMMM yyyy", { locale: fr })} à ${event.location}`}
           className="w-full h-48 object-cover"
           loading="lazy"
         />
+      ) : (
+        <div
+          className="w-full h-48 bg-gray-200 flex items-center justify-center"
+          role="img"
+          aria-label="Aucune image disponible pour cet événement"
+        >
+          <span className="text-gray-500">Pas d'image</span>
+        </div>
       )}
       
       <div className="p-6 flex flex-col flex-grow">
-        <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+        <h3 id={`event-title-${event.id}`} className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
           {event.title}
         </h3>
         
-        <div className="space-y-2 mb-4 text-gray-600">
+        <div className="space-y-2 mb-4 text-gray-600" aria-describedby={`event-title-${event.id}`}>
           <div className="flex items-center">
             <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -76,7 +83,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
           <Link to={`/events/${event.id}`} aria-label={`Voir les détails de ${event.title}`}>
             <Button variant="primary" fullWidth>
-              Voir les détails →
+              Voir les détails
             </Button>
           </Link>
         </div>
