@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, ConfirmPaymentDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -24,6 +25,7 @@ export class OrdersController {
   @Post('payment/initiate')
   @Roles('CLIENT')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ payment: { limit: 5, ttl: 60000 } })
   initiatePayment(@Body() dto: CreateOrderDto, @CurrentUser() user: any) {
     return this.ordersService.initiatePayment(dto.bookingId, user.id);
   }
@@ -31,6 +33,7 @@ export class OrdersController {
   @Post('payment/confirm')
   @Roles('CLIENT')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({ payment: { limit: 5, ttl: 60000 } })
   confirmPayment(@Body() dto: ConfirmPaymentDto, @CurrentUser() user: any) {
     return this.ordersService.confirmPayment(
       dto.bookingId,
@@ -56,6 +59,7 @@ export class OrdersController {
   @Patch(':id/refund')
   @Roles('CLIENT')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ payment: { limit: 5, ttl: 60000 } })
   refundOrder(@Param('id') id: string, @CurrentUser() user: any) {
     return this.ordersService.refundOrder(id, user.id);
   }

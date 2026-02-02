@@ -17,7 +17,12 @@ import { PaymentModule } from './payment/payment.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10,
+        limit: 100,
+      },
+      {
+        name: 'payment',
+        ttl: 60000,
+        limit: 5,
       },
     ]),
     PrismaModule,

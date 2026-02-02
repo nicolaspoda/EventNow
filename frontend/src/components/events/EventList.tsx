@@ -25,8 +25,7 @@ const EventList: React.FC<EventListProps> = ({ events, loading, error }) => {
         role="alert"
         aria-live="assertive"
       >
-        <p className="font-medium">Erreur lors du chargement des événements</p>
-        <p className="text-sm mt-1">{error}</p>
+        <p className="font-medium">{error}</p>
       </div>
     );
   }

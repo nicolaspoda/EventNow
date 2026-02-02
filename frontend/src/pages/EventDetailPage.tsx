@@ -30,11 +30,7 @@ const EventDetailPage: React.FC = () => {
         const data = await eventService.getEventById(id);
         setEvent(data);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Événement introuvable');
-        }
+        setError(getApiErrorMessage(err, 'Événement introuvable'));
       } finally {
         setLoading(false);
       }

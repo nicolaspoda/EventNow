@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { TicketCategory } from '../../types/event.types';
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 import Button from '../ui/Button';
 
 interface CheckoutModalProps {
@@ -31,11 +32,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       await onConfirm(quantity);
       onClose();
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Une erreur est survenue lors de la commande');
-      }
+      setError(getApiErrorMessage(err, 'Une erreur est survenue lors de la commande'));
     } finally {
       setLoading(false);
     }
