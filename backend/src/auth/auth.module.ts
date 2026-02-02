@@ -15,7 +15,12 @@ import { RedisModule } from '../redis/redis.module';
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
-      signOptions: { expiresIn: '15m' },
+      signOptions: {
+        expiresIn: '15m',
+        algorithm: 'HS256',
+        issuer: 'eventnow-api',
+        audience: 'eventnow-client',
+      },
     }),
   ],
   controllers: [AuthController],
