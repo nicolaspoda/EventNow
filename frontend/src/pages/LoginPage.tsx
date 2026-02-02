@@ -45,7 +45,7 @@ export function LoginPage() {
 
   return (
     <AuthLayout subtitle="Connectez-vous à votre compte">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" aria-label="Formulaire de connexion" noValidate>
         {registered && (
           <Alert message="Inscription réussie. Connectez-vous avec vos identifiants." variant="success" />
         )}
