@@ -30,11 +30,7 @@ const EventDetailPage: React.FC = () => {
         const data = await eventService.getEventById(id);
         setEvent(data);
       } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Événement introuvable');
-        }
+        setError(getApiErrorMessage(err, 'Événement introuvable'));
       } finally {
         setLoading(false);
       }
@@ -50,11 +46,14 @@ const EventDetailPage: React.FC = () => {
     }
 
     try {
-      await bookingService.createBooking({ ticketCategoryId: categoryId, quantity });
-      alert('Réservation créée avec succès ! Vous avez 10 minutes pour finaliser le paiement.');
-      navigate('/bookings');
+      const booking = await bookingService.createBooking({
+        ticketCategoryId: categoryId,
+        quantity,
+      });
+
+      navigate(`/checkout?bookingId=${booking.id}`);
     } catch (err) {
-      alert(getApiErrorMessage(err, 'Erreur lors de la réservation'));
+      alert(getApiErrorMessage(err, 'Erreur lors de la création de la réservation'));
     }
   };
 

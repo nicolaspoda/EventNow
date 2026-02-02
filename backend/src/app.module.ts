@@ -8,13 +8,21 @@ import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { OrdersModule } from './orders/orders.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10,
+        limit: 100,
+      },
+      {
+        name: 'payment',
+        ttl: 60000,
+        limit: 5,
       },
     ]),
     PrismaModule,
@@ -22,6 +30,9 @@ import { BookingsModule } from './bookings/bookings.module';
     AuthModule,
     EventsModule,
     BookingsModule,
+    OrdersModule,
+    TicketsModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Event, EventFilters } from '../types/event.types';
 import { eventService } from '../services/eventService';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 
 export const useEvents = (filters: EventFilters) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -15,7 +16,7 @@ export const useEvents = (filters: EventFilters) => {
         const data = await eventService.getEvents(filters);
         setEvents(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        setError(getApiErrorMessage(err, 'Erreur lors du chargement des événements'));
       } finally {
         setLoading(false);
       }
