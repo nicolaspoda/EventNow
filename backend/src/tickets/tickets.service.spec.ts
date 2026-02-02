@@ -77,6 +77,14 @@ describe('TicketsService', () => {
       expect(mockPrismaService.ticket.update).toHaveBeenCalled();
     });
 
+    it('should reject if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.validateTicket('TICKET-ABC123-123456', 'unknown-user'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     it('should reject if user is not STAFF', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({
         id: 'user-1',
@@ -112,6 +120,22 @@ describe('TicketsService', () => {
 
       expect(result.valid).toBe(false);
       expect(result.reason).toBe('Billet déjà utilisé');
+    });
+
+    it('should reject ticket with refunded order', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockStaff);
+      mockPrismaService.ticket.findUnique.mockResolvedValue({
+        ...mockTicket,
+        order: { status: 'REFUNDED' },
+      });
+
+      const result = await service.validateTicket(
+        'TICKET-ABC123-123456',
+        'staff-1',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('Commande annulée ou remboursée');
     });
   });
 

@@ -12,11 +12,19 @@ import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
 export class AuthService {
+  private readonly prisma: PrismaService;
+  private readonly jwtService: JwtService;
+  private readonly redis: RedisService;
+
   constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-    private redis: RedisService,
-  ) {}
+    prisma: PrismaService,
+    jwtService: JwtService,
+    redis: RedisService,
+  ) {
+    this.prisma = prisma;
+    this.jwtService = jwtService;
+    this.redis = redis;
+  }
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({

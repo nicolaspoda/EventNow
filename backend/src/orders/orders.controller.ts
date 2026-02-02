@@ -20,7 +20,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @Controller('orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  private readonly ordersService: OrdersService;
+
+  constructor(ordersService: OrdersService) {
+    this.ordersService = ordersService;
+  }
 
   @Post('payment/initiate')
   @Roles('CLIENT')

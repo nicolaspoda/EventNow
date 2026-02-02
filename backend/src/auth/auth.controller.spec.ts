@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnauthorizedException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RedisService } from '../redis/redis.service';
@@ -12,6 +13,8 @@ describe('AuthController', () => {
     register: jest.fn(),
     login: jest.fn(),
     refreshTokens: jest.fn(),
+    logout: jest.fn(),
+    generateTokens: jest.fn(),
   };
 
   const mockRedisService = {
@@ -67,6 +70,38 @@ describe('AuthController', () => {
       expect(result).toEqual(expectedResult);
       expect(authService.register).toHaveBeenCalledWith(registerDto);
     });
+
+    it('should register with ORGANIZER role', async () => {
+      const registerDto = {
+        email: 'org@example.com',
+        password: 'password123',
+        role: Role.ORGANIZER,
+      };
+      const expectedResult = {
+        user: { id: '2', email: registerDto.email, role: Role.ORGANIZER },
+        accessToken: 'at',
+        refreshToken: 'rt',
+      };
+      mockAuthService.register.mockResolvedValue(expectedResult);
+      const result = await controller.register(registerDto);
+      expect(result.user.role).toBe(Role.ORGANIZER);
+    });
+
+    it('should register with STAFF role', async () => {
+      const registerDto = {
+        email: 'staff@example.com',
+        password: 'password123',
+        role: Role.STAFF,
+      };
+      const expectedResult = {
+        user: { id: '3', email: registerDto.email, role: Role.STAFF },
+        accessToken: 'at',
+        refreshToken: 'rt',
+      };
+      mockAuthService.register.mockResolvedValue(expectedResult);
+      const result = await controller.register(registerDto);
+      expect(result.user.role).toBe(Role.STAFF);
+    });
   });
 
   describe('login', () => {
@@ -112,6 +147,17 @@ describe('AuthController', () => {
     });
   });
 
+  describe('logout', () => {
+    it('should call logout and return success message', async () => {
+      mockAuthService.logout.mockResolvedValue(undefined);
+
+      const result = await controller.logout('refresh-token');
+
+      expect(result).toEqual({ message: 'Déconnexion réussie' });
+      expect(authService.logout).toHaveBeenCalledWith('refresh-token');
+    });
+  });
+
   describe('getProfile', () => {
     it('should return user profile', async () => {
       const mockUser = {
@@ -123,6 +169,99 @@ describe('AuthController', () => {
       const result = await controller.getProfile(mockUser);
 
       expect(result).toEqual(mockUser);
+    });
+  });
+
+  describe('googleAuthCallback', () => {
+    it('should generate tokens, store code in Redis and redirect', async () => {
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        role: Role.CLIENT,
+      };
+      const mockReq = { user: mockUser } as any;
+      const mockRes = {
+        redirect: jest.fn(),
+      } as any;
+      mockAuthService.generateTokens.mockResolvedValue({
+        accessToken: 'at',
+        refreshToken: 'rt',
+      });
+      mockRedisService.setOAuthCode.mockResolvedValue(undefined);
+      const origFrontend = process.env.FRONTEND_URL;
+      delete process.env.FRONTEND_URL;
+
+      await controller.googleAuthCallback(mockReq, mockRes);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^http:\/\/localhost:5173\/auth\/callback\?code=/,
+        ),
+      );
+      if (origFrontend !== undefined) process.env.FRONTEND_URL = origFrontend;
+    });
+
+    it('should use FRONTEND_URL when set', async () => {
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        role: Role.CLIENT,
+      };
+      const mockReq = { user: mockUser } as any;
+      const mockRes = { redirect: jest.fn() } as any;
+      mockAuthService.generateTokens.mockResolvedValue({
+        accessToken: 'at',
+        refreshToken: 'rt',
+      });
+      mockRedisService.setOAuthCode.mockResolvedValue(undefined);
+      process.env.FRONTEND_URL = 'https://app.example.com';
+
+      await controller.googleAuthCallback(mockReq, mockRes);
+
+      expect(mockRes.redirect).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^https:\/\/app\.example\.com\/auth\/callback\?code=/,
+        ),
+      );
+      delete process.env.FRONTEND_URL;
+    });
+  });
+
+  describe('googleExchange', () => {
+    it('should return tokens and user when code is valid', async () => {
+      const validData = {
+        accessToken: 'at',
+        refreshToken: 'rt',
+        user: { id: '1', email: 'u@e.com', role: Role.CLIENT },
+      };
+      mockRedisService.getAndDeleteOAuthCode.mockResolvedValue(validData);
+
+      const result = await controller.googleExchange({ code: 'valid-code' });
+
+      expect(result).toEqual(validData);
+      expect(mockRedisService.getAndDeleteOAuthCode).toHaveBeenCalledWith(
+        'valid-code',
+      );
+    });
+
+    it('should throw UnauthorizedException when code is invalid or expired', async () => {
+      mockRedisService.getAndDeleteOAuthCode.mockResolvedValue(null);
+
+      await expect(
+        controller.googleExchange({ code: 'invalid' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      mockRedisService.getAndDeleteOAuthCode.mockResolvedValue('string');
+
+      await expect(
+        controller.googleExchange({ code: 'invalid' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      mockRedisService.getAndDeleteOAuthCode.mockResolvedValue({});
+
+      await expect(
+        controller.googleExchange({ code: 'invalid' }),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });

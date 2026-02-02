@@ -96,6 +96,17 @@ describe('OrdersController', () => {
     });
   });
 
+  describe('getOrder', () => {
+    it('should return order by id for user', async () => {
+      mockOrdersService.getOrderById.mockResolvedValue(mockOrder);
+
+      const result = await controller.getOrder('order-1', mockUser);
+
+      expect(result).toEqual(mockOrder);
+      expect(service.getOrderById).toHaveBeenCalledWith('order-1', mockUser.id);
+    });
+  });
+
   describe('refundOrder', () => {
     it('should refund order', async () => {
       const refundedOrder = { ...mockOrder, status: OrderStatus.REFUNDED };

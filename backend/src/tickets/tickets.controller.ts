@@ -18,7 +18,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TicketsController {
-  constructor(private readonly ticketsService: TicketsService) {}
+  private readonly ticketsService: TicketsService;
+
+  constructor(ticketsService: TicketsService) {
+    this.ticketsService = ticketsService;
+  }
 
   @Post('validate')
   @Roles('STAFF')

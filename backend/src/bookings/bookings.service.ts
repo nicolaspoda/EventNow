@@ -10,10 +10,13 @@ import { BookingStatus } from '@prisma/client';
 
 @Injectable()
 export class BookingsService {
-  constructor(
-    private prisma: PrismaService,
-    private redis: RedisService,
-  ) {}
+  private readonly prisma: PrismaService;
+  private readonly redis: RedisService;
+
+  constructor(prisma: PrismaService, redis: RedisService) {
+    this.prisma = prisma;
+    this.redis = redis;
+  }
 
   async createBooking(userId: string, dto: CreateBookingDto) {
     const lockKey = `booking:category:${dto.ticketCategoryId}`;

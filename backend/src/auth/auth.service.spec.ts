@@ -18,6 +18,7 @@ describe('AuthService', () => {
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -275,6 +276,163 @@ describe('AuthService', () => {
       mockJwtService.verifyAsync.mockRejectedValue(new Error('Invalid'));
 
       await expect(service.logout(refreshToken)).resolves.not.toThrow();
+    });
+
+    it('should use default ttl 604800 when payload has no exp', async () => {
+      const refreshToken = 'valid-token';
+      const mockPayload = {
+        sub: '1',
+        email: 'test@example.com',
+        role: Role.CLIENT,
+        // no exp
+      };
+
+      mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
+      mockRedisService.blacklistToken.mockResolvedValue(undefined);
+
+      await service.logout(refreshToken);
+
+      expect(redis.blacklistToken).toHaveBeenCalledWith(refreshToken, 604800);
+    });
+
+    it('should not blacklist when token exp is already in the past', async () => {
+      const refreshToken = 'expired-token';
+      const mockPayload = {
+        sub: '1',
+        email: 'test@example.com',
+        role: Role.CLIENT,
+        exp: Math.floor(Date.now() / 1000) - 3600, // 1h in the past
+      };
+
+      mockJwtService.verifyAsync.mockResolvedValue(mockPayload);
+
+      await service.logout(refreshToken);
+
+      expect(redis.blacklistToken).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('validateGoogleUser', () => {
+    it('should return existing user if googleId matches', async () => {
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@gmail.com',
+        googleId: 'google-123',
+        role: Role.CLIENT,
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(mockUser);
+
+      const result = await service.validateGoogleUser({
+        googleId: 'google-123',
+        email: 'test@gmail.com',
+        firstName: 'John',
+        lastName: 'Doe',
+      });
+
+      expect(result).toEqual(mockUser);
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { googleId: 'google-123' },
+      });
+    });
+
+    it('should update existing user with googleId if email matches', async () => {
+      const existingUser = {
+        id: 'user-123',
+        email: 'test@gmail.com',
+        googleId: null,
+        role: Role.CLIENT,
+      };
+
+      const updatedUser = {
+        ...existingUser,
+        googleId: 'google-456',
+        firstName: 'Jane',
+        lastName: 'Smith',
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(existingUser);
+      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+
+      const result = await service.validateGoogleUser({
+        googleId: 'google-456',
+        email: 'test@gmail.com',
+        firstName: 'Jane',
+        lastName: 'Smith',
+      });
+
+      expect(result).toEqual(updatedUser);
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-123' },
+        data: {
+          googleId: 'google-456',
+          firstName: 'Jane',
+          lastName: 'Smith',
+        },
+      });
+    });
+
+    it('should create new user if no match found', async () => {
+      const newUser = {
+        id: 'user-789',
+        email: 'new@gmail.com',
+        googleId: 'google-789',
+        firstName: 'Bob',
+        lastName: 'Martin',
+        role: Role.CLIENT,
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.create.mockResolvedValue(newUser);
+
+      const result = await service.validateGoogleUser({
+        googleId: 'google-789',
+        email: 'new@gmail.com',
+        firstName: 'Bob',
+        lastName: 'Martin',
+      });
+
+      expect(result).toEqual(newUser);
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'new@gmail.com',
+          googleId: 'google-789',
+          firstName: 'Bob',
+          lastName: 'Martin',
+          role: 'CLIENT',
+        },
+      });
+    });
+
+    it('should handle Google user without firstName/lastName', async () => {
+      const newUser = {
+        id: 'user-999',
+        email: 'test3@gmail.com',
+        googleId: 'google-999',
+        role: Role.CLIENT,
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.create.mockResolvedValue(newUser);
+
+      const result = await service.validateGoogleUser({
+        googleId: 'google-999',
+        email: 'test3@gmail.com',
+      });
+
+      expect(result).toEqual(newUser);
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: {
+          email: 'test3@gmail.com',
+          googleId: 'google-999',
+          firstName: undefined,
+          lastName: undefined,
+          role: 'CLIENT',
+        },
+      });
     });
   });
 });

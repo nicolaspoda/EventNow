@@ -10,10 +10,13 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class OrdersService {
-  constructor(
-    private prisma: PrismaService,
-    private paymentService: PaymentService,
-  ) {}
+  private readonly prisma: PrismaService;
+  private readonly paymentService: PaymentService;
+
+  constructor(prisma: PrismaService, paymentService: PaymentService) {
+    this.prisma = prisma;
+    this.paymentService = paymentService;
+  }
 
   async initiatePayment(bookingId: string, userId: string) {
     return this.paymentService.createPaymentIntent(bookingId, userId);
