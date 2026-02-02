@@ -21,11 +21,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: getJwtSecret(),
+      algorithms: ['HS256'],
     });
     this.prisma = prisma;
   }
 
   async validate(payload: JwtPayload) {
+    if (!payload.sub || !payload.email) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
     });
