@@ -33,7 +33,8 @@ const MyOrdersPage: React.FC = () => {
     }
   };
 
-  const handleViewTickets = (_orderId: string) => {
+  const handleViewTickets = (orderId: string) => {
+    void orderId;
     navigate('/my-tickets');
   };
 

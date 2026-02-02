@@ -25,7 +25,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ ticket, onClose, onDownload }
         if (!cancelled) {
           setQrDataUrl(dataUrl);
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError('Impossible de générer le QR code');
         }
