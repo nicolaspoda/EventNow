@@ -70,9 +70,23 @@ export class BookingsService {
           },
         });
 
-        return booking;
+        return this.mapBookingPriceToNumber(booking);
       });
     });
+  }
+
+  private mapBookingPriceToNumber(booking: {
+    ticketCategory?: { price: unknown; [k: string]: unknown };
+    [k: string]: unknown;
+  }) {
+    if (!booking.ticketCategory) return booking;
+    return {
+      ...booking,
+      ticketCategory: {
+        ...booking.ticketCategory,
+        price: Number(booking.ticketCategory.price),
+      },
+    };
   }
 
   async confirmBooking(bookingId: string, userId: string) {
@@ -127,7 +141,7 @@ export class BookingsService {
   }
 
   async getUserBookings(userId: string) {
-    return this.prisma.booking.findMany({
+    const bookings = await this.prisma.booking.findMany({
       where: { userId },
       include: {
         ticketCategory: {
@@ -136,6 +150,7 @@ export class BookingsService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return bookings.map((b) => this.mapBookingPriceToNumber(b));
   }
 
   async expireOldBookings() {

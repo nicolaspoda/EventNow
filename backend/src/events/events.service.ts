@@ -55,7 +55,13 @@ export class EventsService {
         },
       });
 
-      return event;
+      return {
+        ...event,
+        ticketCategories: event.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+      };
     });
   }
 
@@ -127,7 +133,15 @@ export class EventsService {
       orderBy: {
         eventDate: 'asc',
       },
-    });
+    }).then((events) =>
+      events.map((e) => ({
+        ...e,
+        ticketCategories: e.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+      })),
+    );
   }
 
   async findOne(id: string) {
@@ -159,7 +173,13 @@ export class EventsService {
       throw new NotFoundException(`Événement avec l'ID ${id} introuvable`);
     }
 
-    return event;
+    return {
+      ...event,
+      ticketCategories: event.ticketCategories.map((c) => ({
+        ...c,
+        price: Number(c.price),
+      })),
+    };
   }
 
   async update(id: string, userId: string, updateEventDto: UpdateEventDto) {
@@ -232,7 +252,13 @@ export class EventsService {
         },
       });
 
-      return updatedEvent;
+      return {
+        ...updatedEvent,
+        ticketCategories: updatedEvent.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+      };
     });
   }
 

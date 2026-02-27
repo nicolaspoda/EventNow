@@ -99,7 +99,7 @@ export class OrdersService {
   }
 
   async getUserOrders(userId: string) {
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where: { userId: userId },
       include: {
         tickets: {
@@ -112,6 +112,30 @@ export class OrdersService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return orders.map((order) => this.mapOrderDecimalToNumber(order));
+  }
+
+  private mapOrderDecimalToNumber(order: {
+    totalAmount: unknown;
+    tickets: Array<{
+      ticketCategory: { price: unknown; event?: unknown; [k: string]: unknown };
+      [k: string]: unknown;
+    }>;
+    [k: string]: unknown;
+  }) {
+    return {
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      tickets: order.tickets.map((t) => ({
+        ...t,
+        ticketCategory: t.ticketCategory
+          ? {
+              ...t.ticketCategory,
+              price: Number(t.ticketCategory.price),
+            }
+          : t.ticketCategory,
+      })),
+    };
   }
 
   async getOrderById(orderId: string, userId: string) {
@@ -132,7 +156,7 @@ export class OrdersService {
       throw new NotFoundException('Commande introuvable');
     }
 
-    return order;
+    return this.mapOrderDecimalToNumber(order);
   }
 
   async refundOrder(orderId: string, userId: string) {

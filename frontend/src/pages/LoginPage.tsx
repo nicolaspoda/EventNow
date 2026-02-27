@@ -15,6 +15,12 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser } = useAuth();
+  const from = location.state && typeof location.state === 'object' && 'from' in location.state
+    ? (location.state as { from: string }).from
+    : undefined;
+  const stateMessage = location.state && typeof location.state === 'object' && 'message' in location.state
+    ? (location.state as { message?: string }).message
+    : undefined;
   const registered = location.state && typeof location.state === 'object' && 'registered' in location.state && location.state.registered;
 
   const handleSubmit = async (e: FormEvent) => {
@@ -25,7 +31,7 @@ export function LoginPage() {
     try {
       const response = await authService.login({ email, password });
       setUser(response.user);
-      navigate('/dashboard');
+      navigate(from ?? '/dashboard', { replace: true });
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'response' in err
@@ -40,12 +46,13 @@ export function LoginPage() {
 
   const handleGoogleLogin = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    window.location.href = `${apiUrl}/auth/google`;
+    window.location.href = `${apiUrl}/api/v1/auth/google`;
   };
 
   return (
     <AuthLayout subtitle="Connectez-vous à votre compte">
       <form onSubmit={handleSubmit} className="space-y-6" aria-label="Formulaire de connexion" noValidate>
+        {stateMessage && <Alert message={stateMessage} variant="warning" />}
         {registered && (
           <Alert message="Inscription réussie. Connectez-vous avec vos identifiants." variant="success" />
         )}

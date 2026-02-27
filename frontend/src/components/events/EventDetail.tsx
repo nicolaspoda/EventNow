@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { safeFormat } from '../../utils/date';
+import { formatPrice } from '../../utils/price';
 import type { Event, TicketCategory } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
@@ -9,18 +9,22 @@ import BookingModal from '../bookings/BookingModal';
 interface EventDetailProps {
   event: Event;
   onBooking?: (categoryId: string, quantity: number) => Promise<void>;
+  onLoginRequired?: () => void;
+  isAuthenticated?: boolean;
 }
 
-const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
+const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequired, isAuthenticated = false }) => {
   const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
-  const eventDate = new Date(event.eventDate);
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
   const isSoldOut = totalStock === 0;
 
   const handleCategorySelect = (category: TicketCategory) => {
-    if (category.currentStock > 0) {
-      setSelectedCategory(category);
+    if (category.currentStock === 0) return;
+    if (!isAuthenticated && onLoginRequired) {
+      onLoginRequired();
+      return;
     }
+    setSelectedCategory(category);
   };
 
   const handleConfirmBooking = async (quantity: number) => {
@@ -64,7 +68,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <time dateTime={event.eventDate}>
-                {format(eventDate, "EEEE d MMMM yyyy 'à' HH'h'mm", { locale: fr })}
+                {safeFormat(event.eventDate, "EEEE d MMMM yyyy 'à' HH'h'mm")}
               </time>
             </div>
 
@@ -117,7 +121,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
-                        {Number(category.price).toFixed(2)} €
+                        {formatPrice(category.price)} €
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

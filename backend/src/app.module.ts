@@ -25,12 +25,12 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 100,
+        limit: 1000,
       },
       {
         name: 'payment',
         ttl: 60000,
-        limit: 5,
+        limit: 50,
       },
     ]),
     LoggerModule,

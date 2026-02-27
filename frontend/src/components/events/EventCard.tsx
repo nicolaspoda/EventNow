@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import type { Event } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import { safeFormat } from '../../utils/date';
+import { parsePrice, formatPrice } from '../../utils/price';
 
 interface EventCardProps {
   event: Event;
@@ -12,8 +12,8 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
-  const minPrice = Math.min(...event.ticketCategories.map(cat => Number(cat.price)));
-  const eventDate = new Date(event.eventDate);
+  const prices = event.ticketCategories.map((cat) => parsePrice(cat.price));
+  const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
   
   const getStockBadge = () => {
     if (totalStock === 0) {
@@ -32,7 +32,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       {event.imageUrl ? (
         <img
           src={event.imageUrl}
-          alt={`Affiche de l'événement ${event.title} qui se déroulera le ${format(eventDate, "d MMMM yyyy", { locale: fr })} à ${event.location}`}
+          alt={`Affiche de l'événement ${event.title} qui se déroulera le ${safeFormat(event.eventDate, 'd MMMM yyyy')} à ${event.location}`}
           className="w-full h-48 object-cover"
           loading="lazy"
         />
@@ -64,8 +64,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <time dateTime={event.eventDate} className="text-sm">
-              {format(eventDate, "d MMMM yyyy 'à' HH'h'mm", { locale: fr })}
+            <time dateTime={typeof event.eventDate === 'string' ? event.eventDate : ''} className="text-sm">
+              {safeFormat(event.eventDate, "d MMMM yyyy 'à' HH'h'mm")}
             </time>
           </div>
         </div>
@@ -73,7 +73,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <div className="mt-auto">
           <div className="flex items-center justify-between mb-4">
             <span className="text-lg font-semibold text-gray-900">
-              À partir de {minPrice.toFixed(2)} €
+              À partir de {formatPrice(minPrice)} €
             </span>
           </div>
 
