@@ -13,7 +13,13 @@ import {
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { EventsService } from './events.service';
-import { CreateEventDto, UpdateEventDto, GetEventsQueryDto } from './dto';
+import {
+  CreateEventDto,
+  UpdateEventDto,
+  GetEventsQueryDto,
+} from './dto';
+import { SearchEventsDto } from './dto/search-events.dto';
+import { EventCategory } from './dto/create-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -33,6 +39,34 @@ export class EventsController {
   @HttpCode(HttpStatus.CREATED)
   create(@CurrentUser() user: any, @Body() createEventDto: CreateEventDto) {
     return this.eventsService.create(user.id, createEventDto);
+  }
+
+  @Get('search')
+  @SkipThrottle()
+  @HttpCode(HttpStatus.OK)
+  searchEvents(@Query() searchDto: SearchEventsDto) {
+    return this.eventsService.searchEvents(searchDto);
+  }
+
+  @Get('suggestions')
+  @SkipThrottle()
+  @HttpCode(HttpStatus.OK)
+  getSearchSuggestions(@Query('q') query: string) {
+    return this.eventsService.getSearchSuggestions(query);
+  }
+
+  @Get('categories')
+  @SkipThrottle()
+  @HttpCode(HttpStatus.OK)
+  getCategories() {
+    return Object.values(EventCategory);
+  }
+
+  @Get('locations')
+  @SkipThrottle()
+  @HttpCode(HttpStatus.OK)
+  getLocations() {
+    return this.eventsService.getAvailableLocations();
   }
 
   @Get()

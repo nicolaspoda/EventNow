@@ -42,4 +42,38 @@ export const eventService = {
   deleteEvent: async (id: string): Promise<void> => {
     await api.delete(`/events/${id}`);
   },
+
+  searchEvents: async (filters: Record<string, unknown>) => {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach((key) => {
+      const value = filters[key];
+      if (value !== undefined && value !== null && value !== '') {
+        if (Array.isArray(value)) {
+          if (value.length > 0) {
+            params.append(key, value.join(','));
+          }
+        } else {
+          params.append(key, String(value));
+        }
+      }
+    });
+
+    const response = await api.get(`/events/search?${params.toString()}`);
+    return response.data;
+  },
+
+  getSuggestions: async (query: string) => {
+    const response = await api.get(`/events/suggestions?q=${query}`);
+    return response.data;
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/events/categories');
+    return response.data;
+  },
+
+  getLocations: async () => {
+    const response = await api.get('/events/locations');
+    return response.data;
+  },
 };

@@ -1,0 +1,209 @@
+import React, { useState } from 'react';
+
+interface AdvancedFiltersProps {
+  filters: Record<string, unknown>;
+  onFilterChange: (key: string, value: unknown) => void;
+  onClear: () => void;
+  /** 'bar' = bandeau au-dessus du contenu, sans carte */
+  variant?: 'card' | 'bar';
+}
+
+export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
+  filters,
+  onFilterChange,
+  onClear,
+  variant = 'card',
+}) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const wrapperClass =
+    variant === 'bar'
+      ? 'py-4 border-b border-gray-200'
+      : 'bg-white rounded-lg shadow p-4';
+
+  const categories = [
+    { value: 'CONCERT', label: 'Concert' },
+    { value: 'CONFERENCE', label: 'Conférence' },
+    { value: 'FESTIVAL', label: 'Festival' },
+    { value: 'SPORT', label: 'Sport' },
+    { value: 'THEATER', label: 'Théâtre' },
+    { value: 'EXHIBITION', label: 'Exposition' },
+    { value: 'OTHER', label: 'Autre' },
+  ];
+
+  const priceRanges = [
+    { value: 'FREE', label: 'Gratuit' },
+    { value: 'LOW', label: '0-20€' },
+    { value: 'MEDIUM', label: '20-50€' },
+    { value: 'HIGH', label: '50-100€' },
+    { value: 'PREMIUM', label: '100€+' },
+  ];
+
+  const toggleCategory = (category: string) => {
+    const current = (filters.categories as string[]) || [];
+    const newCategories = current.includes(category)
+      ? current.filter((c) => c !== category)
+      : [...current, category];
+    onFilterChange('categories', newCategories);
+  };
+
+  const togglePriceRange = (range: string) => {
+    const current = (filters.priceRanges as string[]) || [];
+    const newRanges = current.includes(range)
+      ? current.filter((r) => r !== range)
+      : [...current, range];
+    onFilterChange('priceRanges', newRanges);
+  };
+
+  return (
+    <div className={wrapperClass}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-lg">Filtres</h3>
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
+          className="text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+          aria-label={expanded ? 'Réduire les filtres' : 'Développer les filtres'}
+        >
+          {expanded ? '▲' : '▼'}
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Type d'événement
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => onFilterChange('type', 'PROFESSIONAL')}
+              className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                filters.type === 'PROFESSIONAL'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Professionnel
+            </button>
+            <button
+              type="button"
+              onClick={() => onFilterChange('type', 'COMMUNITY')}
+              className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                filters.type === 'COMMUNITY'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Communautaire
+            </button>
+            <button
+              type="button"
+              onClick={() => onFilterChange('type', null)}
+              className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                !filters.type
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Tous
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={(filters.availableOnly as boolean) || false}
+              onChange={(e) => onFilterChange('availableOnly', e.target.checked)}
+              className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="text-sm text-gray-700">
+              Uniquement événements avec places disponibles
+            </span>
+          </label>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="mt-6 space-y-6 pt-6 border-t">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Catégories
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => toggleCategory(cat.value)}
+                  className={`px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    (filters.categories as string[])?.includes(cat.value)
+                      ? 'bg-blue-100 text-blue-800 border-2 border-blue-600'
+                      : 'bg-gray-50 text-gray-700 border border-gray-300 hover:bg-gray-100'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Gamme de prix
+            </label>
+            <div className="space-y-2">
+              {priceRanges.map((range) => (
+                <label key={range.value} className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={
+                      (filters.priceRanges as string[])?.includes(range.value) || false
+                    }
+                    onChange={() => togglePriceRange(range.value)}
+                    className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-700">{range.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Période
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label htmlFor="dateFrom" className="text-xs text-gray-600">
+                  Du
+                </label>
+                <input
+                  id="dateFrom"
+                  type="date"
+                  value={(filters.dateFrom as string) || ''}
+                  onChange={(e) => onFilterChange('dateFrom', e.target.value)}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="dateTo" className="text-xs text-gray-600">
+                  Au
+                </label>
+                <input
+                  id="dateTo"
+                  type="date"
+                  value={(filters.dateTo as string) || ''}
+                  onChange={(e) => onFilterChange('dateTo', e.target.value)}
+                  className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
