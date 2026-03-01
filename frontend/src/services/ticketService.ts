@@ -21,4 +21,22 @@ export const ticketService = {
     const response = await api.post<ValidateTicketResponse>('/tickets/validate', data);
     return response.data;
   },
+
+  /**
+   * Télécharger un billet en PDF
+   */
+  async downloadTicketPDF(ticketId: string): Promise<void> {
+    const response = await api.get(`/tickets/download/${ticketId}`, {
+      responseType: 'blob',
+    });
+    
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `ticket-${ticketId}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
