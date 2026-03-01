@@ -5,6 +5,7 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { safeFormat } from '../../utils/date';
 import { parsePrice, formatPrice } from '../../utils/price';
+import { getCloudinarySrcSet } from '../../utils/cloudinary';
 
 interface EventCardProps {
   event: Event;
@@ -16,6 +17,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
   const dateValue = event.eventDate ?? (event as { event_date?: string }).event_date;
   const dateFormatted = safeFormat(dateValue, "d MMMM yyyy 'à' HH'h'mm");
+  const cloudinarySrc = event.imageUrl ? getCloudinarySrcSet(event.imageUrl) : null;
   
   const getStockBadge = () => {
     if (totalStock === 0) {
@@ -32,12 +34,16 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden flex flex-col h-full focus-within:ring-2 focus-within:ring-blue-500 border border-gray-100"
     >
       {event.imageUrl ? (
-        <img
-          src={event.imageUrl}
-          alt={`Affiche de l'événement ${event.title} qui se déroulera le ${dateFormatted} à ${event.location}`}
-          className="w-full h-48 object-cover"
-          loading="lazy"
-        />
+        <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+          <img
+            src={cloudinarySrc?.src ?? event.imageUrl}
+            srcSet={cloudinarySrc?.srcSet}
+            sizes={cloudinarySrc?.sizes}
+            alt={`Affiche de l'événement ${event.title} qui se déroulera le ${dateFormatted} à ${event.location}`}
+            className="w-full h-full object-contain"
+            loading="lazy"
+          />
+        </div>
       ) : (
         <div
           className="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400"

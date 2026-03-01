@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { EventType } from './dto/create-event.dto';
 import {
@@ -15,11 +16,10 @@ import {
 
 @Injectable()
 export class EventsService {
-  private readonly prisma: PrismaService;
-
-  constructor(prisma: PrismaService) {
-    this.prisma = prisma;
-  }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   async create(userId: string, createEventDto: CreateEventDto) {
     const eventDate = new Date(createEventDto.event_date);
@@ -36,6 +36,7 @@ export class EventsService {
           description: createEventDto.description,
           location: createEventDto.location,
           imageUrl: createEventDto.image_url,
+          imagePublicId: createEventDto.image_public_id,
           eventDate: eventDate,
           organizerId: userId,
           type:
@@ -225,6 +226,18 @@ export class EventsService {
       }
     }
 
+    if (
+      updateEventDto.image_url !== undefined &&
+      event.imagePublicId &&
+      updateEventDto.image_url !== event.imageUrl
+    ) {
+      try {
+        await this.uploadService.deleteImage(event.imagePublicId);
+      } catch (err) {
+        console.error('Erreur suppression ancienne image:', err);
+      }
+    }
+
     return this.prisma.$transaction(async (tx) => {
       if (updateEventDto.ticket_categories) {
         await tx.ticketCategory.deleteMany({
@@ -242,6 +255,9 @@ export class EventsService {
           ...(updateEventDto.location && { location: updateEventDto.location }),
           ...(updateEventDto.image_url !== undefined && {
             imageUrl: updateEventDto.image_url,
+          }),
+          ...(updateEventDto.image_public_id !== undefined && {
+            imagePublicId: updateEventDto.image_public_id,
           }),
           ...(updateEventDto.event_date && {
             eventDate: new Date(updateEventDto.event_date),

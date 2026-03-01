@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { safeFormat } from '../../utils/date';
 import { formatPrice } from '../../utils/price';
+import { getCloudinarySrcSet } from '../../utils/cloudinary';
 import type { Event, TicketCategory } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
@@ -17,6 +18,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
   const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
   const isSoldOut = totalStock === 0;
+  const cloudinarySrc = event.imageUrl ? getCloudinarySrcSet(event.imageUrl) : null;
 
   const handleCategorySelect = (category: TicketCategory) => {
     if (category.currentStock === 0) return;
@@ -49,11 +51,16 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
   return (
     <article className="bg-white rounded-lg shadow-lg overflow-hidden">
       {event.imageUrl && (
-        <img
-          src={event.imageUrl}
-          alt={`Image de ${event.title}`}
-          className="w-full h-64 md:h-96 object-cover"
-        />
+        <div className="w-full h-64 md:h-96 bg-gray-100 flex items-center justify-center overflow-hidden">
+          <img
+            src={cloudinarySrc?.src ?? event.imageUrl}
+            srcSet={cloudinarySrc?.srcSet}
+            sizes={cloudinarySrc?.sizes ?? '100vw'}
+            alt={`Image de ${event.title}`}
+            className="w-full h-full object-contain"
+            loading="lazy"
+          />
+        </div>
       )}
 
       <div className="p-6 md:p-8">

@@ -5,6 +5,7 @@ import { eventService } from '../services/eventService';
 import { FormField, FormSelect } from '../components/FormField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
+import { ImageUpload } from '../components/upload/ImageUpload';
 import type {
   CreateEventPayload,
   CreateTicketCategoryPayload,
@@ -36,6 +37,7 @@ export function CreateEventPage() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [imagePublicId, setImagePublicId] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [type, setType] = useState<EventTypeCreate>(
     user?.role === 'CLIENT' ? 'COMMUNITY' : 'PROFESSIONAL',
@@ -97,6 +99,7 @@ export function CreateEventPage() {
       description: description.trim() || undefined,
       location: location.trim(),
       image_url: imageUrl.trim() || undefined,
+      image_public_id: imagePublicId.trim() || undefined,
       event_date: toISOString(eventDate),
       type,
       ticket_categories: validCategories.map((c) => ({
@@ -180,13 +183,13 @@ export function CreateEventPage() {
           placeholder="Ex: Salle Pleyel, Paris"
         />
 
-        <FormField
-          id="event-image"
-          label="URL de l'affiche (optionnel)"
-          type="url"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://..."
+        <ImageUpload
+          currentImage={imageUrl || undefined}
+          onUploadSuccess={(url, publicId) => {
+            setImageUrl(url);
+            setImagePublicId(publicId);
+          }}
+          label="Image de couverture (optionnel)"
         />
 
         <FormField

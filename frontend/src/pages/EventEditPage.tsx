@@ -4,6 +4,7 @@ import { eventService } from '../services/eventService';
 import { FormField } from '../components/FormField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
+import { ImageUpload } from '../components/upload/ImageUpload';
 import type {
   Event,
   UpdateEventPayload,
@@ -37,6 +38,7 @@ export function EventEditPage() {
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [imagePublicId, setImagePublicId] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [categories, setCategories] = useState<CreateTicketCategoryPayload[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export function EventEditPage() {
         setDescription(ev.description || '');
         setLocation(ev.location);
         setImageUrl(ev.imageUrl || '');
+        setImagePublicId('');
         setEventDate(toDateTimeLocal(ev.eventDate));
         setCategories(
           ev.ticketCategories.map((c) => ({
@@ -125,6 +128,7 @@ export function EventEditPage() {
       description: description.trim() || undefined,
       location: location.trim(),
       image_url: imageUrl.trim() || undefined,
+      ...(imagePublicId && { image_public_id: imagePublicId }),
       event_date: toISOString(eventDate),
       ticket_categories: validCategories.map((c) => ({
         name: c.name.trim(),
@@ -248,13 +252,13 @@ export function EventEditPage() {
           placeholder="Ex: Salle Pleyel, Paris"
         />
 
-        <FormField
-          id="event-image"
-          label="URL de l'affiche (optionnel)"
-          type="url"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://..."
+        <ImageUpload
+          currentImage={imageUrl || undefined}
+          onUploadSuccess={(url, publicId) => {
+            setImageUrl(url);
+            setImagePublicId(publicId);
+          }}
+          label="Image de couverture (optionnel)"
         />
 
         <FormField

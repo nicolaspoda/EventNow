@@ -74,6 +74,8 @@ model Event {
   description String?
   location    String
   imageUrl    String?       @map("image_url")
+  imagePublicId String?      @map("image_public_id")
+  galleryImages Json?        @map("gallery_images")
   eventDate   DateTime      @map("event_date")
   organizerId String        @map("organizer_id")
   type        EventType     @default(PROFESSIONAL)
