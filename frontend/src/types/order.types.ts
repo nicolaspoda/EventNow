@@ -1,6 +1,6 @@
 import type { TicketCategory } from './event.types';
 
-export type OrderStatus = 'PENDING' | 'PAID' | 'REFUNDED';
+export type OrderStatus = 'PENDING' | 'PAID' | 'REFUNDED' | 'REFUND_REQUESTED';
 
 export interface Order {
   id: string;
@@ -32,6 +32,15 @@ export interface ConfirmPaymentResponse {
   order: Order;
   tickets: Ticket[];
   event?: { id: string; title: string; eventDate: string; location: string };
+}
+
+export interface OrderWithUser extends Order {
+  user?: {
+    id: string;
+    email: string;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
 }
 
 export interface ValidateTicketDto {

@@ -26,6 +26,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onRequestRe
         return <Badge variant="warning">En attente</Badge>;
       case 'REFUNDED':
         return <Badge variant="error">Remboursée</Badge>;
+      case 'REFUND_REQUESTED':
+        return <Badge variant="warning">Remboursement demandé</Badge>;
       default:
         return <Badge variant="default">{status}</Badge>;
     }

@@ -3,7 +3,7 @@ import { useAuth } from '../utils/useAuth';
 
 export function NavbarLinks() {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -31,12 +31,38 @@ export function NavbarLinks() {
         >
           Mes réservations
         </Link>
-        <Link
-          to="/dashboard"
-          className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
-        >
-          Dashboard
-        </Link>
+        {user?.role === 'ORGANIZER' && (
+          <>
+            <Link
+              to="/dashboard/organizer"
+              className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+            >
+              Dashboard Pro
+            </Link>
+            <Link
+              to="/dashboard/organizer/refund-requests"
+              className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+            >
+              Demandes de remboursement
+            </Link>
+          </>
+        )}
+        {user?.role === 'CLIENT' && (
+          <Link
+            to="/dashboard/client"
+            className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+          >
+            Mes événements
+          </Link>
+        )}
+        {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (
+          <Link
+            to="/events/create"
+            className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+          >
+            Créer un événement
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => void handleLogout()}

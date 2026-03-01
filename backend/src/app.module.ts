@@ -14,6 +14,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { PaymentModule } from './payment/payment.module';
 import { LoggerModule } from './logger/logger.module';
 import { SecurityModule } from './security/security.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -43,6 +44,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     OrdersModule,
     TicketsModule,
     PaymentModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [

@@ -20,7 +20,7 @@ export const authService = {
   },
 
   async logout() {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = sessionStorage.getItem('refreshToken');
     if (refreshToken) {
       try {
         await api.post('/auth/logout', { refreshToken });
@@ -28,23 +28,23 @@ export const authService = {
         // Ignore errors
       }
     }
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('user');
   },
 
   saveAuthData(data: AuthResponse) {
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    localStorage.setItem('user', JSON.stringify(data.user));
+    sessionStorage.setItem('accessToken', data.accessToken);
+    sessionStorage.setItem('refreshToken', data.refreshToken);
+    sessionStorage.setItem('user', JSON.stringify(data.user));
   },
 
   getUser(): User | null {
-    const userStr = localStorage.getItem('user');
+    const userStr = sessionStorage.getItem('user');
     return userStr ? JSON.parse(userStr) : null;
   },
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('accessToken');
+    return !!sessionStorage.getItem('accessToken');
   },
 };

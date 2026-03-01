@@ -25,4 +25,10 @@ export class CreateTicketCategoryDto {
   @Type(() => Number)
   @Min(1)
   initial_stock: number;
+
+  @IsNumber()
+  @Type(() => Number)
+  @Min(0)
+  @IsOptional()
+  current_stock?: number;
 }

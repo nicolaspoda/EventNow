@@ -32,6 +32,7 @@ export class EventsService {
           imageUrl: createEventDto.image_url,
           eventDate: eventDate,
           organizerId: userId,
+          type: createEventDto.type || 'PROFESSIONAL',
           ticketCategories: {
             create: createEventDto.ticket_categories.map((category) => ({
               name: category.name,
@@ -109,39 +110,41 @@ export class EventsService {
       }
     }
 
-    return this.prisma.event.findMany({
-      where: { AND: andConditions },
-      include: {
-        ticketCategories: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            price: true,
-            currentStock: true,
+    return this.prisma.event
+      .findMany({
+        where: { AND: andConditions },
+        include: {
+          ticketCategories: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              price: true,
+              currentStock: true,
+            },
+          },
+          organizer: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-        organizer: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+        orderBy: {
+          eventDate: 'asc',
         },
-      },
-      orderBy: {
-        eventDate: 'asc',
-      },
-    }).then((events) =>
-      events.map((e) => ({
-        ...e,
-        ticketCategories: e.ticketCategories.map((c) => ({
-          ...c,
-          price: Number(c.price),
+      })
+      .then((events) =>
+        events.map((e) => ({
+          ...e,
+          ticketCategories: e.ticketCategories.map((c) => ({
+            ...c,
+            price: Number(c.price),
+          })),
         })),
-      })),
-    );
+      );
   }
 
   async findOne(id: string) {
@@ -234,7 +237,8 @@ export class EventsService {
                 description: category.description,
                 price: category.price,
                 initialStock: category.initial_stock,
-                currentStock: category.initial_stock,
+                currentStock:
+                  category.current_stock ?? category.initial_stock,
               })),
             },
           }),

@@ -12,10 +12,13 @@ EventNow est une plateforme de billetterie en ligne permettant la vente de bille
 
 - Vente de billets en ligne avec gestion des stocks en temps réel
 - Gestion des rôles (Client, Organisateur, Staff)
-- Authentification JWT sécurisée
+- Authentification JWT sécurisée + OAuth Google
 - Intégration paiement (Stripe)
 - Validation des billets par QR Code
-- Dashboard organisateur avec statistiques
+- **Dashboard Organisateur** avec analytics avancés (revenus, graphiques)
+- **Dashboard Client** pour événements communautaires (participants, simplicité)
+- Accessibilité RGAA Level AA
+- Sécurité OWASP Top 10
 
 ## Stack Technique
 
@@ -64,6 +67,8 @@ docker-compose up --build
 ```
 Ou en arrière-plan : `docker-compose up -d --build`.
 
+Les **migrations Prisma** sont appliquées automatiquement au démarrage du backend (aucune commande manuelle).
+
 ### 4. (Optionnel) Remplir la base avec des données de démo
 ```bash
 docker-compose exec backend npx prisma db seed
@@ -83,11 +88,15 @@ EventNow/
 │   │   ├── auth/        # Module authentification
 │   │   ├── events/      # Module événements
 │   │   ├── bookings/    # Module réservations
-│   │   └── orders/      # Module commandes
+│   │   ├── orders/      # Module commandes
+│   │   ├── dashboard/   # Module dashboards (NEW)
+│   │   └── security/    # Module sécurité OWASP
 │   └── prisma/          # Schéma base de données
 ├── frontend/            # Application React
 │   └── src/
 │       ├── components/  # Composants réutilisables
+│       │   ├── dashboard/  # Composants dashboard (NEW)
+│       │   └── events/     # Composants événements (NEW)
 │       ├── pages/       # Pages de l'app
 │       └── services/    # Appels API
 ├── docs/                # Documentation
@@ -108,8 +117,18 @@ EventNow/
 
 - **Bloc 1** : Cadrage et architecture du projet
 - **Bloc 2** : Développement avec NestJS/React, tests, sécurité OWASP
+  - C2.2.1 : Prototype ergonomique (Dashboard UX)
+  - C2.2.3 : Sécurité OWASP Top 10
 - **Bloc 3** : Pilotage de projet, gestion d'équipe
+  - C3.4.2 : Démonstration fonctionnalités (Dashboard analytics)
 - **Bloc 4** : Maintenance et monitoring
+
+## Documentation
+
+- [DASHBOARD.md](./DASHBOARD.md) - Documentation technique dashboards
+- [GUIDE_DASHBOARD.md](./GUIDE_DASHBOARD.md) - Guide utilisateur
+- [ACCESSIBILITE.md](./ACCESSIBILITE.md) - Conformité RGAA
+- [SECURITY_BEST_PRACTICES.md](./SECURITY_BEST_PRACTICES.md) - Sécurité OWASP
 
 ## Auteur
 

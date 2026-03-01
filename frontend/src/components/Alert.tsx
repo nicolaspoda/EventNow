@@ -1,11 +1,22 @@
+import React from 'react';
+
 interface AlertProps {
-  message: string;
+  message: string | React.ReactNode;
   variant?: 'error' | 'success' | 'warning' | 'info';
   title?: string;
   onDismiss?: () => void;
 }
 
 export function Alert({ message, variant = 'error', title, onDismiss }: AlertProps) {
+  const safeMessage =
+    typeof message === 'string'
+      ? message
+      : typeof message === 'object' && message !== null && 'message' in (message as object)
+        ? String((message as { message?: unknown }).message)
+        : typeof message === 'object' && message !== null
+          ? "Une erreur s'est produite"
+          : String(message);
+
   const styleMap = {
     error: 'bg-red-50 border-l-4 border-red-500 text-red-700',
     success: 'bg-green-50 border-l-4 border-green-500 text-green-700',
@@ -37,7 +48,7 @@ export function Alert({ message, variant = 'error', title, onDismiss }: AlertPro
       <div className="flex justify-between items-start">
         <div>
           {title && <h3 className="font-bold mb-1">{title}</h3>}
-          <p>{message}</p>
+          <p>{safeMessage}</p>
         </div>
         {onDismiss && (
           <button

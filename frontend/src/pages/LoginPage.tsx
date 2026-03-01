@@ -18,9 +18,10 @@ export function LoginPage() {
   const from = location.state && typeof location.state === 'object' && 'from' in location.state
     ? (location.state as { from: string }).from
     : undefined;
-  const stateMessage = location.state && typeof location.state === 'object' && 'message' in location.state
-    ? (location.state as { message?: string }).message
+  const rawStateMessage = location.state && typeof location.state === 'object' && 'message' in location.state
+    ? (location.state as { message?: unknown }).message
     : undefined;
+  const stateMessage = typeof rawStateMessage === 'string' ? rawStateMessage : undefined;
   const registered = location.state && typeof location.state === 'object' && 'registered' in location.state && location.state.registered;
 
   const handleSubmit = async (e: FormEvent) => {
@@ -33,12 +34,21 @@ export function LoginPage() {
       setUser(response.user);
       navigate(from ?? '/dashboard', { replace: true });
     } catch (err: unknown) {
-      const message =
+      const data =
         err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { data?: { message?: string } } }).response?.data
-              ?.message
+          ? (err as { response?: { data?: unknown } }).response?.data
           : undefined;
-      setError(message || 'Email ou mot de passe incorrect');
+      const msg =
+        data && typeof data === 'object' && data !== null && 'message' in data
+          ? (data as { message?: unknown }).message
+          : undefined;
+      const messageStr =
+        typeof msg === 'string'
+          ? msg
+          : data && typeof data === 'object' && 'error' in data
+            ? String((data as { error?: unknown }).error)
+            : 'Email ou mot de passe incorrect';
+      setError(messageStr);
     } finally {
       setLoading(false);
     }

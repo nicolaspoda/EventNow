@@ -6,9 +6,15 @@ import {
   IsArray,
   ValidateNested,
   ArrayMinSize,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateTicketCategoryDto } from './create-ticket-category.dto';
+
+export enum EventType {
+  PROFESSIONAL = 'PROFESSIONAL',
+  COMMUNITY = 'COMMUNITY',
+}
 
 export class CreateEventDto {
   @IsString()
@@ -29,6 +35,10 @@ export class CreateEventDto {
 
   @IsDateString()
   event_date: string;
+
+  @IsEnum(EventType)
+  @IsOptional()
+  type?: EventType;
 
   @IsArray()
   @ValidateNested({ each: true })

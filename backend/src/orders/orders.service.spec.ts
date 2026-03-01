@@ -64,6 +64,7 @@ describe('OrdersService', () => {
     paymentIntentId: 'payment-1',
     createdAt: new Date(),
     updatedAt: new Date(),
+    tickets: [],
   };
 
   beforeEach(async () => {

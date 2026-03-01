@@ -27,7 +27,7 @@ export class OrdersController {
   }
 
   @Post('payment/initiate')
-  @Roles('CLIENT')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   @Throttle({ payment: { limit: 5, ttl: 60000 } })
   initiatePayment(@Body() dto: CreateOrderDto, @CurrentUser() user: any) {
@@ -35,7 +35,7 @@ export class OrdersController {
   }
 
   @Post('payment/confirm')
-  @Roles('CLIENT')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ payment: { limit: 5, ttl: 60000 } })
   confirmPayment(@Body() dto: ConfirmPaymentDto, @CurrentUser() user: any) {
@@ -47,24 +47,45 @@ export class OrdersController {
   }
 
   @Get()
-  @Roles('CLIENT')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getUserOrders(@CurrentUser() user: any) {
     return this.ordersService.getUserOrders(user.id);
   }
 
+  @Get('refund-requests')
+  @Roles('ORGANIZER')
+  @HttpCode(HttpStatus.OK)
+  getRefundRequests(@CurrentUser() user: any) {
+    return this.ordersService.getRefundRequests(user.id);
+  }
+
   @Get(':id')
-  @Roles('CLIENT')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getOrder(@Param('id') id: string, @CurrentUser() user: any) {
     return this.ordersService.getOrderById(id, user.id);
   }
 
   @Patch(':id/refund')
-  @Roles('CLIENT')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   @Throttle({ payment: { limit: 5, ttl: 60000 } })
   refundOrder(@Param('id') id: string, @CurrentUser() user: any) {
     return this.ordersService.refundOrder(id, user.id);
+  }
+
+  @Patch(':id/refund/approve')
+  @Roles('ORGANIZER')
+  @HttpCode(HttpStatus.OK)
+  approveRefund(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.ordersService.approveRefund(id, user.id);
+  }
+
+  @Patch(':id/refund/reject')
+  @Roles('ORGANIZER')
+  @HttpCode(HttpStatus.OK)
+  rejectRefund(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.ordersService.rejectRefund(id, user.id);
   }
 }

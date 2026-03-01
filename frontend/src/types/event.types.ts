@@ -34,3 +34,32 @@ export interface EventFilters {
   dateFrom?: string;
   dateTo?: string;
 }
+
+export type EventTypeCreate = 'PROFESSIONAL' | 'COMMUNITY';
+
+export interface CreateTicketCategoryPayload {
+  name: string;
+  description?: string;
+  price: number;
+  initial_stock: number;
+  current_stock?: number;
+}
+
+export interface CreateEventPayload {
+  title: string;
+  description?: string;
+  location: string;
+  image_url?: string;
+  event_date: string;
+  type?: EventTypeCreate;
+  ticket_categories: CreateTicketCategoryPayload[];
+}
+
+export interface UpdateEventPayload {
+  title?: string;
+  description?: string;
+  location?: string;
+  image_url?: string;
+  event_date?: string;
+  ticket_categories?: CreateTicketCategoryPayload[];
+}

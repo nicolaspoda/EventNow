@@ -1,5 +1,10 @@
 import { api } from './api';
-import type { Event, EventFilters } from '../types/event.types';
+import type {
+  Event,
+  EventFilters,
+  CreateEventPayload,
+  UpdateEventPayload,
+} from '../types/event.types';
 
 export const eventService = {
   getEvents: async (filters?: EventFilters): Promise<Event[]> => {
@@ -19,5 +24,22 @@ export const eventService = {
   getEventById: async (id: string): Promise<Event> => {
     const response = await api.get<Event>(`/events/${id}`);
     return response.data;
+  },
+
+  createEvent: async (payload: CreateEventPayload): Promise<Event> => {
+    const response = await api.post<Event>('/events', payload);
+    return response.data;
+  },
+
+  updateEvent: async (
+    id: string,
+    payload: UpdateEventPayload,
+  ): Promise<Event> => {
+    const response = await api.patch<Event>(`/events/${id}`, payload);
+    return response.data;
+  },
+
+  deleteEvent: async (id: string): Promise<void> => {
+    await api.delete(`/events/${id}`);
   },
 };

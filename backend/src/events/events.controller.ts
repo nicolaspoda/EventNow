@@ -29,7 +29,7 @@ export class EventsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER')
+  @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.CREATED)
   create(@CurrentUser() user: any, @Body() createEventDto: CreateEventDto) {
     return this.eventsService.create(user.id, createEventDto);
@@ -51,7 +51,7 @@ export class EventsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER')
+  @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
@@ -63,7 +63,7 @@ export class EventsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER')
+  @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string, @CurrentUser() user: any) {
     return this.eventsService.remove(id, user.id);
