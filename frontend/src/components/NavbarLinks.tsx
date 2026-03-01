@@ -55,6 +55,22 @@ export function NavbarLinks() {
             Mes événements
           </Link>
         )}
+        {user?.role === 'STAFF' && (
+          <>
+            <Link
+              to="/staff/scan"
+              className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+            >
+              Validation billets
+            </Link>
+            <Link
+              to="/staff/validations"
+              className="text-gray-700 hover:text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+            >
+              Historique validations
+            </Link>
+          </>
+        )}
         {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (
           <Link
             to="/events/create"

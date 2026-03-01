@@ -2,7 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
+import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -19,50 +22,198 @@ export class TicketsService {
     });
 
     if (!staff || staff.role !== 'STAFF') {
-      throw new BadRequestException('Accès réservé au personnel');
+      throw new ForbiddenException('Accès réservé au personnel');
     }
 
     const ticket = await this.prisma.ticket.findUnique({
-      where: { qrCode: qrCode },
+      where: { qrCode },
       include: {
         ticketCategory: {
           include: { event: true },
         },
-        order: true,
+        order: {
+          include: {
+            user: {
+              select: { id: true, email: true },
+            },
+          },
+        },
       },
     });
+
+    const timestamp = new Date();
 
     if (!ticket) {
       return {
         valid: false,
-        reason: 'QR code invalide',
+        reason: 'QR_CODE_INVALID',
+        message: 'QR code invalide ou billet inexistant',
+        timestamp,
       };
     }
 
     if (ticket.validatedAt) {
       return {
         valid: false,
-        reason: 'Billet déjà utilisé',
-        validatedAt: ticket.validatedAt,
+        reason: 'ALREADY_VALIDATED',
+        message: 'Billet déjà utilisé',
+        ticket: {
+          event: ticket.ticketCategory.event.title,
+          category: ticket.ticketCategory.name,
+          validated_at: ticket.validatedAt,
+        },
+        timestamp,
       };
     }
 
     if (ticket.order.status !== 'PAID') {
       return {
         valid: false,
-        reason: 'Commande annulée ou remboursée',
+        reason: 'ORDER_CANCELLED',
+        message:
+          ticket.order.status === 'CANCELLED'
+            ? 'Commande annulée'
+            : 'Commande remboursée',
+        timestamp,
+      };
+    }
+
+    const eventDate = new Date(ticket.ticketCategory.event.eventDate);
+    const eventEndDate = new Date(eventDate);
+    eventEndDate.setHours(eventEndDate.getHours() + 6);
+
+    if (new Date() > eventEndDate) {
+      return {
+        valid: false,
+        reason: 'EVENT_ENDED',
+        message: 'Événement terminé',
+        timestamp,
+      };
+    }
+
+    const eventStartTolerance = new Date(eventDate);
+    eventStartTolerance.setHours(eventStartTolerance.getHours() - 1);
+
+    if (new Date() < eventStartTolerance) {
+      return {
+        valid: false,
+        reason: 'EVENT_NOT_STARTED',
+        message: 'Trop tôt - Événement pas encore commencé',
+        event_date: eventDate,
+        timestamp,
       };
     }
 
     const validatedTicket = await this.prisma.ticket.update({
       where: { id: ticket.id },
       data: { validatedAt: new Date() },
+      include: {
+        ticketCategory: {
+          include: { event: true },
+        },
+        order: {
+          include: {
+            user: { select: { email: true } },
+          },
+        },
+      },
     });
 
     return {
       valid: true,
-      ticket: validatedTicket,
-      event: ticket.ticketCategory.event,
+      reason: 'SUCCESS',
+      message: 'Billet validé avec succès',
+      ticket: {
+        id: validatedTicket.id,
+        event: validatedTicket.ticketCategory.event.title,
+        category: validatedTicket.ticketCategory.name,
+        holder_email: validatedTicket.order.user.email,
+        event_date: validatedTicket.ticketCategory.event.eventDate,
+        validated_at: validatedTicket.validatedAt,
+      },
+      timestamp: new Date(),
+    };
+  }
+
+  async getStaffValidations(staffUserId: string, eventId?: string) {
+    const staff = await this.prisma.user.findUnique({
+      where: { id: staffUserId },
+    });
+
+    if (!staff || staff.role !== 'STAFF') {
+      throw new ForbiddenException('Accès réservé au personnel');
+    }
+
+    const tickets = await this.prisma.ticket.findMany({
+      where: {
+        validatedAt: { not: null },
+        ...(eventId && {
+          ticketCategory: { eventId },
+        }),
+      },
+      include: {
+        ticketCategory: { include: { event: true } },
+        order: { include: { user: { select: { email: true } } } },
+      },
+      orderBy: { validatedAt: 'desc' },
+      take: 100,
+    });
+
+    return tickets.map((t) => ({
+      id: t.id,
+      qr_code: t.qrCode,
+      event: t.ticketCategory.event.title,
+      category: t.ticketCategory.name,
+      holder_email: t.order.user.email,
+      validated_at: t.validatedAt,
+    }));
+  }
+
+  async getValidationStats(eventId: string, staffUserId: string) {
+    const staff = await this.prisma.user.findUnique({
+      where: { id: staffUserId },
+    });
+
+    if (!staff || staff.role !== 'STAFF') {
+      throw new ForbiddenException('Accès réservé au personnel');
+    }
+
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { ticketCategories: true },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Événement introuvable');
+    }
+
+    const totalTickets = event.ticketCategories.reduce(
+      (sum, cat) => sum + (cat.initialStock - cat.currentStock),
+      0
+    );
+
+    const validatedTickets = await this.prisma.ticket.count({
+      where: {
+        ticketCategory: { eventId },
+        validatedAt: { not: null },
+      },
+    });
+
+    return {
+      event: {
+        id: event.id,
+        title: event.title,
+        event_date: event.eventDate,
+      },
+      stats: {
+        totalSold: totalTickets,
+        validated: validatedTickets,
+        pending: totalTickets - validatedTickets,
+        validationRate:
+          totalTickets > 0
+            ? Math.round((validatedTickets / totalTickets) * 100)
+            : 0,
+      },
     };
   }
 
@@ -127,9 +278,6 @@ export class TicketsService {
   }
 
   async generateTicketPDF(ticketId: string, userId: string): Promise<Buffer> {
-    const QRCode = await import('qrcode');
-    const PDFDocument = await import('pdfkit');
-
     const ticket = await this.getTicketById(ticketId, userId);
     const event = ticket.ticketCategory.event;
 
@@ -140,7 +288,7 @@ export class TicketsService {
     });
 
     return new Promise((resolve, reject) => {
-      const doc = new (PDFDocument as any).default({
+      const doc = new PDFDocument({
         size: 'A4',
         margin: 40,
         bufferPages: true,

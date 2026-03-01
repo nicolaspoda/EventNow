@@ -20,6 +20,8 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import MyTicketsPage from './pages/MyTicketsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import { RefundRequestsPage } from './pages/RefundRequestsPage';
+import { StaffScanPage } from './pages/StaffScanPage';
+import { StaffValidationsPage } from './pages/StaffValidationsPage';
 
 function App() {
   return (
@@ -127,6 +129,22 @@ function App() {
             element={
               <ProtectedRoute roles={['CLIENT']}>
                 <EventParticipantsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/staff/scan"
+            element={
+              <ProtectedRoute roles={['STAFF']}>
+                <StaffScanPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/staff/validations"
+            element={
+              <ProtectedRoute roles={['STAFF']}>
+                <StaffValidationsPage />
               </ProtectedRoute>
             }
           />
