@@ -50,6 +50,7 @@ export interface CreateEventPayload {
   description?: string;
   location: string;
   image_url?: string;
+  image_public_id?: string;
   event_date: string;
   type?: EventTypeCreate;
   ticket_categories: CreateTicketCategoryPayload[];
@@ -60,6 +61,7 @@ export interface UpdateEventPayload {
   description?: string;
   location?: string;
   image_url?: string;
+  image_public_id?: string;
   event_date?: string;
   ticket_categories?: CreateTicketCategoryPayload[];
 }

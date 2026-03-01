@@ -15,6 +15,7 @@ import { PaymentModule } from './payment/payment.module';
 import { LoggerModule } from './logger/logger.module';
 import { SecurityModule } from './security/security.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { UploadModule } from './upload/upload.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -22,6 +23,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['.env'],
     }),
     ThrottlerModule.forRoot([
       {
@@ -45,6 +47,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     TicketsModule,
     PaymentModule,
     DashboardModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [

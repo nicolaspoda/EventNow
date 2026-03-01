@@ -21,10 +21,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
+    const rawMessage =
       exception instanceof HttpException
         ? exception.getResponse()
         : 'Internal server error';
+
+    const message =
+      typeof rawMessage === 'string'
+        ? rawMessage
+        : rawMessage && typeof rawMessage === 'object' && 'message' in rawMessage
+          ? (() => {
+              const m = (rawMessage as { message: unknown }).message;
+              if (Array.isArray(m)) return m.join(', ');
+              return typeof m === 'string' ? m : 'Erreur serveur';
+            })()
+          : 'Erreur serveur';
 
     this.logger.error(
       `${request.method} ${request.url}`,

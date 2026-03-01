@@ -27,6 +27,10 @@ export class UpdateEventDto {
   @IsOptional()
   image_url?: string;
 
+  @IsString()
+  @IsOptional()
+  image_public_id?: string;
+
   @IsDateString()
   @IsOptional()
   event_date?: string;
