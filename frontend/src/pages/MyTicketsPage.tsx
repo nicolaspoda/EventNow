@@ -45,15 +45,10 @@ const MyTicketsPage: React.FC = () => {
 
   const handleDownloadQRCode = async (ticket: Ticket) => {
     try {
-      const dataUrl = await generateQRCodeDataUrl(ticket.qrCode);
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `ticket-${ticket.id}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch {
-      // ignore
+      await ticketService.downloadTicketPDF(ticket.id);
+    } catch (err) {
+      console.error('Erreur téléchargement PDF:', err);
+      alert('Erreur lors du téléchargement du billet');
     }
   };
 

@@ -7,6 +7,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { ValidateTicketDto } from './dto';
@@ -43,5 +44,27 @@ export class TicketsController {
   @HttpCode(HttpStatus.OK)
   getTicketByQRCode(@Param('qrCode') qrCode: string) {
     return this.ticketsService.getTicketByQRCode(qrCode);
+  }
+
+  @Get('download/:id')
+  @Roles('CLIENT', 'ORGANIZER')
+  @HttpCode(HttpStatus.OK)
+  async downloadTicket(
+    @Param('id') ticketId: string,
+    @CurrentUser() user: any,
+    @Res() res: any
+  ) {
+    const pdfBuffer = await this.ticketsService.generateTicketPDF(
+      ticketId,
+      user.id
+    );
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=ticket-${ticketId}.pdf`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
   }
 }
