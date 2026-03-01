@@ -6,6 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
+import { EventType } from './dto/create-event.dto';
+import {
+  SearchEventsDto,
+  SortBy,
+  PriceRange,
+} from './dto/search-events.dto';
 
 @Injectable()
 export class EventsService {
@@ -32,7 +38,11 @@ export class EventsService {
           imageUrl: createEventDto.image_url,
           eventDate: eventDate,
           organizerId: userId,
-          type: createEventDto.type || 'PROFESSIONAL',
+          type:
+            createEventDto.type === 'COMMUNITY'
+              ? 'COMMUNITY'
+              : 'PROFESSIONAL',
+          category: createEventDto.category || 'OTHER',
           ticketCategories: {
             create: createEventDto.ticket_categories.map((category) => ({
               name: category.name,
@@ -56,9 +66,15 @@ export class EventsService {
         },
       });
 
+      const ev = event as typeof event & {
+        ticketCategories: Array<{
+          price: unknown;
+          [key: string]: unknown;
+        }>;
+      };
       return {
-        ...event,
-        ticketCategories: event.ticketCategories.map((c) => ({
+        ...ev,
+        ticketCategories: ev.ticketCategories.map((c) => ({
           ...c,
           price: Number(c.price),
         })),
@@ -230,6 +246,7 @@ export class EventsService {
           ...(updateEventDto.event_date && {
             eventDate: new Date(updateEventDto.event_date),
           }),
+          ...(updateEventDto.category && { category: updateEventDto.category }),
           ...(updateEventDto.ticket_categories && {
             ticketCategories: {
               create: updateEventDto.ticket_categories.map((category) => ({
@@ -286,5 +303,252 @@ export class EventsService {
     });
 
     return { message: 'Événement supprimé avec succès' };
+  }
+
+  async searchEvents(searchDto: SearchEventsDto) {
+    const {
+      query,
+      type,
+      categories,
+      location,
+      dateFrom,
+      dateTo,
+      priceRanges,
+      availableOnly,
+      sortBy = SortBy.DATE_ASC,
+      page = 1,
+      limit = 20,
+    } = searchDto;
+
+    const where: any = {
+      AND: [],
+    };
+
+    if (query) {
+      where.AND.push({
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { description: { contains: query, mode: 'insensitive' } },
+          { location: { contains: query, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (type && type !== EventType.ALL) {
+      where.AND.push({ type });
+    }
+
+    if (categories && categories.length > 0) {
+      where.AND.push({
+        category: { in: categories },
+      });
+    }
+
+    if (location) {
+      where.AND.push({
+        location: { contains: location, mode: 'insensitive' },
+      });
+    }
+
+    if (dateFrom || dateTo) {
+      const dateFilter: any = {};
+      if (dateFrom) dateFilter.gte = new Date(dateFrom);
+      if (dateTo) dateFilter.lte = new Date(dateTo);
+      where.AND.push({ eventDate: dateFilter });
+    }
+
+    if (priceRanges && priceRanges.length > 0) {
+      const priceConditions = this.buildPriceConditions(priceRanges);
+      where.AND.push({
+        ticketCategories: {
+          some: { OR: priceConditions },
+        },
+      });
+    }
+
+    if (availableOnly) {
+      where.AND.push({
+        ticketCategories: {
+          some: { currentStock: { gt: 0 } },
+        },
+      });
+    }
+
+    if (where.AND.length === 0) {
+      delete where.AND;
+    }
+
+    const orderBy = this.buildOrderBy(sortBy);
+    const skip = (page - 1) * limit;
+
+    const [events, total] = await Promise.all([
+      this.prisma.event.findMany({
+        where,
+        include: {
+          ticketCategories: {
+            select: {
+              name: true,
+              price: true,
+              currentStock: true,
+              initialStock: true,
+            },
+          },
+          organizer: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.event.count({ where }),
+    ]);
+
+    const enrichedEvents = events.map((event) => {
+      const ev = event as typeof event & {
+        ticketCategories: Array<{
+          name: string;
+          price: unknown;
+          currentStock: number;
+          initialStock: number;
+        }>;
+      };
+      return {
+        ...ev,
+        ticketCategories: ev.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+        stats: this.calculateEventStats(ev),
+      };
+    });
+
+    return {
+      events: enrichedEvents,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  private buildPriceConditions(priceRanges: PriceRange[]) {
+    const conditions: any[] = [];
+
+    priceRanges.forEach((range) => {
+      switch (range) {
+        case PriceRange.FREE:
+          conditions.push({ price: { equals: 0 } });
+          break;
+        case PriceRange.LOW:
+          conditions.push({ price: { gte: 0, lte: 20 } });
+          break;
+        case PriceRange.MEDIUM:
+          conditions.push({ price: { gte: 20, lte: 50 } });
+          break;
+        case PriceRange.HIGH:
+          conditions.push({ price: { gte: 50, lte: 100 } });
+          break;
+        case PriceRange.PREMIUM:
+          conditions.push({ price: { gte: 100 } });
+          break;
+      }
+    });
+
+    return conditions;
+  }
+
+  private buildOrderBy(sortBy: SortBy): { eventDate?: 'asc' | 'desc'; createdAt?: 'asc' | 'desc' } {
+    switch (sortBy) {
+      case SortBy.DATE_ASC:
+        return { eventDate: 'asc' };
+      case SortBy.DATE_DESC:
+        return { eventDate: 'desc' };
+      case SortBy.PRICE_ASC:
+      case SortBy.PRICE_DESC:
+        return { createdAt: 'desc' };
+      case SortBy.POPULARITY:
+        return { createdAt: 'desc' };
+      default:
+        return { eventDate: 'asc' };
+    }
+  }
+
+  private calculateEventStats(event: any) {
+    let totalCapacity = 0;
+    let totalSold = 0;
+    let minPrice = Infinity;
+    let maxPrice = 0;
+
+    event.ticketCategories.forEach((cat: any) => {
+      totalCapacity += cat.initialStock;
+      totalSold += cat.initialStock - cat.currentStock;
+      const price = Number(cat.price);
+      minPrice = Math.min(minPrice, price);
+      maxPrice = Math.max(maxPrice, price);
+    });
+
+    return {
+      totalCapacity,
+      totalSold,
+      availableTickets: totalCapacity - totalSold,
+      fillRate: totalCapacity > 0 ? (totalSold / totalCapacity) * 100 : 0,
+      priceRange: {
+        min: minPrice === Infinity ? 0 : minPrice,
+        max: maxPrice,
+      },
+    };
+  }
+
+  async getSearchSuggestions(query: string) {
+    if (!query || query.length < 2) {
+      return [];
+    }
+
+    const events = await this.prisma.event.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { location: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        location: true,
+      },
+      take: 5,
+    });
+
+    return events.map((event) => ({
+      id: event.id,
+      label: event.title,
+      sublabel: event.location,
+    }));
+  }
+
+  async getAvailableLocations() {
+    const locations = await this.prisma.event.groupBy({
+      by: ['location'],
+      _count: {
+        location: true,
+      },
+      orderBy: {
+        _count: {
+          location: 'desc',
+        },
+      },
+    });
+
+    return locations.map((loc) => ({
+      name: loc.location,
+      count: loc._count.location,
+    }));
   }
 }

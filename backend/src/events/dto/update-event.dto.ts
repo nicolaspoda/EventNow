@@ -4,9 +4,11 @@ import {
   IsDateString,
   IsArray,
   ValidateNested,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateTicketCategoryDto } from './create-ticket-category.dto';
+import { EventCategory } from './create-event.dto';
 
 export class UpdateEventDto {
   @IsString()
@@ -28,6 +30,10 @@ export class UpdateEventDto {
   @IsDateString()
   @IsOptional()
   event_date?: string;
+
+  @IsEnum(EventCategory)
+  @IsOptional()
+  category?: EventCategory;
 
   @IsArray()
   @ValidateNested({ each: true })

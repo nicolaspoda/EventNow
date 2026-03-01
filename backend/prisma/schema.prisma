@@ -40,6 +40,16 @@ enum EventType {
   COMMUNITY
 }
 
+enum EventCategory {
+  CONCERT
+  CONFERENCE
+  FESTIVAL
+  SPORT
+  THEATER
+  EXHIBITION
+  OTHER
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -59,23 +69,25 @@ model User {
 }
 
 model Event {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   title       String
   description String?
   location    String
-  imageUrl    String?   @map("image_url")
-  eventDate   DateTime  @map("event_date")
-  organizerId String    @map("organizer_id")
-  type        EventType @default(PROFESSIONAL)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  imageUrl    String?       @map("image_url")
+  eventDate   DateTime      @map("event_date")
+  organizerId String        @map("organizer_id")
+  type        EventType     @default(PROFESSIONAL)
+  category    EventCategory @default(OTHER)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
 
   organizer        User             @relation(fields: [organizerId], references: [id], onDelete: Cascade)
   ticketCategories TicketCategory[]
 
   @@index([organizerId])
   @@index([eventDate])
-  @@index([type])
+  @@index([type, category, eventDate])
+  @@index([location])
   @@map("events")
 }
 
