@@ -28,7 +28,7 @@ export class BookingsController {
   }
 
   @Post()
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.CREATED)
   create(@CurrentUser() user: any, @Body() dto: CreateBookingDto) {
@@ -36,21 +36,21 @@ export class BookingsController {
   }
 
   @Get()
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)
   getUserBookings(@CurrentUser() user: any) {
     return this.bookingsService.getUserBookings(user.id);
   }
 
   @Patch(':id/confirm')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)
   confirm(@Param('id') id: string, @CurrentUser() user: any) {
     return this.bookingsService.confirmBooking(id, user.id);
   }
 
   @Delete(':id')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)
   cancel(@Param('id') id: string, @CurrentUser() user: any) {
     return this.bookingsService.cancelBooking(id, user.id);

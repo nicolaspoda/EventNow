@@ -4,6 +4,7 @@ import {
   Get,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -32,8 +33,28 @@ export class TicketsController {
     return this.ticketsService.validateTicket(dto.qrCode, user.id);
   }
 
+  @Get('validations/stats')
+  @Roles('STAFF')
+  @HttpCode(HttpStatus.OK)
+  getValidationStats(
+    @Query('event_id') eventId: string,
+    @CurrentUser() user: any
+  ) {
+    return this.ticketsService.getValidationStats(eventId, user.id);
+  }
+
+  @Get('validations')
+  @Roles('STAFF')
+  @HttpCode(HttpStatus.OK)
+  getValidations(
+    @CurrentUser() user: any,
+    @Query('event_id') eventId?: string
+  ) {
+    return this.ticketsService.getStaffValidations(user.id, eventId);
+  }
+
   @Get('my-tickets')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)
   getMyTickets(@CurrentUser() user: any) {
     return this.ticketsService.getUserTickets(user.id);
@@ -47,7 +68,7 @@ export class TicketsController {
   }
 
   @Get('download/:id')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)
   async downloadTicket(
     @Param('id') ticketId: string,
