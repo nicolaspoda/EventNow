@@ -1,0 +1,346 @@
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+
+@Injectable()
+export class DashboardService {
+  private readonly prisma: PrismaService;
+
+  constructor(prisma: PrismaService) {
+    this.prisma = prisma;
+  }
+
+  async getOrganizerOverview(organizerId: string) {
+    const events = await this.prisma.event.findMany({
+      where: {
+        organizerId,
+        type: 'PROFESSIONAL',
+      },
+      include: {
+        ticketCategories: true,
+      },
+    });
+
+    const totalEvents = events.length;
+    const now = new Date();
+    const upcomingEvents = events.filter((e) => e.eventDate > now).length;
+    const pastEvents = totalEvents - upcomingEvents;
+
+    let totalRevenue = 0;
+    let totalTicketsSold = 0;
+
+    for (const event of events) {
+      for (const category of event.ticketCategories) {
+        const soldTickets = category.initialStock - category.currentStock;
+        totalTicketsSold += soldTickets;
+        totalRevenue += soldTickets * Number(category.price);
+      }
+    }
+
+    return {
+      totalEvents,
+      upcomingEvents,
+      pastEvents,
+      totalRevenue,
+      totalTicketsSold,
+      averageTicketPrice:
+        totalTicketsSold > 0 ? totalRevenue / totalTicketsSold : 0,
+    };
+  }
+
+  async getOrganizerEvents(organizerId: string) {
+    const events = await this.prisma.event.findMany({
+      where: {
+        organizerId,
+        type: 'PROFESSIONAL',
+      },
+      include: {
+        ticketCategories: true,
+      },
+      orderBy: {
+        eventDate: 'desc',
+      },
+    });
+
+    return events.map((event) => {
+      let totalCapacity = 0;
+      let totalSold = 0;
+      let revenue = 0;
+
+      event.ticketCategories.forEach((cat) => {
+        totalCapacity += cat.initialStock;
+        const sold = cat.initialStock - cat.currentStock;
+        totalSold += sold;
+        revenue += sold * Number(cat.price);
+      });
+
+      const fillRate =
+        totalCapacity > 0 ? (totalSold / totalCapacity) * 100 : 0;
+      const status = this.getEventStatus(event.eventDate, fillRate);
+
+      return {
+        ...event,
+        eventDate:
+          event.eventDate instanceof Date
+            ? event.eventDate.toISOString()
+            : event.eventDate,
+        ticketCategories: event.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+        stats: {
+          totalCapacity,
+          totalSold,
+          revenue,
+          fillRate: Math.round(fillRate * 100) / 100,
+          status,
+        },
+      };
+    });
+  }
+
+  async getEventStats(eventId: string, organizerId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        ticketCategories: {
+          include: {
+            bookings: {
+              where: { status: { in: ['CONFIRMED', 'PENDING'] } },
+            },
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Événement introuvable');
+    }
+
+    if (event.organizerId !== organizerId) {
+      throw new ForbiddenException('Accès non autorisé');
+    }
+
+    const categoriesStats = event.ticketCategories.map((cat) => {
+      const sold = cat.initialStock - cat.currentStock;
+      const revenue = sold * Number(cat.price);
+      const fillRate = (sold / cat.initialStock) * 100;
+
+      return {
+        id: cat.id,
+        name: cat.name,
+        price: Number(cat.price),
+        initialStock: cat.initialStock,
+        currentStock: cat.currentStock,
+        sold,
+        revenue,
+        fillRate: Math.round(fillRate * 100) / 100,
+      };
+    });
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        ticketCategory: {
+          eventId,
+        },
+        status: 'CONFIRMED',
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      select: {
+        createdAt: true,
+        quantity: true,
+      },
+    });
+
+    const salesByDay = bookings.reduce(
+      (acc, booking) => {
+        const date = booking.createdAt.toISOString().split('T')[0];
+        if (!acc[date]) {
+          acc[date] = 0;
+        }
+        acc[date] += booking.quantity;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return {
+      event: {
+        id: event.id,
+        title: event.title,
+        eventDate: event.eventDate,
+      },
+      categoriesStats,
+      salesByDay,
+      totalRevenue: categoriesStats.reduce((sum, cat) => sum + cat.revenue, 0),
+      totalSold: categoriesStats.reduce((sum, cat) => sum + cat.sold, 0),
+    };
+  }
+
+  async getClientOverview(clientId: string) {
+    const events = await this.prisma.event.findMany({
+      where: {
+        organizerId: clientId,
+        type: 'COMMUNITY',
+      },
+      include: {
+        ticketCategories: true,
+      },
+    });
+
+    const totalEvents = events.length;
+    const now = new Date();
+    const upcomingEvents = events.filter((e) => e.eventDate > now).length;
+
+    let totalParticipants = 0;
+
+    for (const event of events) {
+      for (const category of event.ticketCategories) {
+        totalParticipants += category.initialStock - category.currentStock;
+      }
+    }
+
+    return {
+      totalEvents,
+      upcomingEvents,
+      totalParticipants,
+      averageParticipants:
+        totalEvents > 0 ? Math.round(totalParticipants / totalEvents) : 0,
+    };
+  }
+
+  async getClientEvents(clientId: string) {
+    const events = await this.prisma.event.findMany({
+      where: {
+        organizerId: clientId,
+        type: 'COMMUNITY',
+      },
+      include: {
+        ticketCategories: true,
+      },
+      orderBy: {
+        eventDate: 'desc',
+      },
+    });
+
+    return events.map((event) => {
+      let totalCapacity = 0;
+      let totalParticipants = 0;
+
+      event.ticketCategories.forEach((cat) => {
+        totalCapacity += cat.initialStock || 0;
+        totalParticipants += (cat.initialStock || 0) - cat.currentStock;
+      });
+
+      const fillRate =
+        totalCapacity > 0 ? (totalParticipants / totalCapacity) * 100 : 0;
+      const status = this.getEventStatus(event.eventDate, fillRate);
+
+      return {
+        ...event,
+        eventDate:
+          event.eventDate instanceof Date
+            ? event.eventDate.toISOString()
+            : event.eventDate,
+        ticketCategories: event.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+        stats: {
+          totalCapacity,
+          totalParticipants,
+          fillRate: Math.round(fillRate * 100) / 100,
+          status,
+        },
+      };
+    });
+  }
+
+  async getEventParticipants(eventId: string, clientId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        ticketCategories: {
+          include: {
+            bookings: {
+              where: { status: { in: ['CONFIRMED', 'PENDING'] } },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Événement introuvable');
+    }
+
+    if (event.organizerId !== clientId) {
+      throw new ForbiddenException('Accès non autorisé');
+    }
+
+    const participants = event.ticketCategories
+      .flatMap((cat) => cat.bookings)
+      .map((booking) => ({
+        userId: booking.user.id,
+        email: booking.user.email,
+        firstName: booking.user.firstName,
+        lastName: booking.user.lastName,
+        quantity: booking.quantity,
+        status: booking.status,
+        bookedAt: booking.createdAt,
+      }));
+
+    return {
+      event: {
+        id: event.id,
+        title: event.title,
+        eventDate: event.eventDate,
+      },
+      participants,
+      totalParticipants: participants.reduce((sum, p) => sum + p.quantity, 0),
+    };
+  }
+
+  private getEventStatus(eventDate: Date, fillRate: number): string {
+    const now = new Date();
+    const eventDateObj = new Date(eventDate);
+
+    if (eventDateObj < now) {
+      return 'COMPLETED';
+    }
+
+    if (fillRate >= 100) {
+      return 'SOLD_OUT';
+    }
+
+    const daysUntil = Math.ceil(
+      (eventDateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (daysUntil <= 7) {
+      return 'UPCOMING';
+    }
+
+    if (fillRate >= 80) {
+      return 'ALMOST_FULL';
+    }
+
+    return 'ON_SALE';
+  }
+}

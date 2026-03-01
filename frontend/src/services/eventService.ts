@@ -1,7 +1,10 @@
-import axios from 'axios';
-import type { Event, EventFilters } from '../types/event.types';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { api } from './api';
+import type {
+  Event,
+  EventFilters,
+  CreateEventPayload,
+  UpdateEventPayload,
+} from '../types/event.types';
 
 export const eventService = {
   getEvents: async (filters?: EventFilters): Promise<Event[]> => {
@@ -12,14 +15,31 @@ export const eventService = {
     if (filters?.dateTo) params.append('dateTo', filters.dateTo);
     
     const queryString = params.toString();
-    const url = queryString ? `${API_URL}/events?${queryString}` : `${API_URL}/events`;
+    const url = queryString ? `/events?${queryString}` : '/events';
     
-    const response = await axios.get<Event[]>(url);
+    const response = await api.get<Event[]>(url);
     return response.data;
   },
 
   getEventById: async (id: string): Promise<Event> => {
-    const response = await axios.get<Event>(`${API_URL}/events/${id}`);
+    const response = await api.get<Event>(`/events/${id}`);
     return response.data;
+  },
+
+  createEvent: async (payload: CreateEventPayload): Promise<Event> => {
+    const response = await api.post<Event>('/events', payload);
+    return response.data;
+  },
+
+  updateEvent: async (
+    id: string,
+    payload: UpdateEventPayload,
+  ): Promise<Event> => {
+    const response = await api.patch<Event>(`/events/${id}`, payload);
+    return response.data;
+  },
+
+  deleteEvent: async (id: string): Promise<void> => {
+    await api.delete(`/events/${id}`);
   },
 };

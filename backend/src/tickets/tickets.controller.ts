@@ -32,14 +32,14 @@ export class TicketsController {
   }
 
   @Get('my-tickets')
-  @Roles('CLIENT')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getMyTickets(@CurrentUser() user: any) {
     return this.ticketsService.getUserTickets(user.id);
   }
 
   @Get('qr/:qrCode')
-  @Roles('CLIENT', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)
   getTicketByQRCode(@Param('qrCode') qrCode: string) {
     return this.ticketsService.getTicketByQRCode(qrCode);

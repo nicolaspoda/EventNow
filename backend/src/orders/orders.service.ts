@@ -99,7 +99,7 @@ export class OrdersService {
   }
 
   async getUserOrders(userId: string) {
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where: { userId: userId },
       include: {
         tickets: {
@@ -112,6 +112,30 @@ export class OrdersService {
       },
       orderBy: { createdAt: 'desc' },
     });
+    return orders.map((order) => this.mapOrderDecimalToNumber(order));
+  }
+
+  private mapOrderDecimalToNumber(order: {
+    totalAmount: unknown;
+    tickets: Array<{
+      ticketCategory: { price: unknown; event?: unknown; [k: string]: unknown };
+      [k: string]: unknown;
+    }>;
+    [k: string]: unknown;
+  }) {
+    return {
+      ...order,
+      totalAmount: Number(order.totalAmount),
+      tickets: order.tickets.map((t) => ({
+        ...t,
+        ticketCategory: t.ticketCategory
+          ? {
+              ...t.ticketCategory,
+              price: Number(t.ticketCategory.price),
+            }
+          : t.ticketCategory,
+      })),
+    };
   }
 
   async getOrderById(orderId: string, userId: string) {
@@ -132,41 +156,97 @@ export class OrdersService {
       throw new NotFoundException('Commande introuvable');
     }
 
-    return order;
+    return this.mapOrderDecimalToNumber(order);
   }
 
   async refundOrder(orderId: string, userId: string) {
+    return this.requestRefund(orderId, userId);
+  }
+
+  async requestRefund(orderId: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        tickets: {
+          include: {
+            ticketCategory: { include: { event: true } },
+          },
+        },
+      },
+    });
+
+    if (!order || order.userId !== userId) {
+      throw new NotFoundException('Commande introuvable');
+    }
+
+    if (order.status !== OrderStatus.PAID) {
+      throw new BadRequestException(
+        'Seules les commandes payées peuvent faire l\'objet d\'une demande de remboursement.',
+      );
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.REFUND_REQUESTED },
+      include: {
+        tickets: {
+          include: {
+            ticketCategory: { include: { event: true } },
+          },
+        },
+      },
+    });
+
+    return this.mapOrderDecimalToNumber(updated);
+  }
+
+  async getRefundRequests(organizerId: string) {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.REFUND_REQUESTED,
+        tickets: {
+          some: {
+            ticketCategory: { event: { organizerId } },
+          },
+        },
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+        tickets: {
+          include: {
+            ticketCategory: { include: { event: true } },
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return orders.map((o) => this.mapOrderDecimalToNumber(o));
+  }
+
+  async approveRefund(orderId: string, organizerId: string) {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: {
           tickets: {
             include: {
-              ticketCategory: {
-                include: { event: true },
-              },
+              ticketCategory: { include: { event: true } },
             },
           },
         },
       });
 
-      if (!order || order.userId !== userId) {
-        throw new NotFoundException('Commande introuvable');
+      if (!order) throw new NotFoundException('Commande introuvable');
+      if (order.status !== OrderStatus.REFUND_REQUESTED) {
+        throw new BadRequestException('Cette commande n\'est pas en attente de remboursement.');
       }
 
-      if (order.status !== OrderStatus.PAID) {
-        throw new BadRequestException('Commande déjà annulée ou remboursée');
-      }
-
-      const eventDate = order.tickets[0].ticketCategory.event.eventDate;
-      const daysUntilEvent = Math.ceil(
-        (new Date(eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-      );
-
-      if (daysUntilEvent < 7) {
-        throw new BadRequestException(
-          'Impossible de rembourser : événement dans moins de 7 jours',
-        );
+      const event = order.tickets[0]?.ticketCategory?.event;
+      if (!event || event.organizerId !== organizerId) {
+        throw new NotFoundException('Commande introuvable ou non autorisée');
       }
 
       const ticketCount = order.tickets.length;
@@ -177,10 +257,56 @@ export class OrdersService {
         data: { currentStock: { increment: ticketCount } },
       });
 
-      return tx.order.update({
+      const updated = await tx.order.update({
         where: { id: orderId },
         data: { status: OrderStatus.REFUNDED },
+        include: {
+          tickets: {
+            include: {
+              ticketCategory: { include: { event: true } },
+            },
+          },
+        },
       });
+
+      return this.mapOrderDecimalToNumber(updated);
     });
+  }
+
+  async rejectRefund(orderId: string, organizerId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        tickets: {
+          include: {
+            ticketCategory: { include: { event: true } },
+          },
+        },
+      },
+    });
+
+    if (!order) throw new NotFoundException('Commande introuvable');
+    if (order.status !== OrderStatus.REFUND_REQUESTED) {
+      throw new BadRequestException('Cette commande n\'est pas en attente de remboursement.');
+    }
+
+    const event = order.tickets[0]?.ticketCategory?.event;
+    if (!event || event.organizerId !== organizerId) {
+      throw new NotFoundException('Commande introuvable ou non autorisée');
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.PAID },
+      include: {
+        tickets: {
+          include: {
+            ticketCategory: { include: { event: true } },
+          },
+        },
+      },
+    });
+
+    return this.mapOrderDecimalToNumber(updated);
   }
 }

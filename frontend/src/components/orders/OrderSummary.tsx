@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Order } from '../../types/order.types';
+import { parsePrice, formatPrice } from '../../utils/price';
 
 interface OrderSummaryProps {
   order: Order;
@@ -9,7 +10,7 @@ interface OrderSummaryProps {
 const OrderSummary: React.FC<OrderSummaryProps> = ({ order, className = '' }) => {
   const category = order.ticketCategory ?? order.tickets?.[0]?.ticketCategory;
   const quantity = order.quantity ?? order.tickets?.length ?? 0;
-  const totalAmount = Number(order.totalAmount);
+  const totalAmount = parsePrice(order.totalAmount);
 
   return (
     <div className={`bg-gray-50 rounded-lg p-6 ${className}`}>
@@ -38,7 +39,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ order, className = '' }) =>
         <div className="flex justify-between pt-3 border-t border-gray-200">
           <span className="text-lg font-semibold text-gray-900">Total payé</span>
           <span className="text-lg font-bold text-green-600">
-            {totalAmount.toFixed(2)} €
+            {formatPrice(totalAmount)} €
           </span>
         </div>
       </div>

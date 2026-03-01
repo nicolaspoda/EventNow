@@ -25,9 +25,9 @@ export default function AuthCallbackPage() {
           user: { id: string; email: string; role: string };
         }>('/auth/google/exchange', { code });
 
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('accessToken', data.accessToken);
+        sessionStorage.setItem('refreshToken', data.refreshToken);
+        sessionStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user as User);
         navigate('/dashboard', { replace: true });
       } catch (err) {

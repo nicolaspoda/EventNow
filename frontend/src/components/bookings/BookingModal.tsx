@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { TicketCategory } from '../../types/event.types';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
+import { parsePrice, formatPrice } from '../../utils/price';
 import Button from '../ui/Button';
 
 interface BookingModalProps {
@@ -21,7 +22,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const maxQuantity = Math.min(category.currentStock, 10);
-  const totalPrice = Number(category.price) * quantity;
+  const unitPrice = parsePrice(category.price);
+  const totalPrice = unitPrice * quantity;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +73,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             <p className="text-gray-600 text-sm mb-2">{category.description}</p>
           )}
           <p className="text-gray-700">
-            <span className="font-semibold">Prix unitaire :</span> {Number(category.price).toFixed(2)} €
+            <span className="font-semibold">Prix unitaire :</span> {formatPrice(category.price)} €
           </p>
           <p className="text-gray-700">
             <span className="font-semibold">Places disponibles :</span> {category.currentStock}
@@ -102,7 +104,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-lg font-semibold text-gray-900">Total</span>
               <span className="text-2xl font-bold text-blue-600">
-                {totalPrice.toFixed(2)} €
+                {formatPrice(totalPrice)} €
               </span>
             </div>
           </div>

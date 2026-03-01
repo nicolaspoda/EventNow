@@ -32,6 +32,7 @@ export class EventsService {
           imageUrl: createEventDto.image_url,
           eventDate: eventDate,
           organizerId: userId,
+          type: createEventDto.type || 'PROFESSIONAL',
           ticketCategories: {
             create: createEventDto.ticket_categories.map((category) => ({
               name: category.name,
@@ -55,7 +56,13 @@ export class EventsService {
         },
       });
 
-      return event;
+      return {
+        ...event,
+        ticketCategories: event.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+      };
     });
   }
 
@@ -103,31 +110,41 @@ export class EventsService {
       }
     }
 
-    return this.prisma.event.findMany({
-      where: { AND: andConditions },
-      include: {
-        ticketCategories: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            price: true,
-            currentStock: true,
+    return this.prisma.event
+      .findMany({
+        where: { AND: andConditions },
+        include: {
+          ticketCategories: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              price: true,
+              currentStock: true,
+            },
+          },
+          organizer: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-        organizer: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+        orderBy: {
+          eventDate: 'asc',
         },
-      },
-      orderBy: {
-        eventDate: 'asc',
-      },
-    });
+      })
+      .then((events) =>
+        events.map((e) => ({
+          ...e,
+          ticketCategories: e.ticketCategories.map((c) => ({
+            ...c,
+            price: Number(c.price),
+          })),
+        })),
+      );
   }
 
   async findOne(id: string) {
@@ -159,7 +176,13 @@ export class EventsService {
       throw new NotFoundException(`Événement avec l'ID ${id} introuvable`);
     }
 
-    return event;
+    return {
+      ...event,
+      ticketCategories: event.ticketCategories.map((c) => ({
+        ...c,
+        price: Number(c.price),
+      })),
+    };
   }
 
   async update(id: string, userId: string, updateEventDto: UpdateEventDto) {
@@ -214,7 +237,8 @@ export class EventsService {
                 description: category.description,
                 price: category.price,
                 initialStock: category.initial_stock,
-                currentStock: category.initial_stock,
+                currentStock:
+                  category.current_stock ?? category.initial_stock,
               })),
             },
           }),
@@ -232,7 +256,13 @@ export class EventsService {
         },
       });
 
-      return updatedEvent;
+      return {
+        ...updatedEvent,
+        ticketCategories: updatedEvent.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
+        })),
+      };
     });
   }
 

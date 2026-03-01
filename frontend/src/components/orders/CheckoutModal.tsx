@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { TicketCategory } from '../../types/event.types';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
+import { parsePrice, formatPrice } from '../../utils/price';
 import Button from '../ui/Button';
 
 interface CheckoutModalProps {
@@ -21,7 +22,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const maxQuantity = Math.min(category.currentStock, 10);
-  const totalPrice = Number(category.price) * quantity;
+  const price = parsePrice(category.price);
+  const totalPrice = price * quantity;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +125,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600">Prix unitaire</span>
               <span className="text-sm font-medium text-gray-900">
-                {Number(category.price).toFixed(2)} €
+                {formatPrice(price)} €
               </span>
             </div>
             <div className="flex justify-between items-center mb-2">
@@ -134,7 +136,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div className="flex justify-between items-center">
                 <span className="text-base font-semibold text-gray-900">Total</span>
                 <span className="text-xl font-bold text-blue-600">
-                  {totalPrice.toFixed(2)} €
+                  {formatPrice(totalPrice)} €
                 </span>
               </div>
             </div>

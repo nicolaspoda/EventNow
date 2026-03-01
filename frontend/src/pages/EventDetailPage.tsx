@@ -52,7 +52,14 @@ const EventDetailPage: React.FC = () => {
       });
 
       navigate(`/checkout?bookingId=${booking.id}`);
-    } catch (err) {
+    } catch (err: unknown) {
+      const status = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (status === 401) {
+        navigate('/login', { state: { from: `/events/${id}`, message: 'Session expirée, veuillez vous reconnecter.' } });
+        return;
+      }
       alert(getApiErrorMessage(err, 'Erreur lors de la création de la réservation'));
     }
   };
@@ -145,7 +152,12 @@ const EventDetailPage: React.FC = () => {
           </Button>
         </div>
 
-        <EventDetail event={event} onBooking={handleBooking} />
+        <EventDetail
+          event={event}
+          onBooking={handleBooking}
+          onLoginRequired={() => navigate('/login', { state: { from: `/events/${id}` } })}
+          isAuthenticated={isAuthenticated}
+        />
       </div>
     </main>
   );

@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Order, ConfirmPaymentResponse } from '../types/order.types';
+import type { Order, OrderWithUser, ConfirmPaymentResponse } from '../types/order.types';
 
 export interface InitiatePaymentResponse {
   paymentId: string;
@@ -52,10 +52,25 @@ export const orderService = {
   },
 
   /**
-   * Demander un remboursement
+   * Demander un remboursement (passe la commande en "Remboursement demandé").
    */
   async requestRefund(orderId: string): Promise<Order> {
     const response = await api.patch<Order>(`/orders/${orderId}/refund`);
+    return response.data;
+  },
+
+  async getRefundRequests(): Promise<OrderWithUser[]> {
+    const response = await api.get<OrderWithUser[]>('/orders/refund-requests');
+    return response.data;
+  },
+
+  async approveRefund(orderId: string): Promise<Order> {
+    const response = await api.patch<Order>(`/orders/${orderId}/refund/approve`);
+    return response.data;
+  },
+
+  async rejectRefund(orderId: string): Promise<Order> {
+    const response = await api.patch<Order>(`/orders/${orderId}/refund/reject`);
     return response.data;
   },
 };

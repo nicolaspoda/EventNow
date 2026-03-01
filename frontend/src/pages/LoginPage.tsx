@@ -15,6 +15,13 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser } = useAuth();
+  const from = location.state && typeof location.state === 'object' && 'from' in location.state
+    ? (location.state as { from: string }).from
+    : undefined;
+  const rawStateMessage = location.state && typeof location.state === 'object' && 'message' in location.state
+    ? (location.state as { message?: unknown }).message
+    : undefined;
+  const stateMessage = typeof rawStateMessage === 'string' ? rawStateMessage : undefined;
   const registered = location.state && typeof location.state === 'object' && 'registered' in location.state && location.state.registered;
 
   const handleSubmit = async (e: FormEvent) => {
@@ -25,14 +32,23 @@ export function LoginPage() {
     try {
       const response = await authService.login({ email, password });
       setUser(response.user);
-      navigate('/dashboard');
+      navigate(from ?? '/dashboard', { replace: true });
     } catch (err: unknown) {
-      const message =
+      const data =
         err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { data?: { message?: string } } }).response?.data
-              ?.message
+          ? (err as { response?: { data?: unknown } }).response?.data
           : undefined;
-      setError(message || 'Email ou mot de passe incorrect');
+      const msg =
+        data && typeof data === 'object' && data !== null && 'message' in data
+          ? (data as { message?: unknown }).message
+          : undefined;
+      const messageStr =
+        typeof msg === 'string'
+          ? msg
+          : data && typeof data === 'object' && 'error' in data
+            ? String((data as { error?: unknown }).error)
+            : 'Email ou mot de passe incorrect';
+      setError(messageStr);
     } finally {
       setLoading(false);
     }
@@ -40,12 +56,13 @@ export function LoginPage() {
 
   const handleGoogleLogin = () => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    window.location.href = `${apiUrl}/auth/google`;
+    window.location.href = `${apiUrl}/api/v1/auth/google`;
   };
 
   return (
     <AuthLayout subtitle="Connectez-vous à votre compte">
       <form onSubmit={handleSubmit} className="space-y-6" aria-label="Formulaire de connexion" noValidate>
+        {stateMessage && <Alert message={stateMessage} variant="warning" />}
         {registered && (
           <Alert message="Inscription réussie. Connectez-vous avec vos identifiants." variant="success" />
         )}
