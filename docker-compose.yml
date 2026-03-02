@@ -28,7 +28,7 @@ services:
     container_name: eventnow-backend
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
       - "5555:5555"
     env_file:
       - ./backend/.env
@@ -55,7 +55,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:3000
+      VITE_API_URL: http://localhost:3001
     volumes:
       - ./frontend:/app
       - /app/node_modules
