@@ -82,7 +82,10 @@ export class TicketsService {
     const eventEndDate = new Date(eventDate);
     eventEndDate.setHours(eventEndDate.getHours() + 6);
 
-    if (new Date() > eventEndDate) {
+    // En production : bloquer la validation après la fin de l'événement.
+    // En développement : autoriser pour pouvoir valider puis tester les avis.
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && new Date() > eventEndDate) {
       return {
         valid: false,
         reason: 'EVENT_ENDED',
