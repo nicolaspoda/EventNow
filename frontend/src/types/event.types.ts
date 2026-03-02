@@ -23,6 +23,7 @@ export interface Event {
   imageUrl?: string;
   eventDate: string;
   organizerId: string;
+  type?: EventTypeCreate;
   ticketCategories: TicketCategory[];
   organizer?: Organizer;
   createdAt: string;

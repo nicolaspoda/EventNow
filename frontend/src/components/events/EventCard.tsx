@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Event } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import EventTypeBadge from './EventTypeBadge';
 import { safeFormat } from '../../utils/date';
 import { parsePrice, formatPrice } from '../../utils/price';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
@@ -70,6 +71,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
       )}
       
       <div className="p-6 flex flex-col flex-grow">
+        {event.type && (
+          <div className="mb-2">
+            <EventTypeBadge type={event.type} />
+          </div>
+        )}
         <h3 id={`event-title-${event.id}`} className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
           {event.title}
         </h3>
@@ -105,9 +111,15 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
         <div className="mt-auto pt-4 border-t border-gray-100">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-lg font-semibold text-gray-900">
-              À partir de {formatPrice(minPrice)} €
-            </span>
+            {minPrice === 0 ? (
+              <span className="text-lg font-semibold text-green-600">
+                Gratuit
+              </span>
+            ) : (
+              <span className="text-lg font-semibold text-gray-900">
+                À partir de {formatPrice(minPrice)} €
+              </span>
+            )}
           </div>
 
           <div className="mb-4">

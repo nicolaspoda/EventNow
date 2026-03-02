@@ -42,6 +42,7 @@ export function CreateEventPage() {
   const [type, setType] = useState<EventTypeCreate>(
     user?.role === 'CLIENT' ? 'COMMUNITY' : 'PROFESSIONAL',
   );
+  const isCommunity = type === 'COMMUNITY';
   const [categories, setCategories] = useState<CreateTicketCategoryPayload[]>([
     { ...initialCategory },
   ]);
@@ -105,7 +106,7 @@ export function CreateEventPage() {
       ticket_categories: validCategories.map((c) => ({
         name: c.name.trim(),
         description: c.description?.trim() || undefined,
-        price: Number(c.price),
+        price: isCommunity ? 0 : Number(c.price),
         initial_stock: Number(c.initial_stock),
       })),
     };
@@ -209,9 +210,16 @@ export function CreateEventPage() {
           options={EVENT_TYPE_OPTIONS}
         />
 
+        {isCommunity && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+            Les événements communautaires sont gratuits. Les participants pourront
+            s'inscrire sans payer.
+          </div>
+        )}
+
         <fieldset className="space-y-4">
           <legend className="text-lg font-semibold text-gray-900">
-            Catégories de billets
+            {isCommunity ? 'Participation' : 'Catégories de billets'}
           </legend>
           {categories.map((cat, index) => (
             <div
@@ -253,22 +261,24 @@ export function CreateEventPage() {
                 placeholder="Ex: Place assise"
               />
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  id={`cat-price-${index}`}
-                  label="Prix (€)"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={cat.price === 0 ? '' : cat.price}
-                  onChange={(e) =>
-                    updateCategory(
-                      index,
-                      'price',
-                      e.target.value === '' ? 0 : Number(e.target.value),
-                    )
-                  }
-                  placeholder="0"
-                />
+                {!isCommunity && (
+                  <FormField
+                    id={`cat-price-${index}`}
+                    label="Prix (€)"
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={cat.price === 0 ? '' : cat.price}
+                    onChange={(e) =>
+                      updateCategory(
+                        index,
+                        'price',
+                        e.target.value === '' ? 0 : Number(e.target.value),
+                      )
+                    }
+                    placeholder="0"
+                  />
+                )}
                 <FormField
                   id={`cat-stock-${index}`}
                   label="Nombre de places"
