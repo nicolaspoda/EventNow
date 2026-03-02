@@ -14,8 +14,6 @@ const MyOrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refundingOrderId, setRefundingOrderId] = useState<string | null>(null);
-
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -36,23 +34,6 @@ const MyOrdersPage: React.FC = () => {
   const handleViewTickets = (orderId: string) => {
     void orderId;
     navigate('/my-tickets');
-  };
-
-  const handleRequestRefund = async (orderId: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir demander un remboursement pour cette commande ?')) {
-      return;
-    }
-
-    try {
-      setRefundingOrderId(orderId);
-      await orderService.requestRefund(orderId);
-      alert('Demande de remboursement effectuée avec succès');
-      fetchOrders();
-    } catch (err) {
-      alert(getApiErrorMessage(err, 'Erreur lors de la demande de remboursement'));
-    } finally {
-      setRefundingOrderId(null);
-    }
   };
 
   if (loading) {
@@ -129,7 +110,7 @@ const MyOrdersPage: React.FC = () => {
               key={order.id}
               order={order}
               onViewTickets={handleViewTickets}
-              onRequestRefund={refundingOrderId === order.id ? undefined : handleRequestRefund}
+              onCancelSuccess={fetchOrders}
             />
           ))}
         </div>

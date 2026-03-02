@@ -5,6 +5,7 @@ export interface TicketCategory {
   price: number | string;
   initialStock: number;
   currentStock: number;
+  event?: { id: string; title: string; eventDate: string; location: string };
 }
 
 export interface Organizer {
