@@ -3,10 +3,13 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Event } from '../types/event.types';
 import { eventService } from '../services/eventService';
 import { bookingService } from '../services/bookingService';
+import { reviewService } from '../services/reviewService';
 import { useAuth } from '../utils/useAuth';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import EventDetail from '../components/events/EventDetail';
 import Button from '../components/ui/Button';
+import { ReviewForm } from '../components/reviews/ReviewForm';
+import { ReviewsList } from '../components/reviews/ReviewsList';
 
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +18,7 @@ const EventDetailPage: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [canReview, setCanReview] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -38,6 +42,24 @@ const EventDetailPage: React.FC = () => {
 
     fetchEvent();
   }, [id]);
+
+  useEffect(() => {
+    const checkIfCanReview = async () => {
+      if (!id || !isAuthenticated) {
+        setCanReview(false);
+        return;
+      }
+
+      try {
+        const result = await reviewService.canUserReview(id);
+        setCanReview(result.canReview);
+      } catch (error) {
+        setCanReview(false);
+      }
+    };
+
+    checkIfCanReview();
+  }, [id, isAuthenticated]);
 
   const handleBooking = async (categoryId: string, quantity: number) => {
     if (!isAuthenticated) {
@@ -158,6 +180,21 @@ const EventDetailPage: React.FC = () => {
           onLoginRequired={() => navigate('/login', { state: { from: `/events/${id}` } })}
           isAuthenticated={isAuthenticated}
         />
+
+        <section className="mt-12">
+          {canReview && (
+            <div className="mb-8">
+              <ReviewForm
+                eventId={id!}
+                onSuccess={() => {
+                  setCanReview(false);
+                }}
+              />
+            </div>
+          )}
+
+          <ReviewsList eventId={id!} />
+        </section>
       </div>
     </main>
   );

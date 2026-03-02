@@ -19,6 +19,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { UploadModule } from './upload/upload.module';
 import { MailModule } from './mail/mail.module';
 import { JobsModule } from './jobs/jobs.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -54,6 +55,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     UploadModule,
     MailModule,
     JobsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [

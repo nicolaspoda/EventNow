@@ -23,7 +23,8 @@ export class EventsService {
 
   async create(userId: string, createEventDto: CreateEventDto) {
     const eventDate = new Date(createEventDto.event_date);
-    if (eventDate <= new Date()) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && eventDate <= new Date()) {
       throw new BadRequestException(
         "La date de l'événement doit être dans le futur",
       );
@@ -127,41 +128,58 @@ export class EventsService {
       }
     }
 
-    return this.prisma.event
-      .findMany({
-        where: { AND: andConditions },
-        include: {
-          ticketCategories: {
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              price: true,
-              currentStock: true,
-            },
-          },
-          organizer: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-            },
+    const events = await this.prisma.event.findMany({
+      where: { AND: andConditions },
+      include: {
+        ticketCategories: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            price: true,
+            currentStock: true,
           },
         },
-        orderBy: {
-          eventDate: 'asc',
+        organizer: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
         },
-      })
-      .then((events) =>
-        events.map((e) => ({
-          ...e,
-          ticketCategories: e.ticketCategories.map((c) => ({
-            ...c,
-            price: Number(c.price),
-          })),
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+      },
+      orderBy: {
+        eventDate: 'asc',
+      },
+    });
+
+    return events.map((e) => {
+      const averageRating =
+        e.reviews.length > 0
+          ? Math.round(
+              (e.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                e.reviews.length) *
+                10,
+            ) / 10
+          : null;
+
+      return {
+        ...e,
+        averageRating,
+        totalReviews: e.reviews.length,
+        reviews: undefined,
+        ticketCategories: e.ticketCategories.map((c) => ({
+          ...c,
+          price: Number(c.price),
         })),
-      );
+      };
+    });
   }
 
   async findOne(id: string) {
@@ -186,6 +204,11 @@ export class EventsService {
             lastName: true,
           },
         },
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
       },
     });
 
@@ -193,8 +216,20 @@ export class EventsService {
       throw new NotFoundException(`Événement avec l'ID ${id} introuvable`);
     }
 
+    const averageRating =
+      event.reviews.length > 0
+        ? Math.round(
+            (event.reviews.reduce((sum, r) => sum + r.rating, 0) /
+              event.reviews.length) *
+              10,
+          ) / 10
+        : null;
+
     return {
       ...event,
+      averageRating,
+      totalReviews: event.reviews.length,
+      reviews: undefined,
       ticketCategories: event.ticketCategories.map((c) => ({
         ...c,
         price: Number(c.price),
@@ -219,7 +254,8 @@ export class EventsService {
 
     if (updateEventDto.event_date) {
       const eventDate = new Date(updateEventDto.event_date);
-      if (eventDate <= new Date()) {
+      const isProduction = process.env.NODE_ENV === 'production';
+      if (isProduction && eventDate <= new Date()) {
         throw new BadRequestException(
           "La date de l'événement doit être dans le futur",
         );
@@ -416,6 +452,11 @@ export class EventsService {
               lastName: true,
             },
           },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
         },
         orderBy,
         skip,
@@ -432,9 +473,23 @@ export class EventsService {
           currentStock: number;
           initialStock: number;
         }>;
+        reviews: Array<{ rating: number }>;
       };
+
+      const averageRating =
+        ev.reviews.length > 0
+          ? Math.round(
+              (ev.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                ev.reviews.length) *
+                10,
+            ) / 10
+          : null;
+
       return {
         ...ev,
+        averageRating,
+        totalReviews: ev.reviews.length,
+        reviews: undefined,
         ticketCategories: ev.ticketCategories.map((c) => ({
           ...c,
           price: Number(c.price),

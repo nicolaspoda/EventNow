@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import { safeFormat } from '../../utils/date';
 import { parsePrice, formatPrice } from '../../utils/price';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
+import { AverageRating } from '../reviews/AverageRating';
 
 interface EventCardProps {
   event: Event;
@@ -72,6 +73,16 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <h3 id={`event-title-${event.id}`} className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
           {event.title}
         </h3>
+
+        {(event as any).averageRating !== undefined && (event as any).totalReviews > 0 && (
+          <div className="mb-3">
+            <AverageRating
+              average={(event as any).averageRating}
+              totalReviews={(event as any).totalReviews}
+              size="sm"
+            />
+          </div>
+        )}
         
         <div className="space-y-2 mb-4 text-gray-600" aria-describedby={`event-title-${event.id}`}>
           <div className="flex items-center gap-2">
