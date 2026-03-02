@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -16,6 +17,8 @@ import { LoggerModule } from './logger/logger.module';
 import { SecurityModule } from './security/security.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { UploadModule } from './upload/upload.module';
+import { MailModule } from './mail/mail.module';
+import { JobsModule } from './jobs/jobs.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
@@ -25,6 +28,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
       isGlobal: true,
       envFilePath: ['.env'],
     }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
@@ -48,6 +52,8 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
     PaymentModule,
     DashboardModule,
     UploadModule,
+    MailModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
+import { MailService } from '../mail/mail.service';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 
@@ -12,10 +13,16 @@ import * as crypto from 'crypto';
 export class OrdersService {
   private readonly prisma: PrismaService;
   private readonly paymentService: PaymentService;
+  private readonly mailService: MailService;
 
-  constructor(prisma: PrismaService, paymentService: PaymentService) {
+  constructor(
+    prisma: PrismaService,
+    paymentService: PaymentService,
+    mailService: MailService,
+  ) {
     this.prisma = prisma;
     this.paymentService = paymentService;
+    this.mailService = mailService;
   }
 
   async initiatePayment(bookingId: string, userId: string) {
@@ -23,7 +30,7 @@ export class OrdersService {
   }
 
   async confirmPayment(bookingId: string, paymentId: string, userId: string) {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: {
@@ -82,7 +89,56 @@ export class OrdersService {
         order,
         tickets,
         event: booking.ticketCategory.event,
+        ticketCategory: booking.ticketCategory,
       };
+    });
+
+    this.sendOrderConfirmationEmail(result, userId).catch((err) =>
+      console.error('Erreur envoi email confirmation:', err),
+    );
+
+    return result;
+  }
+
+  private async sendOrderConfirmationEmail(
+    orderData: {
+      order: any;
+      tickets: any[];
+      event: any;
+      ticketCategory: any;
+    },
+    userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) return;
+
+    const userName =
+      user.firstName && user.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : user.email.split('@')[0];
+
+    await this.mailService.sendOrderConfirmation({
+      userEmail: user.email,
+      userName,
+      orderId: orderData.order.id,
+      totalAmount: Number(orderData.order.totalAmount),
+      tickets: [
+        {
+          eventTitle: orderData.event.title,
+          eventDate: new Date(orderData.event.eventDate).toLocaleString(
+            'fr-FR',
+            {
+              dateStyle: 'full',
+              timeStyle: 'short',
+            },
+          ),
+          category: orderData.ticketCategory.name,
+          quantity: orderData.tickets.length,
+        },
+      ],
     });
   }
 

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 10px 10px 0 0;
+    }
+    .content {
+      background: #f9f9f9;
+      padding: 30px;
+      border-radius: 0 0 10px 10px;
+    }
+    .ticket-item {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #667eea;
+      border-radius: 5px;
+    }
+    .total {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+      text-align: right;
+      margin-top: 20px;
+    }
+    .button {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 12px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #666;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎉 Commande confirmée !</h1>
+  </div>
+
+  <div class="content">
+    <p>Bonjour <strong>{{userName}}</strong>,</p>
+    
+    <p>Merci pour votre commande ! Votre paiement a été validé avec succès.</p>
+
+    <p><strong>Numéro de commande :</strong> {{orderId}}</p>
+
+    <h2>📋 Détails de votre commande</h2>
+    
+    {{#each tickets}}
+    <div class="ticket-item">
+      <h3>{{this.eventTitle}}</h3>
+      <p>
+        📅 {{this.eventDate}}<br>
+        🎫 {{this.category}} - Quantité : {{this.quantity}}
+      </p>
+    </div>
+    {{/each}}
+
+    <div class="total">
+      Total : {{totalAmount}} €
+    </div>
+
+    <p style="margin-top: 30px;">
+      <a href="{{orderUrl}}" class="button">
+        Voir ma commande
+      </a>
+    </p>
+
+    <p style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 5px;">
+      💡 <strong>Astuce :</strong> Vos billets sont disponibles dans votre espace client. 
+      Vous pouvez les télécharger et les imprimer dès maintenant.
+    </p>
+  </div>
+
+  <div class="footer">
+    <p>
+      Besoin d'aide ? Contactez-nous à 
+      <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>
+    </p>
+    <p>© 2026 EventNow - Tous droits réservés</p>
+  </div>
+</body>
+</html>
