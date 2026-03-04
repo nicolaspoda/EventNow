@@ -28,7 +28,7 @@ export const StaffValidationsPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">

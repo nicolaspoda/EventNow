@@ -66,7 +66,7 @@ const CheckoutPage: React.FC = () => {
 
   if (error && !bookingId) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <svg
             className="mx-auto h-12 w-12 text-red-400 mb-4"
@@ -93,7 +93,7 @@ const CheckoutPage: React.FC = () => {
 
   if (initiating) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Préparation du paiement...</p>
@@ -104,7 +104,7 @@ const CheckoutPage: React.FC = () => {
 
   if (error && !paymentId) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <svg
             className="mx-auto h-12 w-12 text-red-400 mb-4"
@@ -130,7 +130,7 @@ const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <main className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <div className="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">

@@ -21,10 +21,10 @@ export const EventsTable: React.FC<EventsTableProps> = ({
   if (events.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500 mb-4">Aucun événement créé</p>
+        <p className="text-neutral-500 dark:text-neutral-400 mb-4">Aucun événement créé</p>
         <button
           onClick={() => navigate('/events/create')}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           Créer mon premier événement
         </button>
@@ -42,53 +42,53 @@ export const EventsTable: React.FC<EventsTableProps> = ({
         <caption className="sr-only">
           Liste des événements {isProfessional ? 'professionnels' : 'communautaires'}
         </caption>
-        <thead className="bg-gray-50 border-b">
+        <thead className="bg-neutral-100 dark:bg-neutral-800/80 border-b border-neutral-200 dark:border-neutral-700">
           <tr>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
             >
               Événement
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
             >
               Date
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
             >
               Statut
             </th>
             <th
               scope="col"
-              className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
             >
               Taux remplissage
             </th>
             {isProfessional && (
               <th
                 scope="col"
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
               >
                 Revenus
               </th>
             )}
             <th
               scope="col"
-              className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+              className="px-6 py-3 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
             >
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white dark:bg-transparent divide-y divide-neutral-200 dark:divide-neutral-700">
           {events.map((event) => (
             <tr
               key={event.id}
-              className="hover:bg-gray-50 cursor-pointer focus-within:bg-gray-50"
+              className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 cursor-pointer focus-within:bg-neutral-50 dark:focus-within:bg-neutral-700/50"
               onClick={() => navigate(`/events/${event.id}`)}
               tabIndex={0}
               onKeyDown={(e) => {
@@ -100,11 +100,11 @@ export const EventsTable: React.FC<EventsTableProps> = ({
             >
               <td className="px-6 py-4">
                 <div>
-                  <div className="font-medium text-gray-900">{event.title}</div>
-                  <div className="text-sm text-gray-500">{event.location}</div>
+                  <div className="font-medium text-neutral-900 dark:text-neutral-100">{event.title}</div>
+                  <div className="text-sm text-neutral-500 dark:text-neutral-400">{event.location}</div>
                 </div>
               </td>
-              <td className="px-6 py-4 text-sm text-gray-900">
+              <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
                 <time dateTime={typeof event.eventDate === 'string' ? event.eventDate : (event as { event_date?: string }).event_date ?? ''}>
                   {safeFormat(
                     (event as { eventDate?: string; event_date?: string }).eventDate ??
@@ -119,7 +119,7 @@ export const EventsTable: React.FC<EventsTableProps> = ({
               <td className="px-6 py-4 text-right">
                 <div className="flex items-center justify-end">
                   <div
-                    className="w-32 bg-gray-200 rounded-full h-2 mr-2"
+                    className="w-32 bg-neutral-200 dark:bg-neutral-600 rounded-full h-2 mr-2"
                     role="progressbar"
                     aria-valuenow={Math.round(event.stats.fillRate)}
                     aria-valuemin={0}
@@ -132,23 +132,23 @@ export const EventsTable: React.FC<EventsTableProps> = ({
                           ? 'bg-green-500'
                           : event.stats.fillRate >= 50
                             ? 'bg-yellow-500'
-                            : 'bg-blue-500'
+                            : 'bg-primary-500'
                       }`}
                       style={{
                         width: `${Math.min(event.stats.fillRate, 100)}%`,
                       }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     {event.stats.fillRate.toFixed(0)}%
                   </span>
                 </div>
-                <div className="text-xs text-gray-500 mt-1 text-right">
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 text-right">
                   {participantsCount(event)} / {event.stats.totalCapacity}
                 </div>
               </td>
               {isProfessional && (
-                <td className="px-6 py-4 text-right font-medium text-gray-900">
+                <td className="px-6 py-4 text-right font-medium text-neutral-900 dark:text-neutral-100">
                   {(event.stats.revenue || 0).toFixed(2)} €
                 </td>
               )}

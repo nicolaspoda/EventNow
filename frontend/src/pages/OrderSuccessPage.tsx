@@ -37,7 +37,7 @@ const OrderSuccessPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <main className="min-h-screen flex items-center justify-center">
         <LoadingState />
       </main>
     );
@@ -45,7 +45,7 @@ const OrderSuccessPage: React.FC = () => {
 
   if (error || !order) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <main className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <svg
             className="mx-auto h-12 w-12 text-red-400 mb-4"
@@ -71,7 +71,7 @@ const OrderSuccessPage: React.FC = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <main className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <div className="mx-auto h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mb-4">

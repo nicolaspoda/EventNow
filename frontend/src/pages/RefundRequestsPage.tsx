@@ -71,10 +71,10 @@ export const RefundRequestsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Demandes de remboursement</h1>
-          <p className="text-gray-600">Chargement...</p>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Demandes de remboursement</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">Chargement...</p>
         </div>
       </main>
     );
@@ -82,16 +82,16 @@ export const RefundRequestsPage: React.FC = () => {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen">
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Demandes de remboursement</h1>
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Demandes de remboursement</h1>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 px-4 py-3 rounded">
             {error}
           </div>
           <button
             type="button"
             onClick={() => fetchRequests()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600"
           >
             Réessayer
           </button>
@@ -101,25 +101,25 @@ export const RefundRequestsPage: React.FC = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Demandes de remboursement</h1>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Demandes de remboursement</h1>
           <button
             type="button"
             onClick={() => navigate('/dashboard/organizer')}
-            className="text-gray-700 hover:text-gray-900 font-medium"
+            className="text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 font-medium"
           >
             ← Retour au tableau de bord
           </button>
         </div>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-neutral-600 dark:text-neutral-400 mb-6">
           Commandes pour lesquelles un client a demandé un remboursement. Vous pouvez approuver (remboursement effectif) ou refuser.
         </p>
 
         {orders.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+          <div className="glass-card p-8 text-center text-neutral-500 dark:text-neutral-400">
             Aucune demande de remboursement en attente.
           </div>
         ) : (
@@ -127,22 +127,22 @@ export const RefundRequestsPage: React.FC = () => {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-lg shadow p-6 flex flex-wrap items-center justify-between gap-4"
+                className="glass-card p-6 flex flex-wrap items-center justify-between gap-4"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900">
+                  <p className="font-semibold text-neutral-900 dark:text-neutral-100">
                     Commande #{order.id.slice(0, 8)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Événement : {getEventTitle(order)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Client : {getUserLabel(order)}
                     {order.user?.email && (
-                      <span className="text-gray-500"> — {order.user.email}</span>
+                      <span className="text-neutral-500 dark:text-neutral-500"> — {order.user.email}</span>
                     )}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Date : {safeFormat(order.createdAt, "d MMM yyyy 'à' HH'h'mm")} — Total : {formatPrice(order.totalAmount)} €
                   </p>
                 </div>
@@ -151,7 +151,7 @@ export const RefundRequestsPage: React.FC = () => {
                     type="button"
                     onClick={() => handleApprove(order.id)}
                     disabled={actionOrderId !== null}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-green-600 dark:bg-green-600 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-700 disabled:opacity-50"
                   >
                     {actionOrderId === order.id ? 'Traitement...' : 'Approuver le remboursement'}
                   </button>
@@ -159,7 +159,7 @@ export const RefundRequestsPage: React.FC = () => {
                     type="button"
                     onClick={() => handleReject(order.id)}
                     disabled={actionOrderId !== null}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                    className="px-4 py-2 bg-neutral-200 dark:bg-neutral-600 text-neutral-800 dark:text-neutral-200 rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-500 disabled:opacity-50"
                   >
                     Refuser
                   </button>

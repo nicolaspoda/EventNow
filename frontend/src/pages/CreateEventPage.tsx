@@ -136,10 +136,10 @@ export function CreateEventPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900" id="create-event-title">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100" id="create-event-title">
           Créer un événement
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-2">
           Renseignez les informations de votre événement et les catégories de
           billets.
         </p>
@@ -211,30 +211,30 @@ export function CreateEventPage() {
         />
 
         {isCommunity && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+          <div className="p-4 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg text-sm text-primary-800 dark:text-primary-300">
             Les événements communautaires sont gratuits. Les participants pourront
             s'inscrire sans payer.
           </div>
         )}
 
         <fieldset className="space-y-4">
-          <legend className="text-lg font-semibold text-gray-900">
+          <legend className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             {isCommunity ? 'Participation' : 'Catégories de billets'}
           </legend>
           {categories.map((cat, index) => (
             <div
               key={index}
-              className="p-4 border border-gray-200 rounded-lg space-y-3 bg-gray-50"
+              className="glass-card p-4 space-y-3"
             >
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Catégorie {index + 1}
                 </span>
                 {categories.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeCategory(index)}
-                    className="text-sm text-red-600 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
                     aria-label={`Supprimer la catégorie ${index + 1}`}
                   >
                     Supprimer
@@ -300,7 +300,7 @@ export function CreateEventPage() {
           <button
             type="button"
             onClick={addCategory}
-            className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full py-2 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-600 dark:text-neutral-400 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
             aria-label="Ajouter une catégorie de billets"
           >
             + Ajouter une catégorie
@@ -313,7 +313,7 @@ export function CreateEventPage() {
           </PrimaryButton>
           <Link
             to="/events"
-            className="inline-flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center justify-center px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             Annuler
           </Link>

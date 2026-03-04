@@ -21,6 +21,16 @@ body {
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
+html {
+  background-color: var(--bg-primary);
+}
+
+/* Le contenu principal hérite du fond (évite fond blanc en dark mode) */
+#main-content {
+  min-height: 100vh;
+  background-color: transparent;
+}
+
 /* Skip link for accessibility */
 .skip-link {
   position: absolute;

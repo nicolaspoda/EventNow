@@ -17,12 +17,12 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   onAction,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md p-12 text-center">
+    <div className="glass-card p-12 text-center">
       {icon ? (
         icon
       ) : (
         <svg
-          className="mx-auto h-16 w-16 text-gray-400 mb-4"
+          className="mx-auto h-16 w-16 text-neutral-400 dark:text-neutral-500 mb-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -36,8 +36,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           />
         </svg>
       )}
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
-      <p className="text-gray-600 mb-6">{message}</p>
+      <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">{title}</h2>
+      <p className="text-neutral-600 dark:text-neutral-400 mb-6">{message}</p>
       {actionLabel && onAction && (
         <Button variant="primary" onClick={onAction}>
           {actionLabel}

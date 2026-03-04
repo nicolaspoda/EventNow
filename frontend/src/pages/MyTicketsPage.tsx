@@ -54,9 +54,9 @@ const MyTicketsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Mes billets</h1>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Mes billets</h1>
           <LoadingState message="Chargement de vos billets..." />
         </div>
       </main>
@@ -65,9 +65,9 @@ const MyTicketsPage: React.FC = () => {
 
   if (error) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Mes billets</h1>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Mes billets</h1>
           <ErrorState message={error} onRetry={fetchTickets} />
         </div>
       </main>
@@ -76,13 +76,13 @@ const MyTicketsPage: React.FC = () => {
 
   if (tickets.length === 0) {
     return (
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Mes billets</h1>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Mes billets</h1>
           <EmptyState
             icon={
               <svg
-                className="mx-auto h-16 w-16 text-gray-400 mb-4"
+                className="mx-auto h-16 w-16 text-neutral-400 dark:text-neutral-500 mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -106,10 +106,10 @@ const MyTicketsPage: React.FC = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mes billets</h1>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Mes billets</h1>
           <Button variant="ghost" onClick={() => navigate('/events')}>
             ← Retour aux événements
           </Button>

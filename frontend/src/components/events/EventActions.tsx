@@ -48,7 +48,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
   };
 
   const btnBase =
-    'p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50';
+    'p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 dark:focus:ring-offset-neutral-800 disabled:opacity-50';
 
   return (
     <div className="flex items-center justify-center gap-1" role="group" aria-label="Actions">
@@ -56,7 +56,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
         <button
           type="button"
           onClick={handleViewStats}
-          className={`${btnBase} text-gray-600 hover:bg-blue-50 hover:text-blue-600`}
+          className={`${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400`}
           title="Voir statistiques"
           aria-label="Voir les statistiques de l'événement"
         >
@@ -68,7 +68,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
         <button
           type="button"
           onClick={handleViewParticipants}
-          className={`${btnBase} text-gray-600 hover:bg-blue-50 hover:text-blue-600`}
+          className={`${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400`}
           title="Voir participants"
           aria-label="Voir les participants de l'événement"
         >
@@ -80,7 +80,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
       <button
         type="button"
         onClick={handleEdit}
-        className={`${btnBase} text-gray-600 hover:bg-amber-50 hover:text-amber-700`}
+        className={`${btnBase} text-neutral-600 dark:text-neutral-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 hover:text-amber-700 dark:hover:text-amber-400`}
         title="Modifier"
         aria-label="Modifier l'événement"
       >
@@ -92,7 +92,7 @@ export const EventActions: React.FC<EventActionsProps> = ({
         type="button"
         onClick={handleDelete}
         disabled={loading}
-        className={`${btnBase} text-gray-500 hover:bg-red-50 hover:text-red-600`}
+        className={`${btnBase} text-neutral-500 dark:text-neutral-400 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400`}
         title="Supprimer"
         aria-label="Supprimer l'événement"
         aria-busy={loading}

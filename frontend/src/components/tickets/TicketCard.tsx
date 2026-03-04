@@ -10,18 +10,18 @@ interface TicketCardProps {
 
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownload }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="glass-card overflow-hidden hover:shadow-lg transition-shadow">
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             Billet #{ticket.id.slice(0, 8)}
           </h3>
           {(ticket.isValidated ?? !!ticket.validatedAt) ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300">
               Validé
             </span>
           ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/40 text-primary-800 dark:text-primary-300">
               Actif
             </span>
           )}
@@ -29,11 +29,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownloa
 
         {ticket.order?.ticketCategory && (
           <div className="mb-4">
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {ticket.order.ticketCategory.name}
             </p>
             {ticket.order.ticketCategory.description && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {ticket.order.ticketCategory.description}
               </p>
             )}
@@ -41,7 +41,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownloa
         )}
 
         {ticket.isValidated && ticket.validatedAt && (
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
             Validé le {new Date(ticket.validatedAt).toLocaleDateString('fr-FR')}
           </p>
         )}

@@ -54,13 +54,11 @@ export const OrganizerDashboardPage: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div
-            className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
+            className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-200 dark:border-primary-800 border-t-primary-600 dark:border-t-primary-400"
             role="status"
             aria-label="Chargement en cours"
-          >
-            <span className="sr-only">Chargement...</span>
-          </div>
-          <p className="mt-4 text-gray-600">Chargement du tableau de bord...</p>
+          />
+          <p className="mt-4 text-neutral-600 dark:text-neutral-300">Chargement du tableau de bord...</p>
         </div>
       </div>
     );
@@ -70,7 +68,7 @@ export const OrganizerDashboardPage: React.FC = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <div
-          className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded"
+          className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-800 dark:text-error-200 px-4 py-3 rounded-xl"
           role="alert"
         >
           <p className="font-medium">Erreur</p>
@@ -83,7 +81,7 @@ export const OrganizerDashboardPage: React.FC = () => {
   if (!overview) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p className="text-gray-500">Aucune donnée disponible</p>
+        <p className="text-neutral-500 dark:text-neutral-400">Aucune donnée disponible</p>
       </div>
     );
   }
@@ -92,16 +90,16 @@ export const OrganizerDashboardPage: React.FC = () => {
     <div className="container mx-auto px-4 py-8">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
             Tableau de bord organisateur
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-neutral-600 dark:text-neutral-300 mt-2">
             Vue d'ensemble de vos événements et performances
           </p>
         </div>
         <Link
           to="/dashboard/organizer/refund-requests"
-          className="text-blue-600 hover:text-blue-800 font-medium"
+          className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
         >
           Demandes de remboursement →
         </Link>
@@ -124,19 +122,19 @@ export const OrganizerDashboardPage: React.FC = () => {
         className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
         aria-label="Graphiques analytiques"
       >
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Évolution des ventes</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Évolution des ventes</h2>
           <RevenueChart events={events} />
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Ventes par catégorie</h2>
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Ventes par catégorie</h2>
           <SalesChart events={events} />
         </div>
       </section>
 
-      <section className="bg-white rounded-lg shadow" aria-labelledby="events-heading">
-        <div className="px-6 py-4 border-b">
-          <h2 id="events-heading" className="text-xl font-semibold">
+      <section className="glass-card overflow-hidden" aria-labelledby="events-heading">
+        <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
+          <h2 id="events-heading" className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
             Mes événements
           </h2>
         </div>

@@ -39,13 +39,13 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
   const canCancel = order.status === 'PAID' && !!eventDate;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+    <div className="glass-card p-6 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
             Commande #{order.id.slice(0, 8)}
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
             {safeFormat(order.createdAt, "d MMMM yyyy 'à' HH'h'mm")}
           </p>
         </div>
@@ -53,24 +53,24 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
       </div>
 
       {category && (
-        <div className="mb-4 pb-4 border-b border-gray-200">
-          <p className="text-sm font-medium text-gray-900 mb-1">{category.name}</p>
+        <div className="mb-4 pb-4 border-b border-neutral-200 dark:border-neutral-700">
+          <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-1">{category.name}</p>
           {category.description && (
-            <p className="text-sm text-gray-600">{category.description}</p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">{category.description}</p>
           )}
         </div>
       )}
 
       <div className="space-y-2 mb-4">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Quantité</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-neutral-600 dark:text-neutral-400">Quantité</span>
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {quantity} billet{quantity > 1 ? 's' : ''}
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Prix unitaire</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-neutral-600 dark:text-neutral-400">Prix unitaire</span>
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {category
               ? formatPrice(categoryPrice)
               : quantity
@@ -79,16 +79,16 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
             €
           </span>
         </div>
-        <div className="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
-          <span className="text-gray-900">Total</span>
-          <span className="text-blue-600">{formatPrice(totalAmount)} €</span>
+        <div className="flex justify-between text-base font-semibold pt-2 border-t border-neutral-200 dark:border-neutral-700">
+          <span className="text-neutral-900 dark:text-neutral-100">Total</span>
+          <span className="text-primary-600 dark:text-primary-400">{formatPrice(totalAmount)} €</span>
         </div>
       </div>
 
       {order.status === 'REFUNDED' && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm font-semibold text-blue-900 mb-1">Commande remboursée</p>
-          <p className="text-sm text-blue-800">
+        <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
+          <p className="text-sm font-semibold text-primary-900 dark:text-primary-200 mb-1">Commande remboursée</p>
+          <p className="text-sm text-primary-800 dark:text-primary-300">
             Le montant de{' '}
             <strong>{formatPrice(totalAmount)} €</strong> sera recrédité sur
             votre compte sous 5 à 10 jours ouvrés.

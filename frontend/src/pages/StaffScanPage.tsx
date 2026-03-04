@@ -51,20 +51,20 @@ export const StaffScanPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
+    <main className="min-h-screen">
+      <header className="bg-white dark:bg-neutral-800/80 shadow border-b border-neutral-200 dark:border-neutral-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
                 Validation billets
               </h1>
-              <p className="text-sm text-gray-600">Mode STAFF</p>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">Mode STAFF</p>
             </div>
             <button
               type="button"
               onClick={() => navigate('/staff/validations')}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
             >
               Historique
             </button>
@@ -75,10 +75,10 @@ export const StaffScanPage: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
           <section
-            className="bg-white rounded-lg shadow-lg p-6"
+            className="glass-card p-6"
             aria-labelledby="scan-title"
           >
-            <h2 id="scan-title" className="text-xl font-semibold mb-4 text-center">
+            <h2 id="scan-title" className="text-xl font-semibold mb-4 text-center text-neutral-900 dark:text-neutral-100">
               Scanner un billet
             </h2>
 
