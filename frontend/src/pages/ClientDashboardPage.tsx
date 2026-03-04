@@ -102,30 +102,10 @@ export const ClientDashboardPage: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         aria-label="Statistiques clés"
       >
-        <StatCard
-          title="Événements créés"
-          value={overview.totalEvents}
-          icon="🎉"
-          color="blue"
-        />
-        <StatCard
-          title="À venir"
-          value={overview.upcomingEvents}
-          icon="📅"
-          color="green"
-        />
-        <StatCard
-          title="Participants totaux"
-          value={overview.totalParticipants}
-          icon="👥"
-          color="purple"
-        />
-        <StatCard
-          title="Moyenne / événement"
-          value={overview.averageParticipants}
-          icon="📊"
-          color="yellow"
-        />
+        <StatCard title="Événements créés" value={overview.totalEvents} />
+        <StatCard title="À venir" value={overview.upcomingEvents} />
+        <StatCard title="Participants totaux" value={overview.totalParticipants} />
+        <StatCard title="Moyenne / événement" value={overview.averageParticipants} />
       </section>
 
       {events.length > 0 && (

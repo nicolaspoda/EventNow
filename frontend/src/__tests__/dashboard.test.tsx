@@ -10,12 +10,7 @@ describe('Dashboard Components - Accessibility', () => {
   describe('StatCard', () => {
     it('should not have accessibility violations', async () => {
       const { container } = render(
-        <StatCard
-          title="Événements totaux"
-          value={42}
-          icon="📊"
-          color="blue"
-        />,
+        <StatCard title="Événements totaux" value={42} />,
       );
       const results = await axe(container);
       expect(results).toHaveNoViolations();
@@ -26,8 +21,6 @@ describe('Dashboard Components - Accessibility', () => {
         <StatCard
           title="Revenus"
           value="1234.56 €"
-          icon="💰"
-          color="yellow"
           trend={{ value: 15, isPositive: true }}
         />,
       );
@@ -35,17 +28,10 @@ describe('Dashboard Components - Accessibility', () => {
       expect(results).toHaveNoViolations();
     });
 
-    it('should have proper ARIA labels for icon', () => {
-      render(
-        <StatCard
-          title="Participants"
-          value={100}
-          icon="👥"
-          color="purple"
-        />,
-      );
-      const icon = screen.getByRole('img', { name: '👥' });
-      expect(icon).toBeInTheDocument();
+    it('should display title and value', () => {
+      render(<StatCard title="Participants" value={100} />);
+      expect(screen.getByText('Participants')).toBeInTheDocument();
+      expect(screen.getByText('100')).toBeInTheDocument();
     });
   });
 

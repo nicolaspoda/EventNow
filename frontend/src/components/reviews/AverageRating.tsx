@@ -14,7 +14,7 @@ export const AverageRating: React.FC<AverageRatingProps> = ({
 }) => {
   if (totalReviews === 0) {
     return (
-      <div className="text-gray-500 text-sm">
+      <div className="text-neutral-500 dark:text-neutral-400 text-sm">
         Aucun avis pour le moment
       </div>
     );
@@ -23,7 +23,7 @@ export const AverageRating: React.FC<AverageRatingProps> = ({
   return (
     <div className="flex items-center space-x-2">
       <StarRating value={Math.round(average)} readonly size={size} />
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-neutral-600 dark:text-neutral-300">
         <span className="font-semibold text-lg">{average.toFixed(1)}</span>
         <span className="ml-1">({totalReviews} avis)</span>
       </div>

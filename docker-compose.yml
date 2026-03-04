@@ -38,6 +38,8 @@ services:
       REDIS_PORT: 6379
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
+      # CORS : origine du frontend (navigateur) pour autoriser les requêtes
+      FRONTEND_URL: http://localhost:5173
     volumes:
       - ./backend:/app
       - /app/node_modules

@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Event } from '../../types/event.types';
 import Badge from '../ui/Badge';
-import Button from '../ui/Button';
 import EventTypeBadge from './EventTypeBadge';
 import { safeFormat } from '../../utils/date';
 import { parsePrice, formatPrice } from '../../utils/price';
@@ -18,68 +17,101 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const prices = event.ticketCategories.map((cat) => parsePrice(cat.price));
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
   const dateValue = event.eventDate ?? (event as { event_date?: string }).event_date;
-  const dateFormatted = safeFormat(dateValue, "d MMMM yyyy 'à' HH'h'mm");
   const cloudinarySrc = event.imageUrl ? getCloudinarySrcSet(event.imageUrl) : null;
-  
-  const getStockBadge = () => {
-    if (totalStock === 0) {
-      return <Badge variant="error">Complet</Badge>;
-    }
-    if (totalStock < 50) {
-      return <Badge variant="warning">Plus que {totalStock} places</Badge>;
-    }
-    return <Badge variant="success">{totalStock} places disponibles</Badge>;
-  };
+
+  const eventDate = dateValue ? new Date(dateValue) : null;
+  const isPast = eventDate ? eventDate < new Date() : false;
+
+  const stockLevel =
+    totalStock === 0
+      ? 'empty'
+      : totalStock < 50
+      ? 'low'
+      : 'available';
+
+  const stockBarColor =
+    totalStock === 0
+      ? 'bg-error-500'
+      : totalStock < 50
+      ? 'bg-warning-500'
+      : 'bg-success-500';
 
   return (
-    <article 
-      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden flex flex-col h-full focus-within:ring-2 focus-within:ring-blue-500 border border-gray-100"
+    <article
+      className="event-card-modern group focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
     >
-      {event.imageUrl ? (
-        <div className="w-full h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-          <img
-            src={cloudinarySrc?.src ?? event.imageUrl}
-            srcSet={cloudinarySrc?.srcSet}
-            sizes={cloudinarySrc?.sizes}
-            alt={`Affiche de l'événement ${event.title} qui se déroulera le ${dateFormatted} à ${event.location}`}
-            className="w-full h-full object-contain"
-            loading="lazy"
-          />
-        </div>
-      ) : (
-        <div
-          className="w-full h-48 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400"
-          role="img"
-          aria-label="Aucune image disponible pour cet événement"
-        >
-          <svg
-            className="w-14 h-14 mb-2 opacity-60"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+      {/* ── Image section ─────────────────────────── */}
+      <div className="event-card-image">
+        {event.imageUrl ? (
+          <>
+            <img
+              src={cloudinarySrc?.src ?? event.imageUrl}
+              srcSet={cloudinarySrc?.srcSet}
+              sizes={cloudinarySrc?.sizes}
+              alt={`Affiche de l'événement ${event.title}`}
+              className="w-full h-full object-cover"
+              loading="lazy"
             />
-          </svg>
-          <span className="text-sm font-medium">Affiche non fournie</span>
-        </div>
-      )}
-      
-      <div className="p-6 flex flex-col flex-grow">
-        {event.type && (
-          <div className="mb-2">
-            <EventTypeBadge type={event.type} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          </>
+        ) : (
+          <div
+            className="w-full h-full bg-gradient-to-br from-primary-400 via-primary-500 to-accent-400 flex flex-col items-center justify-center"
+            role="img"
+            aria-label="Aucune image disponible pour cet événement"
+          >
+            <svg
+              className="w-14 h-14 text-white/60 mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span className="text-sm font-medium text-white/70">Affiche non fournie</span>
           </div>
         )}
-        <h3 id={`event-title-${event.id}`} className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+
+        {/* Floating badges ── top-left */}
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+          {event.type && <EventTypeBadge type={event.type} />}
+          {isPast && (
+            <Badge variant="neutral" size="sm">
+              Terminé
+            </Badge>
+          )}
+        </div>
+
+        {/* Floating date ── bottom-right */}
+        {eventDate && (
+          <div className="absolute bottom-3 right-3 bg-white/95 dark:bg-neutral-800/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg text-center min-w-[3rem]">
+            <div className="text-xl font-bold text-primary-600 dark:text-primary-400 leading-none">
+              {eventDate.getDate()}
+            </div>
+            <div className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mt-0.5">
+              {eventDate.toLocaleDateString('fr-FR', { month: 'short' })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Content ───────────────────────────────── */}
+      <div className="event-card-body">
+        {/* Title */}
+        <h3
+          id={`event-title-${event.id}`}
+          className="text-lg font-bold text-neutral-900 dark:text-neutral-100 mb-2 line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors"
+        >
           {event.title}
         </h3>
 
+        {/* Reviews */}
         {(event as any).averageRating !== undefined && (event as any).totalReviews > 0 && (
           <div className="mb-3">
             <AverageRating
@@ -89,47 +121,116 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             />
           </div>
         )}
-        
-        <div className="space-y-2 mb-4 text-gray-600" aria-describedby={`event-title-${event.id}`}>
+
+        {/* Meta info */}
+        <div
+          className="space-y-1.5 mb-4 text-neutral-600 dark:text-neutral-300"
+          aria-describedby={`event-title-${event.id}`}
+        >
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              className="w-4 h-4 flex-shrink-0 text-primary-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
-            <span className="text-sm">{event.location}</span>
+            <span className="text-sm truncate">{event.location}</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              className="w-4 h-4 flex-shrink-0 text-primary-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
-            <time dateTime={typeof dateValue === 'string' ? dateValue : ''} className="text-sm">
-              {dateFormatted}
+            <time
+              dateTime={typeof dateValue === 'string' ? dateValue : ''}
+              className="text-sm"
+            >
+              {safeFormat(dateValue, "d MMMM yyyy 'à' HH'h'mm")}
             </time>
           </div>
         </div>
 
-        <div className="mt-auto pt-4 border-t border-gray-100">
+        {/* Footer */}
+        <div className="event-card-footer">
           <div className="flex items-center justify-between mb-3">
+            {/* Price */}
             {minPrice === 0 ? (
-              <span className="text-lg font-semibold text-green-600">
-                Gratuit
-              </span>
+              <span className="text-lg font-bold text-success-500 dark:text-success-400">Gratuit</span>
             ) : (
-              <span className="text-lg font-semibold text-gray-900">
-                À partir de {formatPrice(minPrice)} €
-              </span>
+              <div>
+                <span className="text-xs text-neutral-400 dark:text-neutral-500 block">À partir de</span>
+                <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                  {formatPrice(minPrice)} €
+                </span>
+              </div>
             )}
+
+            {/* Stock indicator */}
+            <div className="text-right">
+              {stockLevel === 'empty' ? (
+                <Badge variant="error" size="sm">Complet</Badge>
+              ) : stockLevel === 'low' ? (
+                <div>
+                  <Badge variant="warning" size="sm">
+                    {totalStock} places
+                  </Badge>
+                  <div className="mt-1 w-16 h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden ml-auto">
+                    <div className={`h-full ${stockBarColor} rounded-full w-1/4`} />
+                  </div>
+                </div>
+              ) : (
+                <Badge variant="success" size="sm">
+                  {totalStock} places
+                </Badge>
+              )}
+            </div>
           </div>
 
-          <div className="mb-4">
-            {getStockBadge()}
-          </div>
-
-          <Link to={`/events/${event.id}`} aria-label={`Voir les détails de ${event.title}`}>
-            <Button variant="primary" fullWidth>
-              Voir les détails
-            </Button>
+          <Link
+            to={`/events/${event.id}`}
+            aria-label={`Voir les détails de ${event.title}`}
+            className="btn-modern btn-primary w-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          >
+            Voir les détails
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
           </Link>
         </div>
       </div>

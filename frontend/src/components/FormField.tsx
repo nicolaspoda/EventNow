@@ -17,8 +17,8 @@ interface SelectFieldProps
 }
 
 const inputClassName =
-  'w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition';
-const labelClassName = 'block text-sm font-medium text-gray-700 mb-2';
+  'w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition';
+const labelClassName = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2';
 
 export function FormField({
   label,

@@ -48,16 +48,16 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, onReviewsLoad
   if (loading) {
     return (
       <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Chargement des avis...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 dark:border-primary-800 border-t-primary-600 dark:border-t-primary-400 mx-auto mb-4" />
+        <p className="text-neutral-600 dark:text-neutral-300">Chargement des avis...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-xl font-semibold mb-4">Avis des participants</h3>
+      <div className="glass-card p-6">
+        <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Avis des participants</h3>
         <AverageRating
           average={stats.averageRating || 0}
           totalReviews={stats.totalReviews}
@@ -67,11 +67,11 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, onReviewsLoad
 
       {stats.totalReviews > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-gray-600">{stats.totalReviews} avis</p>
+          <p className="text-neutral-600 dark:text-neutral-300">{stats.totalReviews} avis</p>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-primary-500 focus:outline-none"
           >
             <option value="recent">Plus récents</option>
             <option value="highest">Mieux notés</option>
@@ -87,7 +87,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, onReviewsLoad
       </div>
 
       {stats.totalReviews === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
           Aucun avis pour le moment. Soyez le premier à donner votre avis !
         </div>
       )}

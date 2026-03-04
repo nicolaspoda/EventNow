@@ -111,30 +111,13 @@ export const OrganizerDashboardPage: React.FC = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         aria-label="Statistiques clés"
       >
-        <StatCard
-          title="Événements totaux"
-          value={overview.totalEvents}
-          icon="📊"
-          color="blue"
-        />
-        <StatCard
-          title="À venir"
-          value={overview.upcomingEvents}
-          icon="📅"
-          color="green"
-        />
+        <StatCard title="Événements totaux" value={overview.totalEvents} />
+        <StatCard title="À venir" value={overview.upcomingEvents} />
         <StatCard
           title="Chiffre d'affaires"
           value={`${formatPrice(overview.totalRevenue)} €`}
-          icon="💰"
-          color="yellow"
         />
-        <StatCard
-          title="Billets vendus"
-          value={overview.totalTicketsSold}
-          icon="🎫"
-          color="purple"
-        />
+        <StatCard title="Billets vendus" value={overview.totalTicketsSold} />
       </section>
 
       <section

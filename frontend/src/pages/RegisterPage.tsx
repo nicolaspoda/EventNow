@@ -97,11 +97,11 @@ export function RegisterPage() {
       </form>
 
       <div className="mt-6 text-center">
-        <p className="text-gray-600">
+        <p className="text-neutral-600 dark:text-neutral-400">
           Déjà un compte ?{' '}
           <Link
             to="/login"
-            className="text-purple-600 hover:text-purple-700 font-semibold"
+            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-semibold"
           >
             Connectez-vous
           </Link>
