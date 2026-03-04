@@ -41,6 +41,7 @@ export function EventEditPage() {
   const [imagePublicId, setImagePublicId] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [categories, setCategories] = useState<CreateTicketCategoryPayload[]>([]);
+  const [soldCountByIndex, setSoldCountByIndex] = useState<number[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -70,6 +71,11 @@ export function EventEditPage() {
             current_stock: c.currentStock,
           })),
         );
+        setSoldCountByIndex(
+          ev.ticketCategories.map((c) =>
+            Math.max(0, c.initialStock - c.currentStock),
+          ),
+        );
       })
       .catch((err) => {
         if (!cancelled) {
@@ -91,11 +97,13 @@ export function EventEditPage() {
       ...prev,
       { name: '', description: '', price: 0, initial_stock: 10 },
     ]);
+    setSoldCountByIndex((prev) => [...prev, 0]);
   };
 
   const removeCategory = (index: number) => {
     if (categories.length <= 1) return;
     setCategories((prev) => prev.filter((_, i) => i !== index));
+    setSoldCountByIndex((prev) => prev.filter((_, i) => i !== index));
   };
 
   const updateCategory = (
@@ -346,13 +354,13 @@ export function EventEditPage() {
                   required
                 />
               </div>
-              {(cat.current_stock !== undefined && cat.initial_stock !== undefined) && (
+              {(cat.initial_stock !== undefined) && (
                 <div className="text-xs text-neutral-500 dark:text-neutral-400 space-y-0.5">
                   <p>
-                    Places déjà vendues : {Math.max(0, cat.initial_stock - cat.current_stock)} (conservées à l'enregistrement)
+                    Places déjà vendues : {soldCountByIndex[index] ?? 0} (conservées à l'enregistrement)
                   </p>
                   <p>
-                    Places disponibles : {cat.current_stock}
+                    Places disponibles : {Math.max(0, (cat.initial_stock ?? 0) - (soldCountByIndex[index] ?? 0))}
                   </p>
                 </div>
               )}

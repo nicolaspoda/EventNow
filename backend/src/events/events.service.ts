@@ -188,6 +188,7 @@ export class EventsService {
       where: { id },
       include: {
         ticketCategories: {
+          orderBy: { createdAt: 'asc' },
           select: {
             id: true,
             name: true,
