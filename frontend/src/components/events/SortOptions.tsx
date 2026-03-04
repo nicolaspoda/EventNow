@@ -16,14 +16,14 @@ export const SortOptions: React.FC<SortOptionsProps> = ({ value, onChange }) => 
 
   return (
     <div className="flex items-center space-x-2">
-      <label htmlFor="sort-select" className="text-sm text-gray-600">
+      <label htmlFor="sort-select" className="text-sm text-neutral-600 dark:text-neutral-400">
         Trier par :
       </label>
       <select
         id="sort-select"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

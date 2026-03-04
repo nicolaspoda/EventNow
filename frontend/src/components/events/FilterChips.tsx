@@ -46,13 +46,13 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm text-gray-600">Filtres actifs:</span>
+      <span className="text-sm text-neutral-600 dark:text-neutral-400">Filtres actifs:</span>
       {activeFilters.map(([key, value]) => (
         <button
           key={key}
           type="button"
           onClick={() => onRemove(key)}
-          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 dark:bg-primary-900/40 text-primary-800 dark:text-primary-200 hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           {getFilterLabel(key, value)}
           <span className="ml-2" aria-hidden="true">
@@ -63,7 +63,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
       <button
         type="button"
         onClick={onClearAll}
-        className="text-sm text-red-600 hover:text-red-700 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-2 py-1"
+        className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 underline focus:outline-none focus:ring-2 focus:ring-red-500 rounded px-2 py-1"
       >
         Tout effacer
       </button>

@@ -97,7 +97,7 @@ export function ImageUpload({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
+      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</label>
 
       <div
         role="button"
@@ -112,10 +112,10 @@ export function ImageUpload({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 ${
           dragActive
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
+            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+            : 'border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500'
         }`}
         aria-label={label}
       >
@@ -133,7 +133,7 @@ export function ImageUpload({
         />
 
         {preview ? (
-          <div className="relative w-full aspect-square max-h-64 mx-auto bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+          <div className="relative w-full aspect-square max-h-64 mx-auto bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden flex items-center justify-center">
             <img
               src={preview}
               alt="Aperçu"
@@ -156,10 +156,10 @@ export function ImageUpload({
             <span className="text-5xl block mb-4" aria-hidden>
               📷
             </span>
-            <p className="text-gray-600 mb-2">
+            <p className="text-neutral-600 dark:text-neutral-400 mb-2">
               Cliquez ou glissez-déposez une image
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               JPEG, PNG ou WebP — max {maxSize} Mo
             </p>
           </div>
@@ -167,7 +167,7 @@ export function ImageUpload({
       </div>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {typeof error === 'string' ? error : "Erreur lors de l'upload de l'image"}
         </p>
       )}
@@ -176,7 +176,7 @@ export function ImageUpload({
         <button
           type="button"
           onClick={handleClick}
-          className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm"
+          className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 text-sm border border-transparent dark:border-neutral-600"
         >
           Changer l'image
         </button>

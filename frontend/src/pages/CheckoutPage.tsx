@@ -67,9 +67,9 @@ const CheckoutPage: React.FC = () => {
   if (error && !bookingId) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="max-w-md w-full glass-card p-8 text-center">
           <svg
-            className="mx-auto h-12 w-12 text-red-400 mb-4"
+            className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -81,8 +81,8 @@ const CheckoutPage: React.FC = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">Erreur</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">{error}</p>
           <Button variant="primary" onClick={() => navigate('/events')}>
             Retour aux événements
           </Button>
@@ -94,9 +94,9 @@ const CheckoutPage: React.FC = () => {
   if (initiating) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Préparation du paiement...</p>
+        <div className="max-w-md w-full glass-card p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mx-auto mb-4" />
+          <p className="text-neutral-600 dark:text-neutral-400">Préparation du paiement...</p>
         </div>
       </main>
     );
@@ -105,9 +105,9 @@ const CheckoutPage: React.FC = () => {
   if (error && !paymentId) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="max-w-md w-full glass-card p-8 text-center">
           <svg
-            className="mx-auto h-12 w-12 text-red-400 mb-4"
+            className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -119,8 +119,8 @@ const CheckoutPage: React.FC = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">Erreur</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">{error}</p>
           <Button variant="primary" onClick={() => navigate('/events')}>
             Retour aux événements
           </Button>
@@ -131,11 +131,11 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+      <div className="max-w-md w-full glass-card p-8">
         <div className="text-center mb-8">
-          <div className="mx-auto h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <div className="mx-auto h-16 w-16 bg-primary-100 dark:bg-primary-900/40 rounded-full flex items-center justify-center mb-4">
             <svg
-              className="h-8 w-8 text-blue-600"
+              className="h-8 w-8 text-primary-600 dark:text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -148,19 +148,19 @@ const CheckoutPage: React.FC = () => {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Paiement sécurisé</h1>
-          <p className="text-gray-600">Confirmez votre paiement pour finaliser votre commande</p>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">Paiement sécurisé</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">Confirmez votre paiement pour finaliser votre commande</p>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-800">
+        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-6">
+          <p className="text-sm text-primary-800 dark:text-primary-300">
             <strong>Note :</strong> Ceci est un environnement de test. Aucun paiement réel ne sera effectué.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg" role="alert">
+            <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
           </div>
         )}
 
@@ -204,7 +204,7 @@ const CheckoutPage: React.FC = () => {
           </Button>
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-6">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center mt-6">
           Vos informations de paiement sont sécurisées et cryptées
         </p>
       </div>

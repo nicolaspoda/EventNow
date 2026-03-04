@@ -46,14 +46,14 @@ const BookingModal: React.FC<BookingModalProps> = ({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+      <div className="glass-card shadow-xl max-w-md w-full p-6">
         <div className="flex justify-between items-start mb-4">
-          <h2 id="modal-title" className="text-2xl font-bold text-gray-900">
+          <h2 id="modal-title" className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             Réserver des billets
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             aria-label="Fermer"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,26 +63,26 @@ const BookingModal: React.FC<BookingModalProps> = ({
         </div>
 
         <div className="mb-6">
-          <p className="text-gray-700 mb-2">
+          <p className="text-neutral-700 dark:text-neutral-300 mb-2">
             <span className="font-semibold">Événement :</span> {eventTitle}
           </p>
-          <p className="text-gray-700 mb-2">
+          <p className="text-neutral-700 dark:text-neutral-300 mb-2">
             <span className="font-semibold">Catégorie :</span> {category.name}
           </p>
           {category.description && (
-            <p className="text-gray-600 text-sm mb-2">{category.description}</p>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-2">{category.description}</p>
           )}
-          <p className="text-gray-700">
+          <p className="text-neutral-700 dark:text-neutral-300">
             <span className="font-semibold">Prix unitaire :</span> {formatPrice(category.price)} €
           </p>
-          <p className="text-gray-700">
+          <p className="text-neutral-700 dark:text-neutral-300">
             <span className="font-semibold">Places disponibles :</span> {category.currentStock}
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="quantity" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Nombre de billets
             </label>
             <input
@@ -92,31 +92,31 @@ const BookingModal: React.FC<BookingModalProps> = ({
               max={maxQuantity}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, Math.min(maxQuantity, parseInt(e.target.value) || 1)))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               disabled={loading}
             />
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               Maximum {maxQuantity} billets par réservation
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <div className="bg-neutral-100 dark:bg-neutral-700/50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-2xl font-bold text-blue-600">
+              <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Total</span>
+              <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {formatPrice(totalPrice)} €
               </span>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg" role="alert">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg" role="alert">
+              <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-            <p className="text-sm text-blue-800">
+          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3 mb-6">
+            <p className="text-sm text-primary-800 dark:text-primary-300">
               Vous aurez <span className="font-semibold">10 minutes</span> pour finaliser votre paiement après la réservation.
             </p>
           </div>

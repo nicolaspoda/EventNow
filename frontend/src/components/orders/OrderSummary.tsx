@@ -13,32 +13,32 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ order, className = '' }) =>
   const totalAmount = parsePrice(order.totalAmount);
 
   return (
-    <div className={`bg-gray-50 rounded-lg p-6 ${className}`}>
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Détails de la commande</h2>
+    <div className={`bg-neutral-100 dark:bg-neutral-700/50 rounded-lg p-6 ${className}`}>
+      <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Détails de la commande</h2>
 
       <div className="space-y-3">
         <div className="flex justify-between">
-          <span className="text-gray-600">Numéro de commande</span>
-          <span className="font-medium text-gray-900">#{order.id.slice(0, 8)}</span>
+          <span className="text-neutral-600 dark:text-neutral-400">Numéro de commande</span>
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">#{order.id.slice(0, 8)}</span>
         </div>
 
         {category && (
           <div className="flex justify-between">
-            <span className="text-gray-600">Catégorie</span>
-            <span className="font-medium text-gray-900">{category.name}</span>
+            <span className="text-neutral-600 dark:text-neutral-400">Catégorie</span>
+            <span className="font-medium text-neutral-900 dark:text-neutral-100">{category.name}</span>
           </div>
         )}
 
         <div className="flex justify-between">
-          <span className="text-gray-600">Quantité</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-neutral-600 dark:text-neutral-400">Quantité</span>
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {quantity} billet{quantity > 1 ? 's' : ''}
           </span>
         </div>
 
-        <div className="flex justify-between pt-3 border-t border-gray-200">
-          <span className="text-lg font-semibold text-gray-900">Total payé</span>
-          <span className="text-lg font-bold text-green-600">
+        <div className="flex justify-between pt-3 border-t border-neutral-200 dark:border-neutral-600">
+          <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Total payé</span>
+          <span className="text-lg font-bold text-green-600 dark:text-green-400">
             {formatPrice(totalAmount)} €
           </span>
         </div>

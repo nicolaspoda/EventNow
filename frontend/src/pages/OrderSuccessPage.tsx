@@ -46,9 +46,9 @@ const OrderSuccessPage: React.FC = () => {
   if (error || !order) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+        <div className="max-w-md w-full glass-card p-8 text-center">
           <svg
-            className="mx-auto h-12 w-12 text-red-400 mb-4"
+            className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -60,8 +60,8 @@ const OrderSuccessPage: React.FC = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Erreur</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">Erreur</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">{error}</p>
           <Button variant="primary" onClick={() => navigate('/events')}>
             Retour aux événements
           </Button>
@@ -72,11 +72,11 @@ const OrderSuccessPage: React.FC = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-lg p-8">
+      <div className="max-w-2xl w-full glass-card p-8">
         <div className="text-center mb-8">
-          <div className="mx-auto h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <div className="mx-auto h-20 w-20 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mb-4">
             <svg
-              className="h-10 w-10 text-green-600"
+              className="h-10 w-10 text-green-600 dark:text-green-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -89,18 +89,18 @@ const OrderSuccessPage: React.FC = () => {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Paiement réussi !</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">Paiement réussi !</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">
             Votre commande a été confirmée et vos billets sont prêts
           </p>
         </div>
 
         <OrderSummary order={order} className="mb-6" />
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-6">
           <div className="flex">
             <svg
-              className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5"
+              className="h-5 w-5 text-primary-600 dark:text-primary-400 mr-3 flex-shrink-0 mt-0.5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -113,8 +113,8 @@ const OrderSuccessPage: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="text-sm font-medium text-blue-900 mb-1">Prochaines étapes</h3>
-              <p className="text-sm text-blue-800">
+              <h3 className="text-sm font-medium text-primary-900 dark:text-primary-200 mb-1">Prochaines étapes</h3>
+              <p className="text-sm text-primary-800 dark:text-primary-300">
                 Vos billets avec QR codes sont maintenant disponibles dans votre espace "Mes billets".
                 Présentez-les à l'entrée de l'événement pour validation.
               </p>
@@ -143,7 +143,7 @@ const OrderSuccessPage: React.FC = () => {
           </Button>
         </div>
 
-        <p className="text-xs text-gray-500 text-center mt-6">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center mt-6">
           Un email de confirmation a été envoyé à votre adresse
         </p>
       </div>

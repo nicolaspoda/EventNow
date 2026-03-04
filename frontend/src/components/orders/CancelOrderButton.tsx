@@ -46,28 +46,28 @@ const CancelOrderButton: React.FC<CancelOrderButtonProps> = ({
         variant="ghost"
         size="sm"
         onClick={() => setShowModal(true)}
-        className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700"
+        className="flex-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
       >
         Annuler la commande
       </Button>
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">Annuler cette commande ?</h3>
+          <div className="glass-card p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">Annuler cette commande ?</h3>
 
             <div className="mb-6">
-              <p className="text-gray-700 mb-4">
+              <p className="text-neutral-700 dark:text-neutral-300 mb-4">
                 Vous êtes sur le point d'annuler cette commande. Le
                 remboursement sera effectué sous 5 à 10 jours ouvrés.
               </p>
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded p-3 text-sm text-yellow-800 dark:text-yellow-300">
                 <strong>Attention :</strong> Cette action est irréversible.
               </div>
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300 text-sm">
                 {error}
               </div>
             )}

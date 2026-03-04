@@ -64,16 +64,16 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ ticket, onClose, onDownload }
       aria-labelledby="qr-modal-title"
     >
       <div
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+        className="glass-card shadow-xl max-w-md w-full p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-start mb-4">
-          <h2 id="qr-modal-title" className="text-2xl font-bold text-gray-900">
+          <h2 id="qr-modal-title" className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
             Votre billet
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             aria-label="Fermer"
           >
             <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,18 +88,18 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ ticket, onClose, onDownload }
         </div>
 
         <div className="mb-6">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
             Présentez ce QR code à l'entrée de l'événement
           </p>
-          <div className="bg-white p-4 rounded-lg border-2 border-gray-200 flex items-center justify-center min-h-[256px]">
+          <div className="bg-neutral-100 dark:bg-neutral-800 p-4 rounded-lg border-2 border-neutral-200 dark:border-neutral-600 flex items-center justify-center min-h-[256px]">
             {loading && (
-              <div className="flex flex-col items-center justify-center text-gray-500">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-2" />
+              <div className="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 dark:border-primary-400 mb-2" />
                 <span className="text-sm">Génération du QR code...</span>
               </div>
             )}
             {error && (
-              <p className="text-sm text-red-600" role="alert">
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                 {error}
               </p>
             )}
@@ -113,8 +113,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ ticket, onClose, onDownload }
           </div>
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-yellow-800">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+          <p className="text-sm text-yellow-800 dark:text-yellow-300">
             <strong>Important :</strong> Ce QR code est unique et ne peut être utilisé qu'une seule fois.
             Ne le partagez pas.
           </p>
