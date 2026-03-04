@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEventSearch } from '../hooks/useEventSearch';
+import { useAuth } from '../utils/useAuth';
 import { SearchBar } from '../components/events/SearchBar';
 import { AdvancedFilters } from '../components/events/AdvancedFilters';
 import { SortOptions } from '../components/events/SortOptions';
@@ -9,6 +10,7 @@ import { FilterChips } from '../components/events/FilterChips';
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const {
     events,
     loading,
@@ -120,7 +122,7 @@ const EventsPage: React.FC = () => {
               <p className="text-neutral-500 dark:text-neutral-400">Recherche en cours...</p>
             </div>
           ) : (
-            <EventList events={events} loading={false} error={null} />
+            <EventList events={events} loading={false} error={null} currentUserId={user?.id} />
           )}
         </section>
       </div>

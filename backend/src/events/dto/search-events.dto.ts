@@ -84,6 +84,15 @@ export class SearchEventsDto {
   availableOnly?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  myEvents?: boolean;
+
+  @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;
 

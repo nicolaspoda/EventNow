@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { eventService } from '../../services/eventService';
 
 interface SearchBarProps {
@@ -15,6 +15,7 @@ interface Suggestion {
 export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (value.length >= 2) {
@@ -24,6 +25,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
       setShowSuggestions(false);
     }
   }, [value]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside, true);
+    return () => document.removeEventListener('mousedown', handleClickOutside, true);
+  }, []);
+
+  const handleInputBlur = () => {
+    setTimeout(() => setShowSuggestions(false), 150);
+  };
 
   const fetchSuggestions = async (query: string) => {
     try {
@@ -36,7 +52,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <div className="relative">
         <input
           type="search"
@@ -45,20 +61,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
           onFocus={() => {
             if (suggestions.length > 0) setShowSuggestions(true);
           }}
+          onBlur={handleInputBlur}
           placeholder="Rechercher un événement, lieu, artiste..."
-          className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          className="w-full px-4 py-3 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:focus:border-primary-400 focus:outline-none"
           aria-label="Rechercher un événement"
         />
-        <div
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"
-          aria-hidden="true"
-        >
-          🔍
-        </div>
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border">
+        <div className="absolute z-10 w-full mt-2 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-800">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.id}
@@ -67,10 +78,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
                 onChange(suggestion.label);
                 setShowSuggestions(false);
               }}
-              className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b last:border-b-0 focus:outline-none focus:bg-gray-50"
+              className="w-full text-left px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-700 border-b border-neutral-200 dark:border-neutral-600 last:border-b-0 focus:outline-none focus:bg-neutral-50 dark:focus:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
             >
               <div className="font-medium">{suggestion.label}</div>
-              <div className="text-sm text-gray-500">{suggestion.sublabel}</div>
+              <div className="text-sm text-neutral-500 dark:text-neutral-400">{suggestion.sublabel}</div>
             </button>
           ))}
         </div>

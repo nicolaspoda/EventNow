@@ -19,13 +19,13 @@ const Badge: React.FC<BadgeProps> = ({
   className = '',
 }) => {
   const variantClasses: Record<BadgeVariant, string> = {
-    primary: 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 ring-primary-600/20 dark:ring-primary-400/30',
-    success: 'bg-success-50 dark:bg-success-900/30 text-success-700 dark:text-success-300 ring-success-500/20 dark:ring-success-400/30',
-    warning: 'bg-warning-50 dark:bg-warning-900/30 text-warning-700 dark:text-warning-300 ring-warning-500/20 dark:ring-warning-400/30',
-    error:   'bg-error-50 dark:bg-error-900/30 text-error-700 dark:text-error-300 ring-error-500/20 dark:ring-error-400/30',
-    info:    'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 ring-primary-600/20 dark:ring-primary-400/30',
-    neutral: 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 ring-neutral-600/20 dark:ring-neutral-500/30',
-    default: 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 ring-neutral-600/20 dark:ring-neutral-500/30',
+    primary: 'bg-primary-100 dark:bg-primary-600 text-primary-800 dark:text-white ring-primary-600/20 dark:ring-primary-500/50',
+    success: 'bg-success-50 dark:bg-success-700 text-success-800 dark:text-white ring-success-500/20 dark:ring-success-400/50',
+    warning: 'bg-warning-50 dark:bg-warning-700 text-warning-800 dark:text-neutral-900 ring-warning-500/20 dark:ring-warning-400/50',
+    error:   'bg-error-50 dark:bg-error-700 text-error-800 dark:text-white ring-error-500/20 dark:ring-error-400/50',
+    info:    'bg-primary-100 dark:bg-primary-600 text-primary-800 dark:text-white ring-primary-600/20 dark:ring-primary-500/50',
+    neutral: 'bg-neutral-100 dark:bg-neutral-600 text-neutral-700 dark:text-white ring-neutral-600/20 dark:ring-neutral-500/50',
+    default: 'bg-neutral-100 dark:bg-neutral-600 text-neutral-700 dark:text-white ring-neutral-600/20 dark:ring-neutral-500/50',
   };
 
   const sizeClasses: Record<BadgeSize, string> = {

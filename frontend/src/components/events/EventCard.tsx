@@ -10,9 +10,10 @@ import { AverageRating } from '../reviews/AverageRating';
 
 interface EventCardProps {
   event: Event;
+  currentUserId?: string;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
   const prices = event.ticketCategories.map((cat) => parsePrice(cat.price));
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -82,6 +83,11 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
         {/* Floating badges ── top-left */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+          {currentUserId && event.organizerId === currentUserId && (
+            <Badge variant="primary" size="sm">
+              Mon événement
+            </Badge>
+          )}
           {event.type && <EventTypeBadge type={event.type} />}
           {isPast && (
             <Badge variant="neutral" size="sm">

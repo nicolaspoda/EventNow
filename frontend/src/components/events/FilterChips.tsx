@@ -29,6 +29,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
       return `Prix: ${ranges.join(', ')}`;
     }
     if (key === 'availableOnly') return 'Places disponibles';
+    if (key === 'myEvents') return 'Mes événements';
     return `${key}: ${value}`;
   };
 

@@ -11,6 +11,7 @@ interface SearchFilters {
   dateTo?: string;
   priceRanges?: string[];
   availableOnly?: boolean;
+  myEvents?: boolean;
   sortBy?: string;
 }
 
@@ -34,6 +35,7 @@ interface Event {
   eventDate: string;
   type: string;
   category: string;
+  organizerId?: string;
   stats?: EventStats;
   ticketCategories: Array<{
     name: string;
@@ -42,6 +44,7 @@ interface Event {
     initialStock: number;
   }>;
   organizer: {
+    id?: string;
     email: string;
     firstName?: string;
     lastName?: string;
@@ -71,6 +74,7 @@ export const useEventSearch = () => {
       dateTo: searchParams.get('dateTo') || undefined,
       priceRanges: searchParams.get('priceRanges')?.split(',').filter(Boolean) || undefined,
       availableOnly: searchParams.get('availableOnly') === 'true',
+      myEvents: searchParams.get('myEvents') === 'true',
       sortBy: searchParams.get('sortBy') || 'DATE_ASC',
     };
   }, [searchParams]);
@@ -121,6 +125,8 @@ export const useEventSearch = () => {
       delete nextFilters[filterKey as keyof SearchFilters];
     } else if (filterKey === 'availableOnly') {
       nextFilters.availableOnly = value === true || value === 'true';
+    } else if (filterKey === 'myEvents') {
+      nextFilters.myEvents = value === true || value === 'true';
     } else if (filterKey === 'categories' && Array.isArray(value)) {
       nextFilters.categories = value.length > 0 ? (value as string[]) : undefined;
     } else if (filterKey === 'priceRanges' && Array.isArray(value)) {
@@ -144,6 +150,7 @@ export const useEventSearch = () => {
     if (nextFilters.dateTo) newParams.set('dateTo', nextFilters.dateTo);
     if (nextFilters.priceRanges?.length) newParams.set('priceRanges', nextFilters.priceRanges.join(','));
     if (nextFilters.availableOnly === true) newParams.set('availableOnly', 'true');
+    if (nextFilters.myEvents === true) newParams.set('myEvents', 'true');
     if (nextFilters.sortBy && nextFilters.sortBy !== 'DATE_ASC') newParams.set('sortBy', nextFilters.sortBy);
 
     setSearchParams(newParams);
@@ -162,6 +169,7 @@ export const useEventSearch = () => {
     if (filters.dateFrom || filters.dateTo) count++;
     if (filters.priceRanges?.length) count++;
     if (filters.availableOnly) count++;
+    if (filters.myEvents) count++;
     return count;
   }, [filters]);
 

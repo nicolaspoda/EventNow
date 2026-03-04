@@ -6,9 +6,10 @@ interface EventListProps {
   events: Event[];
   loading: boolean;
   error: string | null;
+  currentUserId?: string;
 }
 
-const EventList: React.FC<EventListProps> = ({ events, loading, error }) => {
+const EventList: React.FC<EventListProps> = ({ events, loading, error, currentUserId }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-16" role="status" aria-live="polite">
@@ -66,7 +67,7 @@ const EventList: React.FC<EventListProps> = ({ events, loading, error }) => {
     >
       {events.map((event) => (
         <div key={event.id} role="listitem">
-          <EventCard event={event} />
+          <EventCard event={event} currentUserId={currentUserId} />
         </div>
       ))}
     </div>

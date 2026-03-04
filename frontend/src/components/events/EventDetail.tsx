@@ -12,15 +12,17 @@ interface EventDetailProps {
   onBooking?: (categoryId: string, quantity: number) => Promise<void>;
   onLoginRequired?: () => void;
   isAuthenticated?: boolean;
+  isOrganizer?: boolean;
 }
 
-const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequired, isAuthenticated = false }) => {
+const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequired, isAuthenticated = false, isOrganizer = false }) => {
   const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
   const isSoldOut = totalStock === 0;
   const cloudinarySrc = event.imageUrl ? getCloudinarySrcSet(event.imageUrl) : null;
 
   const handleCategorySelect = (category: TicketCategory) => {
+    if (isOrganizer) return;
     if (category.currentStock === 0) return;
     if (!isAuthenticated && onLoginRequired) {
       onLoginRequired();
@@ -135,14 +137,18 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
                       {getStockIndicator(category.currentStock, category.initialStock)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        disabled={category.currentStock === 0}
-                        onClick={() => handleCategorySelect(category)}
-                      >
-                        {category.currentStock === 0 ? 'Épuisé' : 'Réserver'}
-                      </Button>
+                      {isOrganizer ? (
+                        <span className="text-sm text-neutral-500 dark:text-neutral-400">—</span>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          disabled={category.currentStock === 0}
+                          onClick={() => handleCategorySelect(category)}
+                        >
+                          {category.currentStock === 0 ? 'Épuisé' : 'Réserver'}
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}

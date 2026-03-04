@@ -21,6 +21,7 @@ import {
 import { SearchEventsDto } from './dto/search-events.dto';
 import { EventCategory } from './dto/create-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -44,8 +45,12 @@ export class EventsController {
   @Get('search')
   @SkipThrottle()
   @HttpCode(HttpStatus.OK)
-  searchEvents(@Query() searchDto: SearchEventsDto) {
-    return this.eventsService.searchEvents(searchDto);
+  @UseGuards(OptionalJwtAuthGuard)
+  searchEvents(
+    @Query() searchDto: SearchEventsDto,
+    @CurrentUser() user?: { id: string },
+  ) {
+    return this.eventsService.searchEvents(searchDto, user?.id);
   }
 
   @Get('suggestions')

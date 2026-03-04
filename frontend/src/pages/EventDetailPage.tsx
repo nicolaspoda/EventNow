@@ -14,7 +14,7 @@ import { ReviewsList } from '../components/reviews/ReviewsList';
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -184,6 +184,7 @@ const EventDetailPage: React.FC = () => {
           onBooking={handleBooking}
           onLoginRequired={() => navigate('/login', { state: { from: `/events/${id}` } })}
           isAuthenticated={isAuthenticated}
+          isOrganizer={isAuthenticated && user != null && event.organizerId === user.id}
         />
 
         <section className="mt-12">

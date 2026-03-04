@@ -407,7 +407,7 @@ export class EventsService {
     return { message: 'Événement supprimé avec succès' };
   }
 
-  async searchEvents(searchDto: SearchEventsDto) {
+  async searchEvents(searchDto: SearchEventsDto, userId?: string) {
     const {
       query,
       type,
@@ -417,6 +417,7 @@ export class EventsService {
       dateTo,
       priceRanges,
       availableOnly,
+      myEvents,
       sortBy = SortBy.DATE_ASC,
       page = 1,
       limit = 20,
@@ -474,6 +475,17 @@ export class EventsService {
           some: { currentStock: { gt: 0 } },
         },
       });
+    }
+
+    if (myEvents && userId) {
+      where.AND.push({ organizerId: userId });
+    }
+
+    if (myEvents && !userId) {
+      return {
+        events: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      };
     }
 
     if (where.AND.length === 0) {
