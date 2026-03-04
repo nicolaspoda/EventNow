@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
+import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
@@ -293,7 +294,33 @@ export class EventsService {
     }
 
     return this.prisma.$transaction(async (tx) => {
+      let soldByCategoryIndex: number[] = [];
+
       if (updateEventDto.ticket_categories) {
+        const existingCategories = await tx.ticketCategory.findMany({
+          where: { eventId: id },
+          orderBy: { createdAt: 'asc' },
+          select: { id: true },
+        });
+
+        const categoryIds = existingCategories.map((c) => c.id);
+        const soldCounts =
+          categoryIds.length > 0
+            ? await tx.ticket.groupBy({
+                by: ['ticketCategoryId'],
+                where: {
+                  ticketCategoryId: { in: categoryIds },
+                  order: { status: OrderStatus.PAID },
+                },
+                _count: { id: true },
+              })
+            : [];
+
+        const soldMap = new Map(
+          soldCounts.map((s) => [s.ticketCategoryId, s._count.id]),
+        );
+        soldByCategoryIndex = categoryIds.map((id) => soldMap.get(id) ?? 0);
+
         await tx.ticketCategory.deleteMany({
           where: { eventId: id },
         });
@@ -319,14 +346,18 @@ export class EventsService {
           ...(updateEventDto.category && { category: updateEventDto.category }),
           ...(updateEventDto.ticket_categories && {
             ticketCategories: {
-              create: updateEventDto.ticket_categories.map((category) => ({
-                name: category.name,
-                description: category.description,
-                price: category.price,
-                initialStock: category.initial_stock,
-                currentStock:
-                  category.current_stock ?? category.initial_stock,
-              })),
+              create: updateEventDto.ticket_categories.map((category, index) => {
+                const initial = category.initial_stock;
+                const soldCount = soldByCategoryIndex[index] ?? 0;
+                const currentStock = Math.max(0, initial - soldCount);
+                return {
+                  name: category.name,
+                  description: category.description,
+                  price: category.price,
+                  initialStock: initial,
+                  currentStock,
+                };
+              }),
             },
           }),
         },

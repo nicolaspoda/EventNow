@@ -335,21 +335,26 @@ export function EventEditPage() {
                   label="Nombre de places"
                   type="number"
                   min={1}
-                  value={cat.initial_stock}
+                  value={cat.initial_stock === 0 ? '' : cat.initial_stock}
                   onChange={(e) =>
                     updateCategory(
                       index,
                       'initial_stock',
-                      Number(e.target.value) || 1,
+                      e.target.value === '' ? 0 : Number(e.target.value) || 0,
                     )
                   }
                   required
                 />
               </div>
-              {cat.current_stock !== undefined && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  Places déjà vendues : {cat.current_stock} (conservées à l'enregistrement)
-                </p>
+              {(cat.current_stock !== undefined && cat.initial_stock !== undefined) && (
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 space-y-0.5">
+                  <p>
+                    Places déjà vendues : {Math.max(0, cat.initial_stock - cat.current_stock)} (conservées à l'enregistrement)
+                  </p>
+                  <p>
+                    Places disponibles : {cat.current_stock}
+                  </p>
+                </div>
               )}
             </div>
           ))}

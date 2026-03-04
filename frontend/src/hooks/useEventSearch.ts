@@ -79,6 +79,12 @@ export const useEventSearch = () => {
     void fetchEvents();
   }, [filters]);
 
+  useEffect(() => {
+    const onFocus = () => void fetchEvents();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [filters]);
+
   const fetchEvents = async () => {
     setLoading(true);
     try {

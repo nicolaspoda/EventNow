@@ -284,12 +284,12 @@ export function CreateEventPage() {
                   label="Nombre de places"
                   type="number"
                   min={1}
-                  value={cat.initial_stock}
+                  value={cat.initial_stock === 0 ? '' : cat.initial_stock}
                   onChange={(e) =>
                     updateCategory(
                       index,
                       'initial_stock',
-                      Number(e.target.value) || 1,
+                      e.target.value === '' ? 0 : Number(e.target.value) || 0,
                     )
                   }
                   required

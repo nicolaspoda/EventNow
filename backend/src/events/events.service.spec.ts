@@ -19,7 +19,11 @@ describe('EventsService', () => {
       delete: jest.fn(),
     },
     ticketCategory: {
+      findMany: jest.fn(),
       deleteMany: jest.fn(),
+    },
+    ticket: {
+      groupBy: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -276,6 +280,8 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticketCategory.findMany.mockResolvedValue([]);
+      mockPrismaService.ticket.groupBy.mockResolvedValue([]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({
         count: 1,
       });
