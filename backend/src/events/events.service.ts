@@ -225,11 +225,29 @@ export class EventsService {
           ) / 10
         : null;
 
+    const eventDate =
+      event.eventDate instanceof Date
+        ? event.eventDate.toISOString()
+        : typeof event.eventDate === 'string'
+          ? event.eventDate
+          : null;
+
     return {
-      ...event,
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      location: event.location,
+      imageUrl: event.imageUrl,
+      imagePublicId: event.imagePublicId,
+      eventDate: eventDate ?? undefined,
+      organizerId: event.organizerId,
+      type: event.type,
+      category: event.category,
+      createdAt: event.createdAt instanceof Date ? event.createdAt.toISOString() : event.createdAt,
+      updatedAt: event.updatedAt instanceof Date ? event.updatedAt.toISOString() : event.updatedAt,
+      organizer: event.organizer,
       averageRating,
       totalReviews: event.reviews.length,
-      reviews: undefined,
       ticketCategories: event.ticketCategories.map((c) => ({
         ...c,
         price: Number(c.price),
@@ -485,11 +503,29 @@ export class EventsService {
             ) / 10
           : null;
 
+      const eventDate =
+        ev.eventDate instanceof Date
+          ? ev.eventDate.toISOString()
+          : typeof ev.eventDate === 'string'
+            ? ev.eventDate
+            : null;
+
       return {
-        ...ev,
+        id: ev.id,
+        title: ev.title,
+        description: ev.description,
+        location: ev.location,
+        imageUrl: ev.imageUrl,
+        imagePublicId: ev.imagePublicId,
+        eventDate: eventDate ?? undefined,
+        organizerId: ev.organizerId,
+        type: ev.type,
+        category: ev.category,
+        createdAt: ev.createdAt instanceof Date ? ev.createdAt.toISOString() : ev.createdAt,
+        updatedAt: ev.updatedAt instanceof Date ? ev.updatedAt.toISOString() : ev.updatedAt,
+        organizer: ev.organizer,
         averageRating,
         totalReviews: ev.reviews.length,
-        reviews: undefined,
         ticketCategories: ev.ticketCategories.map((c) => ({
           ...c,
           price: Number(c.price),

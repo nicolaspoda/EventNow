@@ -83,7 +83,21 @@ export const useEventSearch = () => {
     setLoading(true);
     try {
       const data = await eventService.searchEvents(filters);
-      setEvents(data.events);
+      const normalizedEvents = (data.events || []).map((ev: Record<string, unknown>) => {
+        const rawDate = ev.eventDate ?? ev.event_date;
+        let eventDateStr: string | undefined;
+        if (rawDate instanceof Date) {
+          eventDateStr = Number.isNaN(rawDate.getTime()) ? undefined : rawDate.toISOString();
+        } else if (typeof rawDate === 'string' && rawDate.trim()) {
+          const d = new Date(rawDate.trim());
+          eventDateStr = Number.isNaN(d.getTime()) ? undefined : rawDate.trim();
+        }
+        return {
+          ...ev,
+          eventDate: eventDateStr ?? (typeof ev.eventDate === 'string' ? ev.eventDate : undefined) ?? (typeof ev.event_date === 'string' ? ev.event_date : undefined),
+        };
+      });
+      setEvents(normalizedEvents);
       setPagination(data.pagination);
     } catch {
       setEvents([]);

@@ -32,7 +32,17 @@ const EventDetailPage: React.FC = () => {
         setLoading(true);
         setError(null);
         const data = await eventService.getEventById(id);
-        setEvent(data);
+        const rawDate = data.eventDate ?? (data as { event_date?: string }).event_date;
+        const eventDateStr =
+          rawDate instanceof Date
+            ? (Number.isNaN(rawDate.getTime()) ? undefined : rawDate.toISOString())
+            : typeof rawDate === 'string' && rawDate.trim()
+              ? (Number.isNaN(new Date(rawDate).getTime()) ? undefined : rawDate.trim())
+              : undefined;
+        setEvent({
+          ...data,
+          eventDate: eventDateStr ?? (data.eventDate as string) ?? (data as { event_date?: string }).event_date,
+        });
       } catch (err) {
         setError(getApiErrorMessage(err, 'Événement introuvable'));
       } finally {

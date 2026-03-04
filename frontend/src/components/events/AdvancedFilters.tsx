@@ -57,17 +57,29 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
   return (
     <div className={wrapperClass}>
-      <div className="flex items-center justify-between mb-4">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center justify-between w-full mb-4 text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 rounded-lg"
+        aria-expanded={expanded}
+        aria-label={expanded ? 'Réduire les filtres avancés' : 'Afficher plus de filtres (catégories, prix, période)'}
+      >
         <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">Filtres</h3>
-        <button
-          type="button"
-          onClick={() => setExpanded(!expanded)}
-          className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-2 py-1"
-          aria-label={expanded ? 'Réduire les filtres' : 'Développer les filtres'}
-        >
-          {expanded ? '▲' : '▼'}
-        </button>
-      </div>
+        <span className="flex items-center gap-2 shrink-0 ml-2 py-1.5 px-2 rounded-md bg-neutral-100 dark:bg-neutral-700/50 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-600 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+          <span className="text-sm font-medium">
+            {expanded ? 'Moins de filtres' : 'Plus de filtres'}
+          </span>
+          <svg
+            className={`w-5 h-5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </span>
+      </button>
 
       <div className="space-y-4">
         <div>

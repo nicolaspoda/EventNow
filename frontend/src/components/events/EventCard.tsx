@@ -19,7 +19,9 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const dateValue = event.eventDate ?? (event as { event_date?: string }).event_date;
   const cloudinarySrc = event.imageUrl ? getCloudinarySrcSet(event.imageUrl) : null;
 
-  const eventDate = dateValue ? new Date(dateValue) : null;
+  const eventDateRaw = dateValue ? new Date(dateValue) : null;
+  const eventDate =
+    eventDateRaw && !Number.isNaN(eventDateRaw.getTime()) ? eventDateRaw : null;
   const isPast = eventDate ? eventDate < new Date() : false;
 
   const stockLevel =
