@@ -15,13 +15,14 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   if (config.data instanceof FormData) {
-    const headers = { ...config.headers } as Record<string, unknown>;
-    delete headers['Content-Type'];
-    delete headers['content-type'];
-    config.headers = headers;
+    delete config.headers['Content-Type'];
+    delete config.headers['content-type'];
   }
   return config;
 });
+
+/** Une seule requête de refresh à la fois ; les autres 401 attendent ce promise. */
+let refreshPromise: Promise<string> | null = null;
 
 api.interceptors.response.use(
   (response) => response,
@@ -45,18 +46,25 @@ api.interceptors.response.use(
           throw new Error('No refresh token');
         }
 
-        const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
-          refreshToken,
-        });
+        if (!refreshPromise) {
+          refreshPromise = (async () => {
+            const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
+              refreshToken,
+            });
+            const { accessToken, refreshToken: newRefreshToken } = response.data;
+            sessionStorage.setItem('accessToken', accessToken);
+            sessionStorage.setItem('refreshToken', newRefreshToken);
+            return accessToken;
+          })();
+        }
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-        sessionStorage.setItem('accessToken', accessToken);
-        sessionStorage.setItem('refreshToken', newRefreshToken);
+        const accessToken = await refreshPromise;
+        refreshPromise = null;
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
+        refreshPromise = null;
         sessionStorage.removeItem('accessToken');
         sessionStorage.removeItem('refreshToken');
         sessionStorage.removeItem('user');
