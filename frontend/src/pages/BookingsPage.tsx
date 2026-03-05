@@ -11,7 +11,7 @@ const BookingsPage: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'cancelled'>('all');
 
   const fetchBookings = async () => {
     try {
@@ -55,6 +55,7 @@ const BookingsPage: React.FC = () => {
   const filteredBookings = bookings.filter((booking) => {
     if (filter === 'pending') return booking.status === 'PENDING';
     if (filter === 'confirmed') return booking.status === 'CONFIRMED';
+    if (filter === 'cancelled') return booking.status === 'CANCELLED';
     return true;
   });
 
@@ -121,6 +122,16 @@ const BookingsPage: React.FC = () => {
             >
               Confirmées ({bookings.filter(b => b.status === 'CONFIRMED').length})
             </button>
+            <button
+              onClick={() => setFilter('cancelled')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                filter === 'cancelled'
+                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  : 'bg-white dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600'
+              }`}
+            >
+              Annulées ({bookings.filter(b => b.status === 'CANCELLED').length})
+            </button>
           </div>
         </header>
 
@@ -146,12 +157,12 @@ const BookingsPage: React.FC = () => {
               />
             </svg>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
-              {filter === 'all' ? 'Aucune réservation' : `Aucune réservation ${filter === 'pending' ? 'en attente' : 'confirmée'}`}
+              {filter === 'all' ? 'Aucune réservation' : `Aucune réservation ${filter === 'pending' ? 'en attente' : filter === 'confirmed' ? 'confirmée' : 'annulée'}`}
             </h2>
             <p className="text-neutral-600 dark:text-neutral-400 mb-6">
               {filter === 'all' 
                 ? 'Vous n\'avez pas encore réservé de billets.'
-                : `Vous n'avez pas de réservation ${filter === 'pending' ? 'en attente' : 'confirmée'}.`
+                : `Vous n'avez pas de réservation ${filter === 'pending' ? 'en attente' : filter === 'confirmed' ? 'confirmée' : 'annulée'}.`
               }
             </p>
             <Button

@@ -122,16 +122,19 @@ model Booking {
   quantity         Int
   status           BookingStatus @default(PENDING)
   expiresAt        DateTime      @map("expires_at")
+  orderId          String?       @unique @map("order_id")
   createdAt        DateTime      @default(now()) @map("created_at")
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   ticketCategory TicketCategory @relation(fields: [ticketCategoryId], references: [id], onDelete: Cascade)
+  order          Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([ticketCategoryId])
   @@index([status])
   @@index([expiresAt])
+  @@index([orderId])
   @@map("bookings")
 }
 
@@ -144,8 +147,9 @@ model Order {
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tickets Ticket[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tickets  Ticket[]
+  bookings Booking[]
 
   @@index([userId])
   @@index([status])

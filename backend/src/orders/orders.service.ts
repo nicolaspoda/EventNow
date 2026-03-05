@@ -69,6 +69,11 @@ export class OrdersService {
         },
       });
 
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: { orderId: order.id },
+      });
+
       const tickets = await Promise.all(
         Array(booking.quantity)
           .fill(null)
@@ -241,6 +246,33 @@ export class OrdersService {
       );
     }
 
+    const categoryId = order.tickets[0]?.ticketCategoryId;
+    const quantity = order.tickets?.length ?? 0;
+
+    const updatedBookings = await this.prisma.booking.updateMany({
+      where: { orderId: orderId },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
+    if (updatedBookings.count === 0 && categoryId && quantity > 0) {
+      const legacyBooking = await this.prisma.booking.findFirst({
+        where: {
+          orderId: null,
+          userId: order.userId,
+          ticketCategoryId: categoryId,
+          quantity,
+          status: BookingStatus.CONFIRMED,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (legacyBooking) {
+        await this.prisma.booking.update({
+          where: { id: legacyBooking.id },
+          data: { status: BookingStatus.CANCELLED },
+        });
+      }
+    }
+
     const updated = await this.prisma.order.update({
       where: { id: orderId },
       data: { status: OrderStatus.REFUND_REQUESTED },
@@ -311,6 +343,11 @@ export class OrdersService {
       await tx.ticketCategory.update({
         where: { id: categoryId },
         data: { currentStock: { increment: ticketCount } },
+      });
+
+      await tx.booking.updateMany({
+        where: { orderId: orderId },
+        data: { status: BookingStatus.CANCELLED },
       });
 
       const updated = await tx.order.update({
