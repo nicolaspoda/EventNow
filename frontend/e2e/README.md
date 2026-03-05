@@ -36,6 +36,16 @@ Pour vérifier que tout passe **sans** ouvrir les navigateurs (headless) :
 cd frontend && npm run test:e2e:flows:headless
 ```
 
+### Tout en une commande (workflow complet)
+
+Depuis la **racine du projet** (`EventNow/`), un script démarre les services, seed la base et lance les tests headless :
+
+```bash
+bash scripts/e2e-full.sh
+```
+
+(Prérequis : Docker, `npm install` et `npx playwright install chromium` dans `frontend/`.)
+
 ### Voir l’exécution à l’écran (recommandé)
 
 **3 fenêtres en parallèle** (Client, Organisateur, Staff) — tous les scénarios, sans ouverture/fermeture en rafale.

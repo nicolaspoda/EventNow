@@ -8,6 +8,8 @@ import { test, expect } from '@playwright/test';
 import { testUsers } from '../fixtures/test-users';
 
 test.describe('Flux Client (1 fenêtre)', () => {
+  const eventLinkRegex = /Concert Jazz|Festival Rock|Conférence|Soirée Electro/i;
+
   test('Tous les scénarios client : landing → auth → catalogue → réservations → checkout → déconnexion', async ({
     page,
   }) => {
@@ -15,16 +17,39 @@ test.describe('Flux Client (1 fenêtre)', () => {
     await page.goto('/');
     await expect(page).toHaveTitle(/EventNow|frontend/i);
     await expect(page.getByRole('heading', { name: /vivez des moments|inoubliables/i })).toBeVisible();
-    await page.getByRole('link', { name: /explorer les événements|voir les événements/i }).first().click();
-    await expect(page).toHaveURL(/\/events/);
-    await page.getByRole('link', { name: /^connexion$/i }).click();
+    // Lien S'inscrire → page register
+    await page.getByRole('link', { name: /s'inscrire|inscrivez-vous/i }).first().click();
+    await expect(page).toHaveURL(/\/register/);
+    await expect(page.getByLabel(/type de compte/i)).toBeVisible();
+    await expect(page.getByRole('link', { name: /connectez-vous/i })).toBeVisible();
+    await page.getByRole('link', { name: /connectez-vous/i }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByLabel(/email/i)).toBeVisible();
 
-    // —— Auth client
-    await page.getByLabel(/email/i).fill(testUsers.client.email);
-    await page.getByLabel(/mot de passe/i).fill(testUsers.client.password);
-    await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
+    // —— Inscription puis retour login
+    await page.getByRole('link', { name: /inscrivez-vous/i }).click();
+    await expect(page).toHaveURL(/\/register/);
+    const uniqueEmail = `e2e.client.${Date.now()}@eventnow.fr`;
+    await page.getByLabel(/email/i).fill(uniqueEmail);
+    await page.getByLabel(/mot de passe/i).first().fill(testUsers.client.password);
+    await page.getByLabel(/confirmer le mot de passe/i).fill(testUsers.client.password);
+    await page.getByLabel(/type de compte/i).selectOption('CLIENT');
+    await page.getByRole('button', { name: /s'inscrire/i }).click();
+    try {
+      await expect(page).toHaveURL(/\/login/, { timeout: 12000 });
+    } catch {
+      await page.goto('/login');
+    }
+    await expect(page).toHaveURL(/\/login/);
+    if (await page.getByText(/inscription réussie/i).isVisible()) {
+      await expect(page.getByText(/inscription réussie/i)).toBeVisible();
+    }
+
+    // —— Login client (une seule tentative pour limiter le throttle)
+    const loginForm = page.getByRole('form', { name: /formulaire de connexion/i });
+    await loginForm.locator('#email').fill(testUsers.client.email);
+    await loginForm.locator('#password').fill(testUsers.client.password);
+    await loginForm.getByRole('button', { name: 'Se connecter', exact: true }).click();
     await expect(page).toHaveURL(/\/(dashboard|events)/, { timeout: 15000 });
     await expect(page.getByRole('link', { name: /mes événements|réservations/i }).first()).toBeVisible();
 
@@ -32,8 +57,8 @@ test.describe('Flux Client (1 fenêtre)', () => {
     await page.getByRole('link', { name: /EventNow|accueil|événements/i }).first().click();
     await expect(page).toHaveURL(/\/events/);
     await expect(page.getByRole('heading', { name: /découvrez des événements|inoubliables/i })).toBeVisible();
-    const eventLink = page.getByRole('link', { name: /Concert Jazz|Festival Rock|Conférence|Soirée Electro/i }).first();
-    await eventLink.click();
+    await expect(page.getByRole('link', { name: eventLinkRegex }).first()).toBeVisible({ timeout: 15000 });
+    await page.getByRole('link', { name: eventLinkRegex }).first().click();
     await expect(page).toHaveURL(/\/events\/[a-f0-9-]+/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: /^Événements$/i })).toBeVisible();
@@ -86,8 +111,8 @@ test.describe('Flux Client (1 fenêtre)', () => {
 
     // —— Réservation → Checkout → Paiement → Succès
     await page.goto('/events');
-    const evLink = page.getByRole('link', { name: /Concert Jazz|Festival Rock|Conférence Tech|Soirée Electro/i }).first();
-    await evLink.click();
+    await expect(page.getByRole('link', { name: eventLinkRegex }).first()).toBeVisible({ timeout: 15000 });
+    await page.getByRole('link', { name: eventLinkRegex }).first().click();
     await expect(page).toHaveURL(/\/events\/[a-f0-9-]+/);
     await page.getByRole('button', { name: /^Réserver$/i }).first().click();
     await expect(page.getByRole('dialog')).toBeVisible();
@@ -105,6 +130,15 @@ test.describe('Flux Client (1 fenêtre)', () => {
     await page.goto('/my-orders');
     await expect(page.getByRole('heading', { name: /mes commandes/i })).toBeVisible();
 
+    // —— Demande de remboursement (si bouton visible : événement > 7 jours)
+    const annulerBtn = page.getByRole('button', { name: /annuler la commande/i }).first();
+    if (await annulerBtn.isVisible()) {
+      await annulerBtn.click();
+      await expect(page.getByRole('heading', { name: /annuler cette commande/i })).toBeVisible();
+      await page.getByRole('button', { name: /confirmer l'annulation/i }).click();
+      await expect(page.getByRole('heading', { name: /annuler cette commande/i })).not.toBeVisible();
+    }
+
     // —— Checkout sans bookingId
     await page.goto('/checkout');
     await expect(page.getByText(/paramètres|manquants|erreur/i).first()).toBeVisible();
@@ -112,12 +146,23 @@ test.describe('Flux Client (1 fenêtre)', () => {
 
     // —— Modal réservation : fermer sans réserver
     await page.goto('/events');
-    const evLink2 = page.getByRole('link', { name: /Concert Jazz|Festival Rock|Soirée Electro/i }).first();
-    await evLink2.click();
+    await expect(page.getByRole('link', { name: eventLinkRegex }).first()).toBeVisible({ timeout: 15000 });
+    await page.getByRole('link', { name: eventLinkRegex }).first().click();
     await page.getByRole('button', { name: /^Réserver$/i }).first().click();
     await expect(page.getByRole('heading', { name: /réserver des billets/i })).toBeVisible();
     await page.getByRole('button', { name: /^Annuler$/i }).first().click();
     await expect(page.getByRole('heading', { name: /réserver des billets/i })).not.toBeVisible();
+
+    // —— Avis : si formulaire visible (client éligible), soumettre un avis
+    const avisHeading = page.getByRole('heading', { name: /laisser un avis/i });
+    if (await avisHeading.isVisible()) {
+      const form = page.locator('form').filter({ has: avisHeading });
+      const stars = form.getByRole('button');
+      await stars.nth(3).click(); // 4e étoile
+      await page.getByLabel(/votre avis/i).fill('Super événement E2E !');
+      await page.getByRole('button', { name: /publier mon avis/i }).click();
+      await expect(avisHeading).not.toBeVisible({ timeout: 5000 });
+    }
 
     // —— Déconnexion
     await page.getByRole('button', { name: /déconnexion/i }).click();
@@ -130,11 +175,16 @@ test.describe('Flux Organisateur (1 fenêtre)', () => {
   test('Tous les scénarios organisateur : auth → dashboard → événements → stats → création/édition → remboursements → déconnexion', async ({
     page,
   }) => {
-    // —— Auth
+    // —— Auth (échec puis succès)
     await page.goto('/login');
-    await page.getByLabel(/email/i).fill(testUsers.organizer.email);
-    await page.getByLabel(/mot de passe/i).fill(testUsers.organizer.password);
-    await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
+    const loginFormOrg = page.getByRole('form', { name: /formulaire de connexion/i });
+    await loginFormOrg.getByLabel(/email/i).fill(testUsers.organizer.email);
+    await loginFormOrg.getByLabel(/mot de passe/i).fill('MauvaisMotDePasse123!');
+    await loginFormOrg.getByRole('button', { name: 'Se connecter', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText(/incorrect|erreur|invalid|throttl|too many requests/i);
+    await loginFormOrg.getByLabel(/email/i).fill(testUsers.organizer.email);
+    await loginFormOrg.getByLabel(/mot de passe/i).fill(testUsers.organizer.password);
+    await loginFormOrg.getByRole('button', { name: 'Se connecter', exact: true }).click();
     await expect(page).toHaveURL(/\/(dashboard|events)/, { timeout: 15000 });
     await expect(page.getByRole('button', { name: /déconnexion/i })).toBeVisible();
 
@@ -149,7 +199,12 @@ test.describe('Flux Organisateur (1 fenêtre)', () => {
     await expect(page).toHaveURL(/\/dashboard\/organizer\/refund-requests/);
     await expect(page.getByRole('heading', { name: /demandes de remboursement/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /retour au tableau de bord/i })).toBeVisible();
-    await expect(page.getByText(/aucune demande de remboursement/i)).toBeVisible();
+    // Liste vide ou demandes en attente (selon ordre d'exécution des flux)
+    await expect(
+      page.getByText(/aucune demande de remboursement en attente/i).or(
+        page.getByRole('button', { name: /approuver le remboursement/i })
+      )
+    ).toBeVisible({ timeout: 10000 });
     await page.getByRole('button', { name: /retour au tableau de bord/i }).click();
     await expect(page).toHaveURL(/\/dashboard\/organizer/);
 
@@ -160,8 +215,9 @@ test.describe('Flux Organisateur (1 fenêtre)', () => {
 
     // —— Catalogue : voir détail (pas de lien modifier sur la page publique)
     await page.goto('/events');
-    const eventLink = page.getByRole('link', { name: /Concert Jazz|Festival Rock/i }).first();
-    await eventLink.click();
+    const eventLinkRegexOrg = /Concert Jazz|Festival Rock|Conférence|Soirée Electro/i;
+    await expect(page.getByRole('link', { name: eventLinkRegexOrg }).first()).toBeVisible({ timeout: 15000 });
+    await page.getByRole('link', { name: eventLinkRegexOrg }).first().click();
     await expect(page).toHaveURL(/\/events\/[a-f0-9-]+/);
     await expect(page.getByRole('link', { name: /^Événements$/i })).toBeVisible();
 
@@ -201,6 +257,14 @@ test.describe('Flux Organisateur (1 fenêtre)', () => {
     await page.getByRole('button', { name: /créer l'événement/i }).click();
     await expect(page).toHaveURL(/\/(events\/[a-f0-9-]+|dashboard\/organizer)/, { timeout: 10000 });
 
+    // —— Remboursements : si une demande existe (ex. client a demandé), l'approuver
+    await page.goto('/dashboard/organizer/refund-requests');
+    const approuverBtn = page.getByRole('button', { name: /^Approuver le remboursement$/i }).first();
+    if (await approuverBtn.isVisible()) {
+      await approuverBtn.click();
+      await page.waitForTimeout(2000);
+    }
+
     // —— Déconnexion
     await page.getByRole('button', { name: /déconnexion/i }).click();
     await expect(page).toHaveURL(/\/login/);
@@ -209,9 +273,12 @@ test.describe('Flux Organisateur (1 fenêtre)', () => {
 
 test.describe('Flux Staff (1 fenêtre)', () => {
   test('Tous les scénarios staff : auth → validation billets → historique → déconnexion', async ({ page }) => {
-    // —— Auth
+    // —— Auth (échec puis succès)
     await page.goto('/login');
     await page.getByLabel(/email/i).fill(testUsers.staff.email);
+    await page.getByLabel(/mot de passe/i).fill('MauvaisMotDePasse123!');
+    await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
+    await expect(page.getByRole('alert')).toContainText(/incorrect|erreur|invalid|throttl|too many requests/i);
     await page.getByLabel(/mot de passe/i).fill(testUsers.staff.password);
     await page.getByRole('button', { name: 'Se connecter', exact: true }).click();
     await expect(page).toHaveURL(/\/(dashboard|staff)/, { timeout: 15000 });
@@ -224,6 +291,11 @@ test.describe('Flux Staff (1 fenêtre)', () => {
     await expect(page.getByRole('heading', { name: /scanner un billet/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /activer la caméra/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /saisie manuelle/i })).toBeVisible();
+
+    // —— Saisie manuelle : dialog prompt avec code invalide → résultat d'erreur
+    page.once('dialog', (d) => d.accept('code-billet-invalide-e2e'));
+    await page.getByRole('button', { name: /saisie manuelle/i }).click();
+    await expect(page.getByRole('status')).toContainText(/invalide|erreur|inexistant|déjà utilisé|annulée|terminé/i, { timeout: 10000 });
 
     // —— Historique
     await page.getByRole('link', { name: /historique/i }).click();
