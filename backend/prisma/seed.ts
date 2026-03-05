@@ -18,6 +18,30 @@ async function main() {
     },
   });
 
+  const client = await prisma.user.upsert({
+    where: { email: 'client@eventnow.fr' },
+    update: {},
+    create: {
+      email: 'client@eventnow.fr',
+      passwordHash: hash,
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      role: 'CLIENT',
+    },
+  });
+
+  const staff = await prisma.user.upsert({
+    where: { email: 'staff@eventnow.fr' },
+    update: {},
+    create: {
+      email: 'staff@eventnow.fr',
+      passwordHash: hash,
+      firstName: 'Sophie',
+      lastName: 'Leroy',
+      role: 'STAFF',
+    },
+  });
+
   const now = new Date();
   const futureDate = (days: number) => {
     const d = new Date(now);
@@ -103,8 +127,10 @@ async function main() {
     },
   });
 
-  console.log('Seed OK: 1 organisateur, 4 événements créés.');
+  console.log('Seed OK: 1 organisateur, 1 client, 1 staff, 4 événements créés.');
   console.log('Compte organisateur: organizer@eventnow.fr / Organizer123!');
+  console.log('Compte client: client@eventnow.fr / Organizer123!');
+  console.log('Compte staff: staff@eventnow.fr / Organizer123!');
 }
 
 main()
