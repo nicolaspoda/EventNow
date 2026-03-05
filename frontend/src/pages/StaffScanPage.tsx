@@ -4,6 +4,7 @@ import { QRScanner } from '../components/staff/QRScanner';
 import { ValidationResult } from '../components/staff/ValidationResult';
 import { validationService } from '../services/validationService';
 import type { ValidationResponse } from '../services/validationService';
+import Button from '../components/ui/Button';
 
 export const StaffScanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,13 +62,13 @@ export const StaffScanPage: React.FC = () => {
               </h1>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">Mode STAFF</p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => navigate('/staff/validations')}
-              className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
             >
               Historique
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -86,7 +87,7 @@ export const StaffScanPage: React.FC = () => {
               <div className="space-y-4">
                 {cameraError && (
                   <div
-                    className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm"
+                    className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm"
                     role="alert"
                   >
                     {cameraError}
@@ -99,23 +100,27 @@ export const StaffScanPage: React.FC = () => {
                     </button>
                   </div>
                 )}
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
                   onClick={() => {
                     setCameraError(null);
                     setScanning(true);
                   }}
-                  className="w-full bg-blue-600 text-white py-4 rounded-lg text-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Activer la caméra
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
                   onClick={handleManualInput}
-                  className="w-full bg-gray-600 text-white py-4 rounded-lg text-lg font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Saisie manuelle
-                </button>
+                </Button>
               </div>
             )}
 
@@ -128,16 +133,18 @@ export const StaffScanPage: React.FC = () => {
                     setScanning(false);
                   }}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="danger"
+                  fullWidth
+                  className="mt-4"
                   onClick={() => {
                     setScanning(false);
                     setCameraError(null);
                   }}
-                  className="w-full mt-4 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   Annuler
-                </button>
+                </Button>
               </div>
             )}
 
@@ -147,35 +154,37 @@ export const StaffScanPage: React.FC = () => {
                   className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"
                   aria-hidden="true"
                 />
-                <p className="text-gray-600">Vérification en cours...</p>
+                <p className="text-gray-600 dark:text-neutral-400">Vérification en cours...</p>
               </div>
             )}
 
             {result && (
               <div>
                 <ValidationResult result={result} />
-                <button
+                <Button
                   type="button"
+                  variant="primary"
+                  fullWidth
+                  className="mt-4"
                   onClick={() => {
                     setResult(null);
                     setScanning(true);
                   }}
-                  className="w-full mt-4 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Scanner un autre billet
-                </button>
+                </Button>
               </div>
             )}
           </section>
 
           <section
-            className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+            className="bg-blue-50 dark:bg-neutral-700/50 border border-blue-200 dark:border-neutral-600 rounded-lg p-4"
             aria-labelledby="instructions-title"
           >
-            <h3 id="instructions-title" className="font-semibold text-blue-900 mb-2">
+            <h3 id="instructions-title" className="font-semibold text-blue-900 dark:text-neutral-100 mb-2">
               Instructions
             </h3>
-            <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+            <ul className="text-sm text-blue-800 dark:text-neutral-300 space-y-1 list-disc list-inside">
               <li>Pointez la caméra vers le QR code du billet</li>
               <li>Le scan se fait automatiquement</li>
               <li>Vérifiez le message de validation avant de laisser entrer</li>

@@ -4,6 +4,7 @@ import { validationService } from '../services/validationService';
 import type { ValidationItem } from '../services/validationService';
 import { ValidationsList } from '../components/staff/ValidationsList';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
+import Button from '../components/ui/Button';
 
 export const StaffValidationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -33,28 +34,29 @@ export const StaffValidationsPage: React.FC = () => {
         <header className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-neutral-100">
                 Historique des validations
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-neutral-400 mt-2">
                 {validations.length} billet
                 {validations.length !== 1 ? 's' : ''} validé
                 {validations.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="lg"
               onClick={() => navigate('/staff/scan')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Retour au scan
-            </button>
+            </Button>
           </div>
         </header>
 
         {error && (
           <div
-            className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded"
+            className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded"
             role="alert"
           >
             {error}
@@ -74,7 +76,7 @@ export const StaffValidationsPage: React.FC = () => {
               className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
               aria-hidden="true"
             />
-            <p className="mt-4 text-gray-600">Chargement...</p>
+            <p className="mt-4 text-gray-600 dark:text-neutral-400">Chargement...</p>
           </div>
         ) : (
           <ValidationsList validations={validations} />
