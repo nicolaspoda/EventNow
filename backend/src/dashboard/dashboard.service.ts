@@ -281,6 +281,38 @@ export class DashboardService {
                 },
               },
             },
+            tickets: {
+              where: {
+                order: { status: 'PAID' },
+              },
+              include: {
+                order: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        email: true,
+                        firstName: true,
+                        lastName: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        participationRequests: {
+          where: { status: 'ACCEPTED' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
       },
@@ -294,17 +326,77 @@ export class DashboardService {
       throw new ForbiddenException('Accès non autorisé');
     }
 
-    const participants = event.ticketCategories
-      .flatMap((cat) => cat.bookings)
-      .map((booking) => ({
-        userId: booking.user.id,
-        email: booking.user.email,
-        firstName: booking.user.firstName,
-        lastName: booking.user.lastName,
-        quantity: booking.quantity,
-        status: booking.status,
-        bookedAt: booking.createdAt,
-      }));
+    const participantsMap = new Map<
+      string,
+      {
+        userId: string;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        quantity: number;
+        status: string;
+        bookedAt: Date;
+      }
+    >();
+
+    for (const cat of event.ticketCategories) {
+      for (const booking of cat.bookings) {
+        const existing = participantsMap.get(booking.user.id);
+        if (existing) {
+          existing.quantity += booking.quantity;
+        } else {
+          participantsMap.set(booking.user.id, {
+            userId: booking.user.id,
+            email: booking.user.email,
+            firstName: booking.user.firstName,
+            lastName: booking.user.lastName,
+            quantity: booking.quantity,
+            status: booking.status,
+            bookedAt: booking.createdAt,
+          });
+        }
+      }
+
+      for (const ticket of cat.tickets) {
+        const user = ticket.order.user;
+        const existing = participantsMap.get(user.id);
+        if (existing) {
+          existing.quantity += 1;
+          if (existing.status !== 'CONFIRMED') {
+            existing.status = 'CONFIRMED';
+          }
+        } else {
+          participantsMap.set(user.id, {
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            quantity: 1,
+            status: 'CONFIRMED',
+            bookedAt: ticket.order.createdAt,
+          });
+        }
+      }
+    }
+
+    for (const request of event.participationRequests) {
+      const existing = participantsMap.get(request.user.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        participantsMap.set(request.user.id, {
+          userId: request.user.id,
+          email: request.user.email,
+          firstName: request.user.firstName,
+          lastName: request.user.lastName,
+          quantity: 1,
+          status: 'CONFIRMED',
+          bookedAt: request.createdAt,
+        });
+      }
+    }
+
+    const participants = Array.from(participantsMap.values());
 
     return {
       event: {
