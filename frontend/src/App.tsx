@@ -25,6 +25,7 @@ import { RefundRequestsPage } from './pages/RefundRequestsPage';
 import { StaffScanPage } from './pages/StaffScanPage';
 import { StaffValidationsPage } from './pages/StaffValidationsPage';
 import LandingPage from './pages/LandingPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 function App() {
   return (
@@ -93,6 +94,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyOrdersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

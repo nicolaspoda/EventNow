@@ -10,6 +10,24 @@ export interface User {
   id: string;
   email: string;
   role: Role;
+  firstName?: string | null;
+  lastName?: string | null;
+  avatarUrl?: string | null;
+  createdAt?: string;
+}
+
+export interface UserProfile extends User {
+  stats: {
+    ordersCount: number;
+    reviewsCount: number;
+    eventsOrganized: number;
+  };
+}
+
+export interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
 }
 
 export interface AuthResponse {
