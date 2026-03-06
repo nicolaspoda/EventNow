@@ -345,6 +345,14 @@ export class DashboardService {
                 imageUrl: true,
                 type: true,
                 category: true,
+                organizer: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
               },
             },
           },
@@ -378,6 +386,14 @@ export class DashboardService {
             imageUrl: true,
             type: true,
             category: true,
+            organizer: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         },
       },
@@ -419,6 +435,7 @@ export class DashboardService {
       imageUrl: item.event.imageUrl,
       type: item.event.type,
       category: item.event.category,
+      organizer: (item.event as any).organizer,
       participationType: 'TICKET' as const,
       ticketCount: item.ticketCount,
       categoryName: item.categoryName,
@@ -435,6 +452,7 @@ export class DashboardService {
       imageUrl: participation.event.imageUrl,
       type: participation.event.type,
       category: participation.event.category,
+      organizer: (participation.event as any).organizer,
       participationType: 'PARTICIPATION' as const,
       acceptedAt: participation.respondedAt,
     }));
