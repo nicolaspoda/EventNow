@@ -3,6 +3,7 @@ import { safeFormat } from '../../utils/date';
 import { formatPrice } from '../../utils/price';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
 import type { Event, TicketCategory } from '../../types/event.types';
+import type { ParticipationRequest } from '../../types/participation.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import BookingModal from '../bookings/BookingModal';
@@ -10,15 +11,32 @@ import BookingModal from '../bookings/BookingModal';
 interface EventDetailProps {
   event: Event;
   onBooking?: (categoryId: string, quantity: number) => Promise<void>;
+  onParticipationRequest?: () => Promise<void>;
+  myParticipationRequest?: ParticipationRequest | null;
   onLoginRequired?: () => void;
   isAuthenticated?: boolean;
   isOrganizer?: boolean;
 }
 
-const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequired, isAuthenticated = false, isOrganizer = false }) => {
+const EventDetail: React.FC<EventDetailProps> = ({
+  event,
+  onBooking,
+  onParticipationRequest,
+  myParticipationRequest,
+  onLoginRequired,
+  isAuthenticated = false,
+  isOrganizer = false,
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
+  const [participationLoading, setParticipationLoading] = useState(false);
+  const isCommunity = event.type === 'COMMUNITY';
+  const participationCategory = isCommunity && event.ticketCategories?.length
+    ? event.ticketCategories.find((c) => c.name === 'Participation') ?? event.ticketCategories[0]
+    : null;
+  const participationPlacesAvailable = participationCategory?.currentStock ?? 0;
+  const isParticipationFull = participationPlacesAvailable <= 0;
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
-  const isSoldOut = totalStock === 0;
+  const isSoldOut = !isCommunity && totalStock === 0;
   const cloudinarySrc = event.imageUrl ? getCloudinarySrcSet(event.imageUrl) : null;
 
   const handleCategorySelect = (category: TicketCategory) => {
@@ -35,6 +53,19 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
     if (selectedCategory && onBooking) {
       await onBooking(selectedCategory.id, quantity);
       setSelectedCategory(null);
+    }
+  };
+
+  const handleParticipationRequest = async () => {
+    if (!onParticipationRequest || !isAuthenticated) {
+      if (onLoginRequired) onLoginRequired();
+      return;
+    }
+    setParticipationLoading(true);
+    try {
+      await onParticipationRequest();
+    } finally {
+      setParticipationLoading(false);
     }
   };
 
@@ -98,6 +129,41 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
           )}
         </div>
 
+        {isCommunity ? (
+          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
+            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+              Participation
+            </h2>
+            <div className="flex flex-wrap items-center gap-4">
+              <Badge variant={isParticipationFull ? 'error' : 'success'}>
+                {isParticipationFull
+                  ? 'Complet'
+                  : `${participationPlacesAvailable} place${participationPlacesAvailable > 1 ? 's' : ''} disponible${participationPlacesAvailable > 1 ? 's' : ''}`}
+              </Badge>
+              {!isOrganizer && (
+                myParticipationRequest ? (
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                    {myParticipationRequest.status === 'PENDING' && 'Demande en attente'}
+                    {myParticipationRequest.status === 'ACCEPTED' && 'Votre demande a été acceptée'}
+                    {myParticipationRequest.status === 'REFUSED' && 'Votre demande a été refusée'}
+                  </span>
+                ) : (
+                  <Button
+                    variant="primary"
+                    disabled={isParticipationFull || participationLoading}
+                    onClick={handleParticipationRequest}
+                  >
+                    {participationLoading
+                      ? 'Envoi...'
+                      : !isAuthenticated
+                        ? 'Se connecter pour demander à participer'
+                        : 'Demander à participer'}
+                  </Button>
+                )
+              )}
+            </div>
+          </div>
+        ) : (
         <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
           <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Catégories de billets</h2>
 
@@ -156,6 +222,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
             </table>
           </div>
         </div>
+        )}
 
         {event.organizer && (
           <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
@@ -178,7 +245,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ event, onBooking, onLoginRequ
           </div>
         )}
 
-        {isSoldOut && (
+        {!isCommunity && isSoldOut && (
           <p className="mt-4 text-center text-sm text-error-600 dark:text-error-400" role="alert">
             Toutes les places pour cet événement sont épuisées
           </p>

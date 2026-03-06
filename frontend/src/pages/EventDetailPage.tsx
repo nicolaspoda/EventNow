@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Event } from '../types/event.types';
+import type { ParticipationRequest } from '../types/participation.types';
 import { eventService } from '../services/eventService';
 import { bookingService } from '../services/bookingService';
+import { participationService } from '../services/participationService';
 import { reviewService } from '../services/reviewService';
 import { useAuth } from '../utils/useAuth';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
@@ -16,6 +18,7 @@ const EventDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
+  const [myParticipationRequest, setMyParticipationRequest] = useState<ParticipationRequest | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [canReview, setCanReview] = useState(false);
@@ -52,6 +55,22 @@ const EventDetailPage: React.FC = () => {
 
     fetchEvent();
   }, [id]);
+
+  useEffect(() => {
+    const fetchMyRequest = async () => {
+      if (!id || !isAuthenticated) {
+        setMyParticipationRequest(undefined);
+        return;
+      }
+      try {
+        const req = await participationService.getMyRequestForEvent(id);
+        setMyParticipationRequest(req ?? null);
+      } catch {
+        setMyParticipationRequest(null);
+      }
+    };
+    fetchMyRequest();
+  }, [id, isAuthenticated]);
 
   useEffect(() => {
     const checkIfCanReview = async () => {
@@ -93,6 +112,16 @@ const EventDetailPage: React.FC = () => {
         return;
       }
       alert(getApiErrorMessage(err, 'Erreur lors de la création de la réservation'));
+    }
+  };
+
+  const handleParticipationRequest = async () => {
+    if (!id || !isAuthenticated) return;
+    try {
+      const created = await participationService.create({ eventId: id });
+      setMyParticipationRequest(created);
+    } catch (err: unknown) {
+      alert(getApiErrorMessage(err, 'Erreur lors de la demande de participation'));
     }
   };
 
@@ -181,7 +210,9 @@ const EventDetailPage: React.FC = () => {
 
         <EventDetail
           event={event}
-          onBooking={handleBooking}
+          onBooking={event.type === 'COMMUNITY' ? undefined : handleBooking}
+          onParticipationRequest={event.type === 'COMMUNITY' ? handleParticipationRequest : undefined}
+          myParticipationRequest={event.type === 'COMMUNITY' ? myParticipationRequest : undefined}
           onLoginRequired={() => navigate('/login', { state: { from: `/events/${id}` } })}
           isAuthenticated={isAuthenticated}
           isOrganizer={isAuthenticated && user != null && event.organizerId === user.id}

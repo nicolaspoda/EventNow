@@ -20,6 +20,8 @@ import { UploadModule } from './upload/upload.module';
 import { MailModule } from './mail/mail.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { ParticipationRequestsModule } from './participation-requests/participation-requests.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -57,6 +59,8 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     MailModule,
     JobsModule,
     ReviewsModule,
+    ParticipationRequestsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

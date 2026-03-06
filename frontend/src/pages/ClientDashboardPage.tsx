@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService';
+import { participationService } from '../services/participationService';
 import { StatCard } from '../components/dashboard/StatCard';
 import { EventsTable } from '../components/dashboard/EventsTable';
 import { ParticipantsChart } from '../components/dashboard/ParticipantsChart';
+import { PendingRequestsList } from '../components/dashboard/PendingRequestsList';
 import type {
   ClientOverview,
   DashboardEvent,
 } from '../types/dashboard.types';
+import type { ParticipationRequest } from '../types/participation.types';
 
 export const ClientDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [overview, setOverview] = useState<ClientOverview | null>(null);
   const [events, setEvents] = useState<DashboardEvent[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<ParticipationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,12 +33,14 @@ export const ClientDashboardPage: React.FC = () => {
   const fetchDashboardData = async () => {
     try {
       setError(null);
-      const [overviewData, eventsData] = await Promise.all([
+      const [overviewData, eventsData, pendingData] = await Promise.all([
         dashboardService.getClientOverview(),
         dashboardService.getClientEvents(),
+        participationService.getPendingForOrganizer().catch(() => []),
       ]);
       setOverview(overviewData);
       setEvents(eventsData);
+      setPendingRequests(Array.isArray(pendingData) ? pendingData : []);
     } catch (err) {
       console.error('Erreur chargement dashboard:', err);
       const errorMessage =
@@ -117,6 +123,11 @@ export const ClientDashboardPage: React.FC = () => {
           <ParticipantsChart events={events} />
         </section>
       )}
+
+      <PendingRequestsList
+        requests={pendingRequests}
+        onRefresh={fetchDashboardData}
+      />
 
       <section className="glass-card overflow-hidden" aria-labelledby="events-heading">
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">

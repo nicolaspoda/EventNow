@@ -22,7 +22,19 @@ export class EventsService {
     private readonly uploadService: UploadService,
   ) {}
 
-  async create(userId: string, createEventDto: CreateEventDto) {
+  async create(
+    userId: string,
+    createEventDto: CreateEventDto,
+    userRole?: string,
+  ) {
+    const requestedType =
+      createEventDto.type === 'COMMUNITY' ? 'COMMUNITY' : 'PROFESSIONAL';
+    if (userRole === 'CLIENT' && requestedType === 'PROFESSIONAL') {
+      throw new ForbiddenException(
+        'Seuls les organisateurs peuvent créer des événements professionnels.',
+      );
+    }
+
     const eventDate = new Date(createEventDto.event_date);
     const isProduction = process.env.NODE_ENV === 'production';
     if (isProduction && eventDate <= new Date()) {
@@ -44,7 +56,7 @@ export class EventsService {
           type:
             createEventDto.type === 'COMMUNITY'
               ? 'COMMUNITY'
-              : 'PROFESSIONAL',
+              : requestedType,
           category: createEventDto.category || 'OTHER',
           ticketCategories: {
             create: createEventDto.ticket_categories.map((category) => ({

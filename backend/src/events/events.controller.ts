@@ -39,7 +39,7 @@ export class EventsController {
   @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.CREATED)
   create(@CurrentUser() user: any, @Body() createEventDto: CreateEventDto) {
-    return this.eventsService.create(user.id, createEventDto);
+    return this.eventsService.create(user.id, createEventDto, user.role);
   }
 
   @Get('search')

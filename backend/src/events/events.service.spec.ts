@@ -112,6 +112,17 @@ describe('EventsService', () => {
         BadRequestException,
       );
     });
+
+    it('should throw ForbiddenException when CLIENT tries to create PROFESSIONAL event', async () => {
+      const professionalDto = {
+        ...createEventDto,
+        type: 'PROFESSIONAL',
+      };
+
+      await expect(
+        service.create('client-user-id', professionalDto, 'CLIENT'),
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe('findAll', () => {
