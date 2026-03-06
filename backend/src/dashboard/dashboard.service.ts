@@ -317,6 +317,137 @@ export class DashboardService {
     };
   }
 
+  async getMyUpcomingEvents(userId: string) {
+    const now = new Date();
+
+    const ticketsWithEvents = await this.prisma.ticket.findMany({
+      where: {
+        order: {
+          userId,
+          status: 'PAID',
+        },
+        ticketCategory: {
+          event: {
+            eventDate: { gte: now },
+          },
+        },
+      },
+      include: {
+        ticketCategory: {
+          include: {
+            event: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                eventDate: true,
+                location: true,
+                imageUrl: true,
+                type: true,
+                category: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        ticketCategory: {
+          event: {
+            eventDate: 'asc',
+          },
+        },
+      },
+    });
+
+    const acceptedParticipations = await this.prisma.participationRequest.findMany({
+      where: {
+        userId,
+        status: 'ACCEPTED',
+        event: {
+          eventDate: { gte: now },
+        },
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: {
+        event: {
+          eventDate: 'asc',
+        },
+      },
+    });
+
+    const ticketEventsMap = new Map<string, {
+      event: typeof ticketsWithEvents[0]['ticketCategory']['event'];
+      ticketCount: number;
+      categoryName: string;
+    }>();
+
+    for (const ticket of ticketsWithEvents) {
+      const eventId = ticket.ticketCategory.event.id;
+      const existing = ticketEventsMap.get(eventId);
+      if (existing) {
+        existing.ticketCount += 1;
+      } else {
+        ticketEventsMap.set(eventId, {
+          event: ticket.ticketCategory.event,
+          ticketCount: 1,
+          categoryName: ticket.ticketCategory.name,
+        });
+      }
+    }
+
+    const professionalEvents = Array.from(ticketEventsMap.values()).map((item) => ({
+      id: item.event.id,
+      title: item.event.title,
+      description: item.event.description,
+      eventDate: item.event.eventDate instanceof Date 
+        ? item.event.eventDate.toISOString() 
+        : item.event.eventDate,
+      location: item.event.location,
+      imageUrl: item.event.imageUrl,
+      type: item.event.type,
+      category: item.event.category,
+      participationType: 'TICKET' as const,
+      ticketCount: item.ticketCount,
+      categoryName: item.categoryName,
+    }));
+
+    const communityEvents = acceptedParticipations.map((participation) => ({
+      id: participation.event.id,
+      title: participation.event.title,
+      description: participation.event.description,
+      eventDate: participation.event.eventDate instanceof Date 
+        ? participation.event.eventDate.toISOString() 
+        : participation.event.eventDate,
+      location: participation.event.location,
+      imageUrl: participation.event.imageUrl,
+      type: participation.event.type,
+      category: participation.event.category,
+      participationType: 'PARTICIPATION' as const,
+      acceptedAt: participation.respondedAt,
+    }));
+
+    const allEvents = [...professionalEvents, ...communityEvents].sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    return allEvents;
+  }
+
   private getEventStatus(eventDate: Date, fillRate: number): string {
     const now = new Date();
     const eventDateObj = new Date(eventDate);

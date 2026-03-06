@@ -65,4 +65,10 @@ export class DashboardController {
   ) {
     return this.dashboardService.getEventParticipants(eventId, user.id);
   }
+
+  @Get('my-upcoming-events')
+  @HttpCode(HttpStatus.OK)
+  async getMyUpcomingEvents(@CurrentUser() user: any) {
+    return this.dashboardService.getMyUpcomingEvents(user.id);
+  }
 }

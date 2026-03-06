@@ -87,3 +87,36 @@ export interface EventParticipantsResponse {
   participants: EventParticipant[];
   totalParticipants: number;
 }
+
+export type EventCategory =
+  | 'CONCERT'
+  | 'CONFERENCE'
+  | 'FESTIVAL'
+  | 'SPORT'
+  | 'THEATER'
+  | 'EXHIBITION'
+  | 'OTHER';
+
+interface UpcomingEventBase {
+  id: string;
+  title: string;
+  description?: string;
+  eventDate: string;
+  location: string;
+  imageUrl?: string;
+  type: 'PROFESSIONAL' | 'COMMUNITY';
+  category: EventCategory;
+}
+
+export interface UpcomingTicketEvent extends UpcomingEventBase {
+  participationType: 'TICKET';
+  ticketCount: number;
+  categoryName: string;
+}
+
+export interface UpcomingParticipationEvent extends UpcomingEventBase {
+  participationType: 'PARTICIPATION';
+  acceptedAt?: string;
+}
+
+export type UpcomingEvent = UpcomingTicketEvent | UpcomingParticipationEvent;

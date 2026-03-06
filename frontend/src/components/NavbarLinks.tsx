@@ -18,6 +18,9 @@ export function NavbarLinks() {
     return (
       <>
         <DarkModeToggle />
+        <Link to="/my-upcoming-events" className={navLinkClass}>
+          À venir
+        </Link>
         <Link to="/my-tickets" className={navLinkClass}>
           Mes billets
         </Link>

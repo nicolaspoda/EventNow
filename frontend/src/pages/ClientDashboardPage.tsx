@@ -134,12 +134,14 @@ export const ClientDashboardPage: React.FC = () => {
           <h2 id="events-heading" className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
             Mes événements
           </h2>
-          <button
-            onClick={() => navigate('/events/create')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            + Créer un événement
-          </button>
+          {events.length > 0 && (
+            <button
+              onClick={() => navigate('/events/create')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              + Créer un événement
+            </button>
+          )}
         </div>
         <EventsTable
           events={events}

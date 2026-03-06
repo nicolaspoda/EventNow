@@ -20,6 +20,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import MyTicketsPage from './pages/MyTicketsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
+import MyUpcomingEventsPage from './pages/MyUpcomingEventsPage';
 import { RefundRequestsPage } from './pages/RefundRequestsPage';
 import { StaffScanPage } from './pages/StaffScanPage';
 import { StaffValidationsPage } from './pages/StaffValidationsPage';
@@ -68,6 +69,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <OrderSuccessPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-upcoming-events"
+            element={
+              <ProtectedRoute>
+                <MyUpcomingEventsPage />
               </ProtectedRoute>
             }
           />
