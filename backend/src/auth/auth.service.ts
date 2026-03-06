@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
-import { RegisterDto, LoginDto } from './dto';
+import { RegisterDto, LoginDto, UpdateProfileDto } from './dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -143,6 +143,72 @@ export class AuthService {
     } catch {
       return;
     }
+  }
+
+  async getFullProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        createdAt: true,
+        _count: {
+          select: {
+            orders: true,
+            reviews: true,
+            organizedEvents: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur non trouvé');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt.toISOString(),
+      stats: {
+        ordersCount: user._count.orders,
+        reviewsCount: user._count.reviews,
+        eventsOrganized: user._count.organizedEvents,
+      },
+    };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: dto.firstName || null,
+        lastName: dto.lastName || null,
+        avatarUrl: dto.avatarUrl || null,
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+    };
   }
 
   async validateGoogleUser(googleUser: {

@@ -97,6 +97,13 @@ export type EventCategory =
   | 'EXHIBITION'
   | 'OTHER';
 
+interface UpcomingEventOrganizer {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 interface UpcomingEventBase {
   id: string;
   title: string;
@@ -106,6 +113,7 @@ interface UpcomingEventBase {
   imageUrl?: string;
   type: 'PROFESSIONAL' | 'COMMUNITY';
   category: EventCategory;
+  organizer?: UpcomingEventOrganizer;
 }
 
 export interface UpcomingTicketEvent extends UpcomingEventBase {

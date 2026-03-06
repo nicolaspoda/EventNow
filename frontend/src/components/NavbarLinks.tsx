@@ -68,14 +68,15 @@ export function NavbarLinks() {
           </Link>
         )}
 
-        {/* Avatar + logout */}
+        {/* Avatar + Profile + logout */}
         <div className="flex items-center gap-2 ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700">
-          <div
-            className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
-            aria-hidden="true"
+          <Link
+            to="/profile"
+            className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 dark:hover:ring-offset-neutral-900 transition-all"
+            title="Mon profil"
           >
             {user?.email?.[0]?.toUpperCase() ?? '?'}
-          </div>
+          </Link>
           <button
             type="button"
             onClick={() => void handleLogout()}

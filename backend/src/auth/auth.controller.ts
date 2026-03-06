@@ -6,6 +6,7 @@ import {
   HttpStatus,
   UseGuards,
   Get,
+  Put,
   Req,
   Res,
   UnauthorizedException,
@@ -15,7 +16,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RedisService } from '../redis/redis.service';
-import { RegisterDto, LoginDto, ExchangeCodeDto } from './dto';
+import { RegisterDto, LoginDto, ExchangeCodeDto, UpdateProfileDto } from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -61,6 +62,22 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@CurrentUser() user: any) {
     return user;
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getFullProfile(@CurrentUser() user: any) {
+    return this.authService.getFullProfile(user.id);
+  }
+
+  @Put('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @CurrentUser() user: any,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(user.id, dto);
   }
 
   @Get('google')
