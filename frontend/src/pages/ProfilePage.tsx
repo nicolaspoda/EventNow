@@ -313,21 +313,19 @@ export const ProfilePage: React.FC = () => {
                 </span>
               </div>
 
-              {profile.role === 'ORGANIZER' && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-sm text-neutral-600 dark:text-neutral-300">Événements</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                   </div>
-                  <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                    {profile.stats.eventsOrganized}
-                  </span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-300">Événements organisés</span>
                 </div>
-              )}
+                <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                  {profile.stats.eventsOrganized}
+                </span>
+              </div>
             </div>
           </div>
         </div>
