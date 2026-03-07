@@ -7,6 +7,8 @@ import {
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
+import { FollowsService } from '../follows/follows.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { EventType } from './dto/create-event.dto';
 import {
@@ -20,6 +22,8 @@ export class EventsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
+    private readonly followsService: FollowsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(
@@ -43,7 +47,7 @@ export class EventsService {
       );
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const event = await tx.event.create({
         data: {
           title: createEventDto.title,
@@ -101,6 +105,21 @@ export class EventsService {
         })),
       };
     });
+
+    const organizerName =
+      result.organizer?.firstName && result.organizer?.lastName
+        ? `${result.organizer.firstName} ${result.organizer.lastName}`.trim()
+        : result.organizer?.email?.split('@')[0] ?? 'Un organisateur';
+    const followerIds = await this.followsService.getFollowerIds(userId);
+    if (followerIds.length > 0) {
+      await this.notificationsService.createForManyUsers(followerIds, {
+        type: 'NEW_EVENT_FROM_FOLLOWED',
+        title: 'Nouvel événement',
+        body: `${organizerName} a créé un événement : ${createEventDto.title}`,
+        relatedId: result.id,
+      });
+    }
+    return result;
   }
 
   async findAll(filters?: {
@@ -461,6 +480,7 @@ export class EventsService {
       priceRanges,
       availableOnly,
       myEvents,
+      followedOnly,
       sortBy = SortBy.DATE_ASC,
       page = 1,
       limit = 20,
@@ -546,6 +566,24 @@ export class EventsService {
     }
 
     if (myEvents && !userId) {
+      return {
+        events: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      };
+    }
+
+    if (followedOnly && userId) {
+      const followingIds = await this.followsService.getFollowingIds(userId);
+      if (followingIds.length === 0) {
+        return {
+          events: [],
+          pagination: { page, limit, total: 0, totalPages: 0 },
+        };
+      }
+      where.AND.push({ organizerId: { in: followingIds } });
+    }
+
+    if (followedOnly && !userId) {
       return {
         events: [],
         pagination: { page, limit, total: 0, totalPages: 0 },

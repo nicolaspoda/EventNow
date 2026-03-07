@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { FollowsService } from '../follows/follows.service';
 import { RegisterDto, LoginDto, UpdateProfileDto } from './dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
@@ -15,15 +16,18 @@ export class AuthService {
   private readonly prisma: PrismaService;
   private readonly jwtService: JwtService;
   private readonly redis: RedisService;
+  private readonly followsService: FollowsService;
 
   constructor(
     prisma: PrismaService,
     jwtService: JwtService,
     redis: RedisService,
+    followsService: FollowsService,
   ) {
     this.prisma = prisma;
     this.jwtService = jwtService;
     this.redis = redis;
+    this.followsService = followsService;
   }
 
   async register(dto: RegisterDto) {
@@ -184,6 +188,11 @@ export class AuthService {
       _count: { rating: true },
     });
 
+    const [followersCount, followingCount] = await Promise.all([
+      this.followsService.getFollowersCount(userId),
+      this.followsService.getFollowingCount(userId),
+    ]);
+
     return {
       id: user.id,
       email: user.email,
@@ -192,6 +201,8 @@ export class AuthService {
       lastName: user.lastName,
       avatarUrl: user.avatarUrl,
       createdAt: user.createdAt.toISOString(),
+      followersCount,
+      followingCount,
       stats: {
         ordersCount: user._count.orders,
         reviewsCount: user._count.reviews,
@@ -208,7 +219,7 @@ export class AuthService {
     };
   }
 
-  async getUserPublicProfile(userId: string) {
+  async getUserPublicProfile(userId: string, currentUserId?: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -276,6 +287,14 @@ export class AuthService {
       _count: { rating: true },
     });
 
+    const [followRecord, followersCount, followingCount] = await Promise.all([
+      currentUserId
+        ? this.followsService.getFollowRecord(currentUserId, userId)
+        : Promise.resolve(null),
+      this.followsService.getFollowersCount(userId),
+      this.followsService.getFollowingCount(userId),
+    ]);
+
     return {
       id: user.id,
       email: user.email,
@@ -284,6 +303,12 @@ export class AuthService {
       lastName: user.lastName,
       avatarUrl: user.avatarUrl,
       createdAt: user.createdAt.toISOString(),
+      ...(currentUserId && {
+        isFollowing: !!followRecord,
+        ...(followRecord && { notificationsEnabled: followRecord.notificationsEnabled }),
+      }),
+      followersCount,
+      followingCount,
       participatedEvents: acceptedParticipations.map((p) => ({
         ...p.event,
         eventDate: p.event.eventDate.toISOString(),

@@ -73,8 +73,11 @@ export class AuthController {
 
   @Get('user/:userId/public-profile')
   @UseGuards(JwtAuthGuard)
-  async getUserPublicProfile(@Param('userId') userId: string) {
-    return this.authService.getUserPublicProfile(userId);
+  async getUserPublicProfile(
+    @Param('userId') userId: string,
+    @CurrentUser() user: { id: string } | undefined,
+  ) {
+    return this.authService.getUserPublicProfile(userId, user?.id);
   }
 
   @Put('profile')

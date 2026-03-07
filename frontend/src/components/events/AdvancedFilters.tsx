@@ -150,6 +150,20 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             </span>
           </label>
         </div>
+
+        <div>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={(filters.followedOnly as boolean) || false}
+              onChange={(e) => onFilterChange('followedOnly', e.target.checked)}
+              className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700"
+            />
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">
+              Uniquement les organisateurs que je suis
+            </span>
+          </label>
+        </div>
       </div>
 
       {expanded && (

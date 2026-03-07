@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { profileService } from '../services/profile.service';
+import { followService } from '../services/followService';
 import type { PublicUserProfile } from '../services/profile.service';
+import { useAuth } from '../utils/useAuth';
 import { Card } from '../components/ui/Card';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
@@ -11,9 +13,23 @@ import Button from '../components/ui/Button';
 export default function UserPublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  const isOwnProfile = currentUser && userId === currentUser.id;
+
+  const refreshProfile = async () => {
+    if (!userId) return;
+    try {
+      const data = await profileService.getUserPublicProfile(userId);
+      setProfile(data);
+    } catch {
+      // keep previous state
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -23,8 +39,9 @@ export default function UserPublicProfilePage() {
         setLoading(true);
         const data = await profileService.getUserPublicProfile(userId);
         setProfile(data);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Erreur lors du chargement du profil');
+      } catch (err: unknown) {
+        const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+        setError(msg || 'Erreur lors du chargement du profil');
       } finally {
         setLoading(false);
       }
@@ -32,6 +49,21 @@ export default function UserPublicProfilePage() {
 
     fetchProfile();
   }, [userId]);
+
+  const handleFollow = async () => {
+    if (!userId || !currentUser || followLoading || profile?.isFollowing === undefined) return;
+    setFollowLoading(true);
+    try {
+      if (profile.isFollowing) {
+        await followService.unfollow(userId);
+      } else {
+        await followService.follow(userId);
+      }
+      await refreshProfile();
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} />;
@@ -82,7 +114,22 @@ export default function UserPublicProfilePage() {
                   month: 'long', 
                   year: 'numeric' 
                 })}
+                {typeof profile.followersCount === 'number' && (
+                  <> · {profile.followersCount} abonné{profile.followersCount !== 1 ? 's' : ''}</>
+                )}
               </p>
+              {!isOwnProfile && currentUser && profile.isFollowing !== undefined && (
+                <div className="mb-4">
+                  <Button
+                    variant={profile.isFollowing ? 'outline' : 'primary'}
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    aria-label={profile.isFollowing ? 'Ne plus suivre' : 'Suivre'}
+                  >
+                    {followLoading ? 'Chargement...' : profile.isFollowing ? 'Ne plus suivre' : 'Suivre'}
+                  </Button>
+                </div>
+              )}
 
               {/* Statistiques */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

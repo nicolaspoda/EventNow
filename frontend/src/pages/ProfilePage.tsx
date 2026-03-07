@@ -253,7 +253,7 @@ export const ProfilePage: React.FC = () => {
   if (!profile && !isViewMode) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-800 dark:text-error-200 px-4 py-3 rounded-xl">
+        <div className="bg-error-50 dark:bg-neutral-800 border border-error-200 dark:border-red-800 text-error-800 dark:text-red-200 px-4 py-3 rounded-xl">
           <p className="font-medium">Erreur</p>
           <p className="text-sm">{error || 'Profil non trouvé'}</p>
         </div>
@@ -264,7 +264,7 @@ export const ProfilePage: React.FC = () => {
   if (isViewMode && !publicProfile && !loading) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-800 dark:text-error-200 px-4 py-3 rounded-xl">
+        <div className="bg-error-50 dark:bg-neutral-800 border border-error-200 dark:border-red-800 text-error-800 dark:text-red-200 px-4 py-3 rounded-xl">
           <p className="font-medium">Erreur</p>
           <p className="text-sm">{error || 'Profil introuvable'}</p>
         </div>
@@ -273,7 +273,17 @@ export const ProfilePage: React.FC = () => {
   }
 
   if (isViewMode && publicProfile) {
-    return <ProfileViewMode profile={publicProfile} />;
+    return (
+      <ProfileViewMode
+        profile={publicProfile}
+        userId={userIdFromRoute!}
+        onProfileUpdate={async () => {
+          if (!userIdFromRoute) return;
+          const data = await profileService.getUserPublicProfile(userIdFromRoute);
+          setPublicProfile(data);
+        }}
+      />
+    );
   }
 
   return (
@@ -318,6 +328,14 @@ export const ProfilePage: React.FC = () => {
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleColors[profile.role]}`}>
                 {roleLabels[profile.role] || profile.role}
               </span>
+
+              {(typeof profile.followersCount === 'number' || typeof profile.followingCount === 'number') && (
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
+                  {profile.followersCount ?? 0} abonné{(profile.followersCount ?? 0) !== 1 ? 's' : ''}
+                  {' · '}
+                  {profile.followingCount ?? 0} abonnement{(profile.followingCount ?? 0) !== 1 ? 's' : ''}
+                </p>
+              )}
 
               <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700 w-full text-center">
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">Membre depuis</p>

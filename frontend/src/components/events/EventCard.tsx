@@ -214,11 +214,15 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span className="text-sm truncate">
+              <Link
+                to={`/user/${event.organizerId}/profile`}
+                className="text-sm truncate hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {event.organizer.firstName || event.organizer.lastName
                   ? `${event.organizer.firstName || ''} ${event.organizer.lastName || ''}`.trim()
                   : event.organizer.email.split('@')[0]}
-              </span>
+              </Link>
             </div>
           )}
         </div>

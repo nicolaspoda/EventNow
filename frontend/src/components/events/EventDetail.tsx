@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { safeFormat } from '../../utils/date';
 import { formatPrice } from '../../utils/price';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
@@ -225,21 +226,24 @@ const EventDetail: React.FC<EventDetailProps> = ({
         {event.organizer && (
           <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Organisateur</h2>
-            <div className="flex items-center">
-              <div className="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center mr-4 flex-shrink-0">
+            <Link
+              to={`/user/${event.organizerId}/profile`}
+              className="flex items-center gap-4 rounded-lg p-2 -m-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900"
+            >
+              <div className="h-12 w-12 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0">
                 <svg className="h-6 w-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div>
                 {event.organizer.firstName && event.organizer.lastName ? (
-                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  <p className="text-sm font-medium">
                     {event.organizer.firstName} {event.organizer.lastName}
                   </p>
                 ) : null}
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">{event.organizer.email}</p>
               </div>
-            </div>
+            </Link>
           </div>
         )}
 

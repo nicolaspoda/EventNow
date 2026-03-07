@@ -15,7 +15,7 @@ const ErrorState: React.FC<ErrorStateProps> = ({
   retryLabel = 'Réessayer',
 }) => {
   return (
-    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center" role="alert">
+    <div className="bg-red-50 dark:bg-neutral-800 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center" role="alert">
       <svg
         className="mx-auto h-12 w-12 text-red-500 dark:text-red-400 mb-4"
         fill="none"
