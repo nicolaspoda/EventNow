@@ -45,4 +45,38 @@ export class NotificationsService {
       where: { userId, read: false },
     });
   }
+
+  async create(data: {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    relatedId?: string;
+  }) {
+    return this.prisma.notification.create({
+      data: {
+        userId: data.userId,
+        type: data.type,
+        title: data.title,
+        body: data.body,
+        relatedId: data.relatedId ?? null,
+      },
+    });
+  }
+
+  async createForManyUsers(
+    userIds: string[],
+    data: { type: string; title: string; body: string; relatedId?: string },
+  ) {
+    if (userIds.length === 0) return [];
+    return this.prisma.notification.createMany({
+      data: userIds.map((userId) => ({
+        userId,
+        type: data.type,
+        title: data.title,
+        body: data.body,
+        relatedId: data.relatedId ?? null,
+      })),
+    });
+  }
 }

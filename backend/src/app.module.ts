@@ -23,6 +23,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { ParticipationRequestsModule } from './participation-requests/participation-requests.module';
 import { ParticipantReviewsModule } from './participant-reviews/participant-reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { FollowsModule } from './follows/follows.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -63,6 +64,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     ParticipationRequestsModule,
     ParticipantReviewsModule,
     NotificationsModule,
+    FollowsModule,
   ],
   controllers: [AppController],
   providers: [

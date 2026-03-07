@@ -97,6 +97,16 @@ export class SearchEventsDto {
   @IsBoolean()
   myEvents?: boolean;
 
+  /** Uniquement les événements dont l'organisateur est suivi par l'utilisateur connecté. */
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  followedOnly?: boolean;
+
   @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;

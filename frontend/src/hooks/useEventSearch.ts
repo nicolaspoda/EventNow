@@ -13,6 +13,7 @@ interface SearchFilters {
   priceRanges?: string[];
   availableOnly?: boolean;
   myEvents?: boolean;
+  followedOnly?: boolean;
   sortBy?: string;
   radiusKm?: number;
 }
@@ -84,6 +85,7 @@ export const useEventSearch = () => {
       priceRanges: searchParams.get('priceRanges')?.split(',').filter(Boolean) || undefined,
       availableOnly: searchParams.get('availableOnly') === 'true',
       myEvents: searchParams.get('myEvents') === 'true',
+      followedOnly: searchParams.get('followedOnly') === 'true',
       sortBy: searchParams.get('sortBy') || 'DATE_ASC',
       ...(radiusKm != null && !Number.isNaN(radiusKm) && radiusKm > 0 && { radiusKm }),
     };
@@ -195,6 +197,8 @@ export const useEventSearch = () => {
       nextFilters.availableOnly = value === true || value === 'true';
     } else if (filterKey === 'myEvents') {
       nextFilters.myEvents = value === true || value === 'true';
+    } else if (filterKey === 'followedOnly') {
+      nextFilters.followedOnly = value === true || value === 'true';
     } else if (filterKey === 'categories' && Array.isArray(value)) {
       nextFilters.categories = value.length > 0 ? (value as string[]) : undefined;
     } else if (filterKey === 'priceRanges' && Array.isArray(value)) {
@@ -219,6 +223,7 @@ export const useEventSearch = () => {
     if (nextFilters.priceRanges?.length) newParams.set('priceRanges', nextFilters.priceRanges.join(','));
     if (nextFilters.availableOnly === true) newParams.set('availableOnly', 'true');
     if (nextFilters.myEvents === true) newParams.set('myEvents', 'true');
+    if (nextFilters.followedOnly === true) newParams.set('followedOnly', 'true');
     if (nextFilters.sortBy && nextFilters.sortBy !== 'DATE_ASC') newParams.set('sortBy', nextFilters.sortBy);
     if (nextFilters.radiusKm != null && nextFilters.radiusKm > 0) newParams.set('radiusKm', String(nextFilters.radiusKm));
 
@@ -239,6 +244,7 @@ export const useEventSearch = () => {
     if (filters.priceRanges?.length) count++;
     if (filters.availableOnly) count++;
     if (filters.myEvents) count++;
+    if (filters.followedOnly) count++;
     if (filters.radiusKm != null && filters.radiusKm > 0) count++;
     return count;
   }, [filters]);

@@ -77,6 +77,9 @@ model User {
   participantReviewsGiven ParticipantReview[] @relation("ReviewAuthor")
   participantReviewsReceived ParticipantReview[] @relation("ReviewedParticipant")
 
+  followers  Follow[] @relation("Follower")
+  following Follow[] @relation("Following")
+
   @@map("users")
 }
 
@@ -229,6 +232,22 @@ model Notification {
   @@index([userId])
   @@index([userId, read])
   @@map("notifications")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower  User @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
 }
 
 model Review {

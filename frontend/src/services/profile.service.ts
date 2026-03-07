@@ -9,6 +9,10 @@ export interface PublicUserProfile {
   lastName?: string;
   avatarUrl?: string;
   createdAt: string;
+  isFollowing?: boolean;
+  followersCount?: number;
+  followingCount?: number;
+  notificationsEnabled?: boolean;
   participatedEvents: Array<{
     id: string;
     title: string;

@@ -30,6 +30,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
     }
     if (key === 'availableOnly') return 'Places disponibles';
     if (key === 'myEvents') return 'Mes événements';
+    if (key === 'followedOnly') return 'Organisateurs que je suis';
     if (key === 'radiusKm') return `Près de moi (${value} km)`;
     return `${key}: ${value}`;
   };
