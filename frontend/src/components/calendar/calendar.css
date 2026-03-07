@@ -1,0 +1,215 @@
+.calendar-container {
+  font-family: inherit;
+}
+
+.rbc-calendar {
+  color: inherit;
+}
+
+.rbc-header {
+  padding: 12px 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid;
+}
+
+.rbc-header,
+.rbc-today {
+  background-color: transparent;
+}
+
+.rbc-off-range-bg {
+  background-color: transparent;
+}
+
+.rbc-date-cell {
+  padding: 4px;
+  text-align: right;
+}
+
+.rbc-button-link {
+  color: inherit;
+}
+
+.rbc-toolbar {
+  padding: 12px 0;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rbc-toolbar button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.rbc-toolbar button:hover {
+  opacity: 0.8;
+}
+
+.rbc-toolbar button:active {
+  transform: scale(0.98);
+}
+
+.rbc-toolbar button.rbc-active {
+  font-weight: 600;
+}
+
+.rbc-toolbar-label {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  flex-grow: 1;
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-event {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.rbc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.rbc-event-label {
+  font-size: 0.75rem;
+}
+
+.rbc-show-more {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.rbc-show-more:hover {
+  opacity: 0.8;
+}
+
+.rbc-month-row {
+  overflow: visible;
+}
+
+.rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid;
+}
+
+.rbc-month-row + .rbc-month-row {
+  border-top: 1px solid;
+}
+
+/* Light mode colors */
+:root {
+  --rbc-border-color: #e5e7eb;
+  --rbc-header-bg: #f9fafb;
+  --rbc-today-bg: #fef3c7;
+  --rbc-off-range: #f3f4f6;
+  --rbc-toolbar-btn-bg: #ffffff;
+  --rbc-toolbar-btn-border: #d1d5db;
+  --rbc-toolbar-btn-text: #374151;
+  --rbc-toolbar-btn-active-bg: #6366f1;
+  --rbc-toolbar-btn-active-text: #ffffff;
+  --rbc-show-more-bg: #e0e7ff;
+  --rbc-show-more-text: #4338ca;
+}
+
+/* Dark mode colors */
+.dark {
+  --rbc-border-color: #374151;
+  --rbc-header-bg: #1f2937;
+  --rbc-today-bg: #422006;
+  --rbc-off-range: #111827;
+  --rbc-toolbar-btn-bg: #374151;
+  --rbc-toolbar-btn-border: #4b5563;
+  --rbc-toolbar-btn-text: #e5e7eb;
+  --rbc-toolbar-btn-active-bg: #6366f1;
+  --rbc-toolbar-btn-active-text: #ffffff;
+  --rbc-show-more-bg: #312e81;
+  --rbc-show-more-text: #c7d2fe;
+}
+
+.rbc-header {
+  background-color: var(--rbc-header-bg);
+  border-bottom-color: var(--rbc-border-color);
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+  border: 1px solid var(--rbc-border-color);
+}
+
+.rbc-day-bg + .rbc-day-bg,
+.rbc-month-row + .rbc-month-row {
+  border-color: var(--rbc-border-color);
+}
+
+.rbc-today {
+  background-color: var(--rbc-today-bg);
+}
+
+.rbc-off-range-bg {
+  background-color: var(--rbc-off-range);
+}
+
+.rbc-toolbar button {
+  background-color: var(--rbc-toolbar-btn-bg);
+  border-color: var(--rbc-toolbar-btn-border);
+  color: var(--rbc-toolbar-btn-text);
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: var(--rbc-toolbar-btn-active-bg);
+  color: var(--rbc-toolbar-btn-active-text);
+  border-color: var(--rbc-toolbar-btn-active-bg);
+}
+
+.rbc-show-more {
+  background-color: var(--rbc-show-more-bg);
+  color: var(--rbc-show-more-text);
+}
+
+.rbc-time-header-content,
+.rbc-time-content {
+  border-color: var(--rbc-border-color);
+}
+
+.rbc-time-slot {
+  border-top-color: var(--rbc-border-color);
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top-color: var(--rbc-border-color);
+}
+
+.rbc-agenda-view table {
+  border-color: var(--rbc-border-color);
+}
+
+.rbc-agenda-view table tbody > tr > td {
+  border-color: var(--rbc-border-color);
+}
+
+.rbc-agenda-view table thead > tr > th {
+  border-color: var(--rbc-border-color);
+}

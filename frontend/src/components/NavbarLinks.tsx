@@ -32,7 +32,7 @@ export function NavbarLinks() {
     navigate('/login');
   };
 
-  const isEventsPage = location.pathname === '/my-upcoming-events' || location.pathname === '/my-participated-events';
+  const isEventsPage = location.pathname === '/my-upcoming-events' || location.pathname === '/my-participated-events' || location.pathname === '/my-calendar';
 
   if (isAuthenticated) {
     return (
@@ -65,8 +65,16 @@ export function NavbarLinks() {
               role="menu"
             >
               <Link
-                to="/my-upcoming-events"
+                to="/my-calendar"
                 className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-t-lg"
+                role="menuitem"
+                onClick={() => setEventsMenuOpen(false)}
+              >
+                Calendrier
+              </Link>
+              <Link
+                to="/my-upcoming-events"
+                className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30"
                 role="menuitem"
                 onClick={() => setEventsMenuOpen(false)}
               >

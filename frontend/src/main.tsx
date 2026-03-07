@@ -5,6 +5,17 @@ import './styles/accessibility.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
+// Masquer l'avertissement "outdated JSX transform" en dev : il vient de react-big-calendar
+// (bibliothèque compilée avec l'ancien transform). À retirer quand la lib sera mise à jour.
+if (import.meta.env.DEV) {
+  const originalWarn = console.warn
+  console.warn = (...args: unknown[]) => {
+    const msg = typeof args[0] === 'string' ? args[0] : ''
+    if (msg.includes('outdated JSX transform')) return
+    originalWarn.apply(console, args)
+  }
+}
+
 const rootEl = document.getElementById('root')
 if (!rootEl) {
   console.error('Élément #root introuvable dans le DOM')
