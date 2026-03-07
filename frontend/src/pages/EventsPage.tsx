@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEventSearch } from '../hooks/useEventSearch';
 import { useAuth } from '../utils/useAuth';
@@ -7,6 +7,7 @@ import { AdvancedFilters } from '../components/events/AdvancedFilters';
 import { SortOptions } from '../components/events/SortOptions';
 import EventList from '../components/events/EventList';
 import { FilterChips } from '../components/events/FilterChips';
+import { EventsMap } from '../components/map/EventsMap';
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,7 +20,33 @@ const EventsPage: React.FC = () => {
     updateFilter,
     clearFilters,
     activeFiltersCount,
+    userPosition,
+    positionLoading,
+    positionError,
+    requestUserPosition,
+    clearUserPosition,
+    clearNearMeFilter,
   } = useEventSearch();
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+
+  // En vue carte : demander la position une fois pour afficher le point bleu (sans changer le tri)
+  useEffect(() => {
+    if (viewMode === 'map' && !userPosition && !positionLoading && navigator.geolocation) {
+      requestUserPosition({ forDisplayOnly: true });
+    }
+  }, [viewMode]);
+
+  const handleSortChange = (value: string) => {
+    if (value === 'DISTANCE_ASC') {
+      if (userPosition) {
+        updateFilter('sortBy', 'DISTANCE_ASC');
+      } else {
+        requestUserPosition({ sortOnly: true });
+      }
+    } else {
+      updateFilter('sortBy', value);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -84,7 +111,7 @@ const EventsPage: React.FC = () => {
         {activeFiltersCount > 0 && (
           <div className="mb-4">
             <FilterChips
-              filters={filters}
+              filters={filters as Record<string, unknown>}
               onRemove={(key) => updateFilter(key, null)}
               onClearAll={clearFilters}
             />
@@ -93,7 +120,7 @@ const EventsPage: React.FC = () => {
 
         <div className="mb-6">
           <AdvancedFilters
-            filters={filters}
+            filters={filters as Record<string, unknown>}
             onFilterChange={updateFilter}
             onClear={clearFilters}
             variant="bar"
@@ -107,10 +134,88 @@ const EventsPage: React.FC = () => {
               événement{(pagination?.total ?? 0) !== 1 ? 's' : ''} trouvé
               {(pagination?.total ?? 0) !== 1 ? 's' : ''}
             </p>
-            <SortOptions
-              value={(filters.sortBy as string) || 'DATE_ASC'}
-              onChange={(value) => updateFilter('sortBy', value)}
-            />
+            
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                {viewMode === 'list' && (
+                  <>
+                    {filters.radiusKm != null && filters.radiusKm > 0 ? (
+                      <button
+                        type="button"
+                        onClick={clearNearMeFilter}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/60 transition-colors"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" aria-hidden="true" />
+                        Près de moi ({filters.radiusKm} km)
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => requestUserPosition()}
+                        disabled={positionLoading}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                      >
+                        {positionLoading ? (
+                          <>
+                            <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent" aria-hidden="true" />
+                            Position...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Événements près de moi
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {positionError && (
+                      <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                        {positionError}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="flex items-center bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  }`}
+                  aria-label="Vue liste"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    viewMode === 'map'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  }`}
+                  aria-label="Vue carte"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {viewMode === 'list' && (
+                <SortOptions
+                  value={(filters.sortBy as string) || 'DATE_ASC'}
+                  onChange={handleSortChange}
+                />
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -121,8 +226,15 @@ const EventsPage: React.FC = () => {
               />
               <p className="text-neutral-500 dark:text-neutral-400">Recherche en cours...</p>
             </div>
-          ) : (
+          ) : viewMode === 'list' ? (
             <EventList events={events} loading={false} error={null} currentUserId={user?.id} />
+          ) : (
+            <EventsMap
+              events={events}
+              userPosition={userPosition}
+              onEventClick={(eventId) => navigate(`/events/${eventId}`)}
+              className="h-[600px]"
+            />
           )}
         </section>
       </div>

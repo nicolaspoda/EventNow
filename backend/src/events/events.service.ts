@@ -49,6 +49,12 @@ export class EventsService {
           title: createEventDto.title,
           description: createEventDto.description,
           location: createEventDto.location,
+          address: createEventDto.address,
+          city: createEventDto.city,
+          postalCode: createEventDto.postal_code,
+          country: createEventDto.country,
+          latitude: createEventDto.latitude,
+          longitude: createEventDto.longitude,
           imageUrl: createEventDto.image_url,
           imagePublicId: createEventDto.image_public_id,
           eventDate: eventDate,
@@ -251,6 +257,12 @@ export class EventsService {
       title: event.title,
       description: event.description,
       location: event.location,
+      address: event.address,
+      city: event.city,
+      postalCode: event.postalCode,
+      country: event.country,
+      latitude: event.latitude,
+      longitude: event.longitude,
       imageUrl: event.imageUrl,
       imagePublicId: event.imagePublicId,
       eventDate: eventDate ?? undefined,
@@ -347,6 +359,24 @@ export class EventsService {
             description: updateEventDto.description,
           }),
           ...(updateEventDto.location && { location: updateEventDto.location }),
+          ...(updateEventDto.address !== undefined && {
+            address: updateEventDto.address,
+          }),
+          ...(updateEventDto.city !== undefined && {
+            city: updateEventDto.city,
+          }),
+          ...(updateEventDto.postal_code !== undefined && {
+            postalCode: updateEventDto.postal_code,
+          }),
+          ...(updateEventDto.country !== undefined && {
+            country: updateEventDto.country,
+          }),
+          ...(updateEventDto.latitude !== undefined && {
+            latitude: updateEventDto.latitude,
+          }),
+          ...(updateEventDto.longitude !== undefined && {
+            longitude: updateEventDto.longitude,
+          }),
           ...(updateEventDto.image_url !== undefined && {
             imageUrl: updateEventDto.image_url,
           }),
@@ -425,6 +455,7 @@ export class EventsService {
       type,
       categories,
       location,
+      city,
       dateFrom,
       dateTo,
       priceRanges,
@@ -433,7 +464,19 @@ export class EventsService {
       sortBy = SortBy.DATE_ASC,
       page = 1,
       limit = 20,
+      latitude: userLat,
+      longitude: userLon,
+      radiusKm,
     } = searchDto;
+
+    const useDistancePath =
+      userLat != null &&
+      userLon != null &&
+      !Number.isNaN(userLat) &&
+      !Number.isNaN(userLon) &&
+      (sortBy === SortBy.DISTANCE_ASC || (radiusKm != null && radiusKm > 0));
+
+    const sortByDistance = useDistancePath;
 
     const where: any = {
       AND: [],
@@ -465,6 +508,12 @@ export class EventsService {
     if (location) {
       where.AND.push({
         location: { contains: location, mode: 'insensitive' },
+      });
+    }
+
+    if (city) {
+      where.AND.push({
+        city: { contains: city, mode: 'insensitive' },
       });
     }
 
@@ -503,12 +552,151 @@ export class EventsService {
       };
     }
 
+    if (sortByDistance) {
+      where.AND.push({ latitude: { not: null } });
+      where.AND.push({ longitude: { not: null } });
+    }
+
     if (where.AND.length === 0) {
       delete where.AND;
     }
 
-    const orderBy = this.buildOrderBy(sortBy);
+    const orderBy = sortByDistance
+      ? { eventDate: 'asc' as const }
+      : this.buildOrderBy(sortBy);
     const skip = (page - 1) * limit;
+
+    if (sortByDistance) {
+      const maxFetch = 500;
+      const eventsRaw = await this.prisma.event.findMany({
+        where,
+        include: {
+          ticketCategories: {
+            select: {
+              name: true,
+              price: true,
+              currentStock: true,
+              initialStock: true,
+            },
+          },
+          organizer: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          reviews: {
+            select: {
+              rating: true,
+            },
+          },
+        },
+        orderBy: { eventDate: 'asc' },
+        take: maxFetch,
+      });
+
+      let withDistance = eventsRaw
+        .filter(
+          (e) =>
+            e.latitude != null &&
+            e.longitude != null &&
+            !Number.isNaN(e.latitude) &&
+            !Number.isNaN(e.longitude),
+        )
+        .map((event) => {
+          const dist = this.haversineDistance(
+            userLat!,
+            userLon!,
+            event.latitude!,
+            event.longitude!,
+          );
+          return { event, distance: dist };
+        })
+        .sort((a, b) => a.distance - b.distance);
+
+      if (radiusKm != null && radiusKm > 0) {
+        withDistance = withDistance.filter(({ distance }) => distance <= radiusKm);
+      }
+
+      const total = withDistance.length;
+      const paginated = withDistance.slice(skip, skip + limit);
+
+      const enrichedEvents = paginated.map(({ event, distance }) => {
+        const ev = event as typeof event & {
+          ticketCategories: Array<{
+            name: string;
+            price: unknown;
+            currentStock: number;
+            initialStock: number;
+          }>;
+          reviews: Array<{ rating: number }>;
+        };
+
+        const averageRating =
+          ev.reviews.length > 0
+            ? Math.round(
+                (ev.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                  ev.reviews.length) *
+                  10,
+              ) / 10
+            : null;
+
+        const eventDate =
+          ev.eventDate instanceof Date
+            ? ev.eventDate.toISOString()
+            : typeof ev.eventDate === 'string'
+              ? ev.eventDate
+              : null;
+
+        return {
+          id: ev.id,
+          title: ev.title,
+          description: ev.description,
+          location: ev.location,
+          address: ev.address,
+          city: ev.city,
+          postalCode: ev.postalCode,
+          country: ev.country,
+          latitude: ev.latitude,
+          longitude: ev.longitude,
+          imageUrl: ev.imageUrl,
+          imagePublicId: ev.imagePublicId,
+          eventDate: eventDate ?? undefined,
+          organizerId: ev.organizerId,
+          type: ev.type,
+          category: ev.category,
+          createdAt:
+            ev.createdAt instanceof Date
+              ? ev.createdAt.toISOString()
+              : ev.createdAt,
+          updatedAt:
+            ev.updatedAt instanceof Date
+              ? ev.updatedAt.toISOString()
+              : ev.updatedAt,
+          organizer: ev.organizer,
+          averageRating,
+          totalReviews: ev.reviews.length,
+          ticketCategories: ev.ticketCategories.map((c) => ({
+            ...c,
+            price: Number(c.price),
+          })),
+          stats: this.calculateEventStats(ev),
+          distance: Math.round(distance * 10) / 10,
+        };
+      });
+
+      return {
+        events: enrichedEvents,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
+    }
 
     const [events, total] = await Promise.all([
       this.prisma.event.findMany({
@@ -570,11 +758,32 @@ export class EventsService {
             ? ev.eventDate
             : null;
 
+      const distance =
+        userLat != null &&
+        userLon != null &&
+        ev.latitude != null &&
+        ev.longitude != null
+          ? Math.round(
+              this.haversineDistance(
+                userLat,
+                userLon,
+                ev.latitude,
+                ev.longitude,
+              ) * 10,
+            ) / 10
+          : undefined;
+
       return {
         id: ev.id,
         title: ev.title,
         description: ev.description,
         location: ev.location,
+        address: ev.address,
+        city: ev.city,
+        postalCode: ev.postalCode,
+        country: ev.country,
+        latitude: ev.latitude,
+        longitude: ev.longitude,
         imageUrl: ev.imageUrl,
         imagePublicId: ev.imagePublicId,
         eventDate: eventDate ?? undefined,
@@ -591,6 +800,7 @@ export class EventsService {
           price: Number(c.price),
         })),
         stats: this.calculateEventStats(ev),
+        ...(distance !== undefined && { distance }),
       };
     });
 
@@ -642,9 +852,30 @@ export class EventsService {
         return { createdAt: 'desc' };
       case SortBy.POPULARITY:
         return { createdAt: 'desc' };
+      case SortBy.DISTANCE_ASC:
+        return { eventDate: 'asc' };
       default:
         return { eventDate: 'asc' };
     }
+  }
+
+  private haversineDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
   }
 
   private calculateEventStats(event: any) {
@@ -717,5 +948,31 @@ export class EventsService {
       name: loc.location,
       count: loc._count.location,
     }));
+  }
+
+  async getAvailableCities() {
+    const cities = await this.prisma.event.groupBy({
+      by: ['city'],
+      where: {
+        city: {
+          not: null,
+        },
+      },
+      _count: {
+        city: true,
+      },
+      orderBy: {
+        _count: {
+          city: 'desc',
+        },
+      },
+    });
+
+    return cities
+      .filter((c) => c.city !== null)
+      .map((c) => ({
+        name: c.city as string,
+        count: c._count.city,
+      }));
   }
 }

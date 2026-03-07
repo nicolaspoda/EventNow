@@ -74,6 +74,13 @@ export class EventsController {
     return this.eventsService.getAvailableLocations();
   }
 
+  @Get('cities')
+  @SkipThrottle()
+  @HttpCode(HttpStatus.OK)
+  getCities() {
+    return this.eventsService.getAvailableCities();
+  }
+
   @Get()
   @SkipThrottle()
   @HttpCode(HttpStatus.OK)

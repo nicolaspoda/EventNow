@@ -135,6 +135,22 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
           className="space-y-1.5 mb-4 text-neutral-600 dark:text-neutral-300"
           aria-describedby={`event-title-${event.id}`}
         >
+          {(event as Event & { distance?: number }).distance != null && (
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-4 h-4 flex-shrink-0 text-primary-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm font-medium">
+                À {(event as Event & { distance?: number }).distance} km
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <svg
               className="w-4 h-4 flex-shrink-0 text-primary-400"
