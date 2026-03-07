@@ -30,6 +30,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
     }
     if (key === 'availableOnly') return 'Places disponibles';
     if (key === 'myEvents') return 'Mes événements';
+    if (key === 'radiusKm') return `Près de moi (${value} km)`;
     return `${key}: ${value}`;
   };
 
@@ -40,7 +41,8 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
       value !== '' &&
       value !== false &&
       key !== 'sortBy' &&
-      !(Array.isArray(value) && value.length === 0)
+      !(Array.isArray(value) && value.length === 0) &&
+      (key !== 'radiusKm' || (typeof value === 'number' && value > 0))
   );
 
   if (activeFilters.length === 0) return null;

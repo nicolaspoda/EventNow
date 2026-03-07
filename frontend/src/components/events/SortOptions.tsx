@@ -12,6 +12,7 @@ export const SortOptions: React.FC<SortOptionsProps> = ({ value, onChange }) => 
     { value: 'PRICE_ASC', label: 'Prix (croissant)' },
     { value: 'PRICE_DESC', label: 'Prix (décroissant)' },
     { value: 'POPULARITY', label: 'Popularité' },
+    { value: 'DISTANCE_ASC', label: 'Distance (près de moi)' },
   ];
 
   return (

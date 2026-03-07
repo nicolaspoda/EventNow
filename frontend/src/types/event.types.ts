@@ -26,6 +26,7 @@ export interface Event {
   country?: string;
   latitude?: number;
   longitude?: number;
+  distance?: number;
   imageUrl?: string;
   eventDate: string;
   organizerId: string;

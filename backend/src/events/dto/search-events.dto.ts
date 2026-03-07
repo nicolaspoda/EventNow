@@ -16,6 +16,7 @@ export enum SortBy {
   PRICE_ASC = 'PRICE_ASC',
   PRICE_DESC = 'PRICE_DESC',
   POPULARITY = 'POPULARITY',
+  DISTANCE_ASC = 'DISTANCE_ASC',
 }
 
 export enum PriceRange {
@@ -99,6 +100,22 @@ export class SearchEventsDto {
   @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number;
+
+  /** Rayon en km pour filtrer les événements "près de moi" (avec latitude/longitude). */
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  radiusKm?: number;
 
   @IsOptional()
   @Type(() => Number)

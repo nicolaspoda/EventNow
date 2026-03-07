@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { eventService } from '../services/eventService';
 import { useSearchParams } from 'react-router-dom';
 import type { Event } from '../types/event.types';
@@ -14,6 +14,12 @@ interface SearchFilters {
   availableOnly?: boolean;
   myEvents?: boolean;
   sortBy?: string;
+  radiusKm?: number;
+}
+
+interface UserPosition {
+  lat: number;
+  lon: number;
 }
 
 interface EventStats {
@@ -43,8 +49,31 @@ export const useEventSearch = () => {
   const [events, setEvents] = useState<EventWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [userPosition, setUserPosition] = useState<UserPosition | null>(null);
+  const [positionLoading, setPositionLoading] = useState(false);
+  const [positionError, setPositionError] = useState<string | null>(null);
+  const initialPositionRequested = useRef(false);
+
+  useEffect(() => {
+    if (initialPositionRequested.current || !navigator.geolocation) return;
+    initialPositionRequested.current = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPosition({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('sortBy', 'DISTANCE_ASC');
+          return next;
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 }
+    );
+  }, [setSearchParams]);
 
   const filters: SearchFilters = useMemo(() => {
+    const radiusParam = searchParams.get('radiusKm');
+    const radiusKm = radiusParam != null && radiusParam !== '' ? Number(radiusParam) : undefined;
     return {
       query: searchParams.get('q') || undefined,
       type: searchParams.get('type') || undefined,
@@ -56,12 +85,61 @@ export const useEventSearch = () => {
       availableOnly: searchParams.get('availableOnly') === 'true',
       myEvents: searchParams.get('myEvents') === 'true',
       sortBy: searchParams.get('sortBy') || 'DATE_ASC',
+      ...(radiusKm != null && !Number.isNaN(radiusKm) && radiusKm > 0 && { radiusKm }),
     };
   }, [searchParams]);
 
   useEffect(() => {
     void fetchEvents();
-  }, [filters]);
+  }, [filters, userPosition]);
+
+  const requestUserPosition = useCallback((options?: { forDisplayOnly?: boolean; sortOnly?: boolean }) => {
+    setPositionError(null);
+    setPositionLoading(true);
+    if (!navigator.geolocation) {
+      setPositionError('La géolocalisation n\'est pas supportée par votre navigateur.');
+      setPositionLoading(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPosition({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setPositionLoading(false);
+        if (!options?.forDisplayOnly) {
+          setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('sortBy', 'DISTANCE_ASC');
+            if (!options?.sortOnly) next.set('radiusKm', '50');
+            return next;
+          });
+        }
+      },
+      () => {
+        setPositionError('Impossible d\'obtenir votre position. Vérifiez les autorisations.');
+        setPositionLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+  }, [setSearchParams]);
+
+  const clearNearMeFilter = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('radiusKm');
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const clearUserPosition = useCallback(() => {
+    setUserPosition(null);
+    setPositionError(null);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('radiusKm');
+      if (next.get('sortBy') === 'DISTANCE_ASC') next.delete('sortBy');
+      return next;
+    });
+  }, [setSearchParams]);
 
   useEffect(() => {
     const onFocus = () => void fetchEvents();
@@ -72,7 +150,15 @@ export const useEventSearch = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const data = await eventService.searchEvents(filters as Record<string, unknown>);
+      const apiParams: Record<string, unknown> = { ...filters };
+      if (userPosition) {
+        apiParams.latitude = userPosition.lat;
+        apiParams.longitude = userPosition.lon;
+      }
+      if (filters.radiusKm != null && filters.radiusKm > 0) {
+        apiParams.radiusKm = filters.radiusKm;
+      }
+      const data = await eventService.searchEvents(apiParams);
       const normalizedEvents = (data.events || []).map((ev: Record<string, unknown>) => {
         const rawDate = ev.eventDate ?? ev.event_date;
         let eventDateStr: string | undefined;
@@ -134,6 +220,7 @@ export const useEventSearch = () => {
     if (nextFilters.availableOnly === true) newParams.set('availableOnly', 'true');
     if (nextFilters.myEvents === true) newParams.set('myEvents', 'true');
     if (nextFilters.sortBy && nextFilters.sortBy !== 'DATE_ASC') newParams.set('sortBy', nextFilters.sortBy);
+    if (nextFilters.radiusKm != null && nextFilters.radiusKm > 0) newParams.set('radiusKm', String(nextFilters.radiusKm));
 
     setSearchParams(newParams);
   };
@@ -152,6 +239,7 @@ export const useEventSearch = () => {
     if (filters.priceRanges?.length) count++;
     if (filters.availableOnly) count++;
     if (filters.myEvents) count++;
+    if (filters.radiusKm != null && filters.radiusKm > 0) count++;
     return count;
   }, [filters]);
 
@@ -163,5 +251,11 @@ export const useEventSearch = () => {
     updateFilter,
     clearFilters,
     activeFiltersCount,
+    userPosition,
+    positionLoading,
+    positionError,
+    requestUserPosition,
+    clearUserPosition,
+    clearNearMeFilter,
   };
 };

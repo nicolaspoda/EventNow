@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from 'react-leaflet';
 import { Icon, LatLngBounds } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Event } from '../../types/event.types';
@@ -7,8 +7,14 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { MAP_CONFIG } from '../../config/map.config';
 
+interface UserPosition {
+  lat: number;
+  lon: number;
+}
+
 interface EventsMapProps {
   events: Event[];
+  userPosition?: UserPosition | null;
   onEventClick?: (eventId: string) => void;
   className?: string;
 }
@@ -23,7 +29,13 @@ const defaultIcon = new Icon({
   shadowSize: MAP_CONFIG.marker.shadowSize,
 });
 
-function MapBoundsUpdater({ events }: { events: Event[] }) {
+function MapBoundsUpdater({
+  events,
+  userPosition,
+}: {
+  events: Event[];
+  userPosition?: UserPosition | null;
+}) {
   const map = useMap();
 
   useEffect(() => {
@@ -31,23 +43,28 @@ function MapBoundsUpdater({ events }: { events: Event[] }) {
       (event) => event.latitude != null && event.longitude != null,
     );
 
-    if (eventsWithCoords.length === 0) return;
+    const positions: [number, number][] = eventsWithCoords.map((event) => [
+      event.latitude!,
+      event.longitude!,
+    ]);
+    if (userPosition) {
+      positions.push([userPosition.lat, userPosition.lon]);
+    }
 
-    if (eventsWithCoords.length === 1) {
-      const event = eventsWithCoords[0];
-      map.setView([event.latitude!, event.longitude!], MAP_CONFIG.defaultZoom + 7);
+    if (positions.length === 0) return;
+
+    if (positions.length === 1) {
+      map.setView(positions[0], MAP_CONFIG.defaultZoom + 7);
     } else {
-      const bounds = new LatLngBounds(
-        eventsWithCoords.map((event) => [event.latitude!, event.longitude!]),
-      );
+      const bounds = new LatLngBounds(positions);
       map.fitBounds(bounds, { padding: MAP_CONFIG.bounds.padding });
     }
-  }, [events, map]);
+  }, [events, userPosition, map]);
 
   return null;
 }
 
-export function EventsMap({ events, onEventClick, className = '' }: EventsMapProps) {
+export function EventsMap({ events, userPosition, onEventClick, className = '' }: EventsMapProps) {
   const eventsWithCoords = events.filter(
     (event) => event.latitude != null && event.longitude != null,
   );
@@ -55,7 +72,7 @@ export function EventsMap({ events, onEventClick, className = '' }: EventsMapPro
   const defaultCenter: [number, number] = [MAP_CONFIG.defaultCenter.lat, MAP_CONFIG.defaultCenter.lng];
   const defaultZoom = MAP_CONFIG.defaultZoom;
 
-  if (eventsWithCoords.length === 0) {
+  if (eventsWithCoords.length === 0 && !userPosition) {
     return (
       <div className={`bg-neutral-100 dark:bg-neutral-800 rounded-xl p-8 text-center ${className}`}>
         <svg
@@ -99,7 +116,24 @@ export function EventsMap({ events, onEventClick, className = '' }: EventsMapPro
           url={MAP_CONFIG.tileLayer.url}
         />
         
-        <MapBoundsUpdater events={eventsWithCoords} />
+        <MapBoundsUpdater events={eventsWithCoords} userPosition={userPosition} />
+
+        {userPosition && (
+          <CircleMarker
+            center={[userPosition.lat, userPosition.lon]}
+            radius={10}
+            pathOptions={{
+              color: '#2563eb',
+              fillColor: '#3b82f6',
+              fillOpacity: 0.8,
+              weight: 2,
+            }}
+          >
+            <Popup>
+              <span className="font-medium text-neutral-800 dark:text-neutral-200">Ma position</span>
+            </Popup>
+          </CircleMarker>
+        )}
 
         {eventsWithCoords.map((event) => (
           <Marker
@@ -128,6 +162,12 @@ export function EventsMap({ events, onEventClick, className = '' }: EventsMapPro
                     <span className="text-neutral-400 dark:text-neutral-500" aria-hidden="true">📍</span>
                     {event.city || event.location}
                   </p>
+                  {event.distance != null && (
+                    <p className="text-sm font-medium text-primary-600 dark:text-primary-400 flex items-center gap-2">
+                      <span aria-hidden="true">↔</span>
+                      À {event.distance} km de vous
+                    </p>
+                  )}
                   {event.ticketCategories && event.ticketCategories.length > 0 && (
                     <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">
                       À partir de {Math.min(...event.ticketCategories.map((c) => Number(c.price)))}€
