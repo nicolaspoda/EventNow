@@ -22,6 +22,7 @@ import MyTicketsPage from './pages/MyTicketsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import MyUpcomingEventsPage from './pages/MyUpcomingEventsPage';
 import MyParticipatedEventsPage from './pages/MyParticipatedEventsPage';
+import MyCalendarPage from './pages/MyCalendarPage';
 import { RefundRequestsPage } from './pages/RefundRequestsPage';
 import { StaffScanPage } from './pages/StaffScanPage';
 import { StaffValidationsPage } from './pages/StaffValidationsPage';
@@ -90,6 +91,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyParticipatedEventsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-calendar"
+            element={
+              <ProtectedRoute>
+                <MyCalendarPage />
               </ProtectedRoute>
             }
           />

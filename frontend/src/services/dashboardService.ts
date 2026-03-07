@@ -45,4 +45,9 @@ export const dashboardService = {
     const response = await api.get<ParticipatedEvent[]>('/dashboard/my-participated-events');
     return response.data;
   },
+
+  getMyCalendarEvents: async (): Promise<ParticipatedEvent[]> => {
+    const response = await api.get<ParticipatedEvent[]>('/dashboard/my-participated-events');
+    return response.data;
+  },
 };
