@@ -19,12 +19,35 @@
   border-radius: 0.75rem;
   padding: 0;
   overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
 .leaflet-popup-content {
-  margin: 0;
-  padding: 0;
-  min-width: 250px;
+  margin: 0 !important;
+  padding: 20px;
+  min-width: 280px;
+  max-width: 320px;
+  box-sizing: border-box;
+}
+
+/* Popup événements : espacement symétrique + contenu centré */
+.events-map-popup .leaflet-popup-content {
+  padding: 24px 24px 20px 24px;
+  min-width: 280px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 !important;
+}
+
+.events-map-popup .leaflet-popup-content button {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* Bouton de fermeture */

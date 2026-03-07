@@ -107,30 +107,37 @@ export function EventsMap({ events, onEventClick, className = '' }: EventsMapPro
             position={[event.latitude!, event.longitude!]}
             icon={defaultIcon}
           >
-            <Popup>
-              <div className="min-w-[200px]">
+            <Popup className="events-map-popup">
+              <div className="min-w-[280px] max-w-[320px]">
                 {event.imageUrl && (
                   <img
                     src={event.imageUrl}
                     alt={event.title}
-                    className="w-full h-32 object-cover rounded-lg mb-2"
+                    className="w-full h-36 object-cover rounded-lg mb-4"
                   />
                 )}
-                <h3 className="font-bold text-lg mb-1">{event.title}</h3>
-                <p className="text-sm text-neutral-600 mb-1">
-                  {format(new Date(event.eventDate), 'PPP', { locale: fr })}
-                </p>
-                <p className="text-sm text-neutral-600 mb-2">
-                  📍 {event.city || event.location}
-                </p>
-                {event.ticketCategories && event.ticketCategories.length > 0 && (
-                  <p className="text-sm font-semibold text-primary-600 mb-2">
-                    À partir de {Math.min(...event.ticketCategories.map((c) => Number(c.price)))}€
+                <h3 className="font-bold text-xl text-neutral-900 dark:text-neutral-100 mb-3 leading-tight">
+                  {event.title}
+                </h3>
+                <div className="space-y-2 mb-4">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
+                    <span className="text-neutral-400 dark:text-neutral-500" aria-hidden="true">📅</span>
+                    {format(new Date(event.eventDate), 'EEEE d MMMM yyyy', { locale: fr })}
                   </p>
-                )}
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
+                    <span className="text-neutral-400 dark:text-neutral-500" aria-hidden="true">📍</span>
+                    {event.city || event.location}
+                  </p>
+                  {event.ticketCategories && event.ticketCategories.length > 0 && (
+                    <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                      À partir de {Math.min(...event.ticketCategories.map((c) => Number(c.price)))}€
+                    </p>
+                  )}
+                </div>
                 <button
+                  type="button"
                   onClick={() => onEventClick?.(event.id)}
-                  className="w-full mt-2 px-3 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-base font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center justify-center"
                 >
                   Voir les détails
                 </button>
