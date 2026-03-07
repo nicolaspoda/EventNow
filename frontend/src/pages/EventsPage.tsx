@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEventSearch } from '../hooks/useEventSearch';
 import { useAuth } from '../utils/useAuth';
@@ -7,6 +7,7 @@ import { AdvancedFilters } from '../components/events/AdvancedFilters';
 import { SortOptions } from '../components/events/SortOptions';
 import EventList from '../components/events/EventList';
 import { FilterChips } from '../components/events/FilterChips';
+import { EventsMap } from '../components/map/EventsMap';
 
 const EventsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const EventsPage: React.FC = () => {
     clearFilters,
     activeFiltersCount,
   } = useEventSearch();
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   return (
     <div className="min-h-screen">
@@ -84,7 +86,7 @@ const EventsPage: React.FC = () => {
         {activeFiltersCount > 0 && (
           <div className="mb-4">
             <FilterChips
-              filters={filters}
+              filters={filters as Record<string, unknown>}
               onRemove={(key) => updateFilter(key, null)}
               onClearAll={clearFilters}
             />
@@ -93,7 +95,7 @@ const EventsPage: React.FC = () => {
 
         <div className="mb-6">
           <AdvancedFilters
-            filters={filters}
+            filters={filters as Record<string, unknown>}
             onFilterChange={updateFilter}
             onClear={clearFilters}
             variant="bar"
@@ -107,10 +109,44 @@ const EventsPage: React.FC = () => {
               événement{(pagination?.total ?? 0) !== 1 ? 's' : ''} trouvé
               {(pagination?.total ?? 0) !== 1 ? 's' : ''}
             </p>
-            <SortOptions
-              value={(filters.sortBy as string) || 'DATE_ASC'}
-              onChange={(value) => updateFilter('sortBy', value)}
-            />
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  }`}
+                  aria-label="Vue liste"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    viewMode === 'map'
+                      ? 'bg-primary-600 text-white'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100'
+                  }`}
+                  aria-label="Vue carte"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {viewMode === 'list' && (
+                <SortOptions
+                  value={(filters.sortBy as string) || 'DATE_ASC'}
+                  onChange={(value) => updateFilter('sortBy', value)}
+                />
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -121,8 +157,14 @@ const EventsPage: React.FC = () => {
               />
               <p className="text-neutral-500 dark:text-neutral-400">Recherche en cours...</p>
             </div>
-          ) : (
+          ) : viewMode === 'list' ? (
             <EventList events={events} loading={false} error={null} currentUserId={user?.id} />
+          ) : (
+            <EventsMap 
+              events={events} 
+              onEventClick={(eventId) => navigate(`/events/${eventId}`)}
+              className="h-[600px]"
+            />
           )}
         </section>
       </div>

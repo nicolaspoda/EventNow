@@ -85,6 +85,12 @@ model Event {
   title       String
   description String?
   location    String
+  address     String?
+  city        String?
+  postalCode  String?       @map("postal_code")
+  country     String?       @default("France")
+  latitude    Float?
+  longitude   Float?
   imageUrl    String?       @map("image_url")
   imagePublicId String?      @map("image_public_id")
   galleryImages Json?        @map("gallery_images")
@@ -104,6 +110,8 @@ model Event {
   @@index([eventDate])
   @@index([type, category, eventDate])
   @@index([location])
+  @@index([city])
+  @@index([latitude, longitude])
   @@map("events")
 }
 

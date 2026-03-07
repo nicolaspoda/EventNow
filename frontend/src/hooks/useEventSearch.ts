@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { eventService } from '../services/eventService';
 import { useSearchParams } from 'react-router-dom';
+import type { Event } from '../types/event.types';
 
 interface SearchFilters {
   query?: string;
@@ -26,29 +27,8 @@ interface EventStats {
   };
 }
 
-interface Event {
-  id: string;
-  title: string;
-  description?: string;
-  location: string;
-  imageUrl?: string;
-  eventDate: string;
-  type: string;
-  category: string;
-  organizerId?: string;
+type EventWithStats = Event & {
   stats?: EventStats;
-  ticketCategories: Array<{
-    name: string;
-    price: number;
-    currentStock: number;
-    initialStock: number;
-  }>;
-  organizer: {
-    id?: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-  };
 }
 
 interface Pagination {
@@ -60,7 +40,7 @@ interface Pagination {
 
 export const useEventSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<Pagination | null>(null);
 
@@ -92,7 +72,7 @@ export const useEventSearch = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const data = await eventService.searchEvents(filters);
+      const data = await eventService.searchEvents(filters as Record<string, unknown>);
       const normalizedEvents = (data.events || []).map((ev: Record<string, unknown>) => {
         const rawDate = ev.eventDate ?? ev.event_date;
         let eventDateStr: string | undefined;
@@ -105,6 +85,8 @@ export const useEventSearch = () => {
         return {
           ...ev,
           eventDate: eventDateStr ?? (typeof ev.eventDate === 'string' ? ev.eventDate : undefined) ?? (typeof ev.event_date === 'string' ? ev.event_date : undefined),
+          createdAt: typeof ev.createdAt === 'string' ? ev.createdAt : new Date().toISOString(),
+          updatedAt: typeof ev.updatedAt === 'string' ? ev.updatedAt : new Date().toISOString(),
         };
       });
       setEvents(normalizedEvents);

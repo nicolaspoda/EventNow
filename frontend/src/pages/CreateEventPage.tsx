@@ -6,6 +6,8 @@ import { FormField } from '../components/FormField';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
 import { ImageUpload } from '../components/upload/ImageUpload';
+import { AddressAutocomplete } from '../components/location/AddressAutocomplete';
+import type { AddressSuggestion } from '../services/geocodingService';
 import type {
   CreateEventPayload,
   CreateTicketCategoryPayload,
@@ -32,6 +34,12 @@ export function CreateEventPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country] = useState('France');
+  const [latitude, setLatitude] = useState<number | undefined>();
+  const [longitude, setLongitude] = useState<number | undefined>();
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
   const [eventDate, setEventDate] = useState('');
@@ -63,6 +71,15 @@ export function CreateEventPage() {
     );
   };
 
+  const handleAddressSelect = (suggestion: AddressSuggestion) => {
+    setAddress(suggestion.label);
+    setCity(suggestion.city);
+    setPostalCode(suggestion.postcode);
+    setLatitude(suggestion.coordinates.lat);
+    setLongitude(suggestion.coordinates.lon);
+    setLocation(`${suggestion.city}, ${suggestion.postcode}`);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
@@ -71,8 +88,12 @@ export function CreateEventPage() {
       setError('Le titre est obligatoire');
       return;
     }
-    if (!location.trim()) {
-      setError('Le lieu est obligatoire');
+    if (!address.trim()) {
+      setError('L\'adresse est obligatoire');
+      return;
+    }
+    if (!city.trim()) {
+      setError('La ville est obligatoire');
       return;
     }
     if (!eventDate) {
@@ -114,7 +135,13 @@ export function CreateEventPage() {
     const payload: CreateEventPayload = {
       title: title.trim(),
       description: description.trim() || undefined,
-      location: location.trim(),
+      location: location.trim() || `${city}, ${postalCode}`,
+      address: address.trim(),
+      city: city.trim(),
+      postal_code: postalCode.trim(),
+      country: country.trim(),
+      latitude,
+      longitude,
       image_url: imageUrl.trim() || undefined,
       image_public_id: imagePublicId.trim() || undefined,
       event_date: toISOString(eventDate),
@@ -186,14 +213,43 @@ export function CreateEventPage() {
           placeholder="Décrivez votre événement"
         />
 
+        <AddressAutocomplete
+          value={address}
+          onChange={setAddress}
+          onAddressSelect={handleAddressSelect}
+          label="Adresse de l'événement"
+          placeholder="Commencez à taper une adresse (ex: Tou...)"
+          required
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            id="event-city"
+            label="Ville"
+            type="text"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            required
+            placeholder="Ex: Toulouse"
+          />
+          <FormField
+            id="event-postal-code"
+            label="Code postal"
+            type="text"
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            required
+            placeholder="Ex: 31000"
+          />
+        </div>
+
         <FormField
           id="event-location"
-          label="Lieu"
+          label="Nom du lieu (optionnel)"
           type="text"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          required
-          placeholder="Ex: Salle Pleyel, Paris"
+          placeholder="Ex: Salle Pleyel, Zénith..."
         />
 
         <ImageUpload

@@ -51,6 +51,10 @@ export class SearchEventsDto {
   location?: string;
 
   @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   radius?: number;

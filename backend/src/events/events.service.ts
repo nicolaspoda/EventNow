@@ -49,6 +49,12 @@ export class EventsService {
           title: createEventDto.title,
           description: createEventDto.description,
           location: createEventDto.location,
+          address: createEventDto.address,
+          city: createEventDto.city,
+          postalCode: createEventDto.postal_code,
+          country: createEventDto.country,
+          latitude: createEventDto.latitude,
+          longitude: createEventDto.longitude,
           imageUrl: createEventDto.image_url,
           imagePublicId: createEventDto.image_public_id,
           eventDate: eventDate,
@@ -251,6 +257,12 @@ export class EventsService {
       title: event.title,
       description: event.description,
       location: event.location,
+      address: event.address,
+      city: event.city,
+      postalCode: event.postalCode,
+      country: event.country,
+      latitude: event.latitude,
+      longitude: event.longitude,
       imageUrl: event.imageUrl,
       imagePublicId: event.imagePublicId,
       eventDate: eventDate ?? undefined,
@@ -347,6 +359,24 @@ export class EventsService {
             description: updateEventDto.description,
           }),
           ...(updateEventDto.location && { location: updateEventDto.location }),
+          ...(updateEventDto.address !== undefined && {
+            address: updateEventDto.address,
+          }),
+          ...(updateEventDto.city !== undefined && {
+            city: updateEventDto.city,
+          }),
+          ...(updateEventDto.postal_code !== undefined && {
+            postalCode: updateEventDto.postal_code,
+          }),
+          ...(updateEventDto.country !== undefined && {
+            country: updateEventDto.country,
+          }),
+          ...(updateEventDto.latitude !== undefined && {
+            latitude: updateEventDto.latitude,
+          }),
+          ...(updateEventDto.longitude !== undefined && {
+            longitude: updateEventDto.longitude,
+          }),
           ...(updateEventDto.image_url !== undefined && {
             imageUrl: updateEventDto.image_url,
           }),
@@ -425,6 +455,7 @@ export class EventsService {
       type,
       categories,
       location,
+      city,
       dateFrom,
       dateTo,
       priceRanges,
@@ -465,6 +496,12 @@ export class EventsService {
     if (location) {
       where.AND.push({
         location: { contains: location, mode: 'insensitive' },
+      });
+    }
+
+    if (city) {
+      where.AND.push({
+        city: { contains: city, mode: 'insensitive' },
       });
     }
 
@@ -575,6 +612,12 @@ export class EventsService {
         title: ev.title,
         description: ev.description,
         location: ev.location,
+        address: ev.address,
+        city: ev.city,
+        postalCode: ev.postalCode,
+        country: ev.country,
+        latitude: ev.latitude,
+        longitude: ev.longitude,
         imageUrl: ev.imageUrl,
         imagePublicId: ev.imagePublicId,
         eventDate: eventDate ?? undefined,
@@ -717,5 +760,31 @@ export class EventsService {
       name: loc.location,
       count: loc._count.location,
     }));
+  }
+
+  async getAvailableCities() {
+    const cities = await this.prisma.event.groupBy({
+      by: ['city'],
+      where: {
+        city: {
+          not: null,
+        },
+      },
+      _count: {
+        city: true,
+      },
+      orderBy: {
+        _count: {
+          city: 'desc',
+        },
+      },
+    });
+
+    return cities
+      .filter((c) => c.city !== null)
+      .map((c) => ({
+        name: c.city as string,
+        count: c._count.city,
+      }));
   }
 }

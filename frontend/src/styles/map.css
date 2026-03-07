@@ -1,0 +1,68 @@
+/* Styles pour la carte Leaflet */
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+/* Mode sombre pour les popups */
+.dark .leaflet-popup-content-wrapper {
+  background-color: rgb(38 38 38);
+  color: rgb(229 229 229);
+}
+
+.dark .leaflet-popup-tip {
+  background-color: rgb(38 38 38);
+}
+
+/* Amélioration des popups */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+  min-width: 250px;
+}
+
+/* Bouton de fermeture */
+.leaflet-popup-close-button {
+  color: rgb(115 115 115);
+  font-size: 24px;
+  padding: 4px 8px;
+}
+
+.dark .leaflet-popup-close-button {
+  color: rgb(163 163 163);
+}
+
+.leaflet-popup-close-button:hover {
+  color: rgb(64 64 64);
+}
+
+.dark .leaflet-popup-close-button:hover {
+  color: rgb(212 212 212);
+}
+
+/* Contrôles de zoom */
+.dark .leaflet-control-zoom a {
+  background-color: rgb(38 38 38);
+  color: rgb(229 229 229);
+  border-color: rgb(64 64 64);
+}
+
+.dark .leaflet-control-zoom a:hover {
+  background-color: rgb(64 64 64);
+}
+
+/* Attribution */
+.dark .leaflet-control-attribution {
+  background-color: rgba(38, 38, 38, 0.8);
+  color: rgb(163 163 163);
+}
+
+.dark .leaflet-control-attribution a {
+  color: rgb(96 165 250);
+}
