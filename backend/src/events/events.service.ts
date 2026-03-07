@@ -439,6 +439,9 @@ export class EventsService {
       AND: [],
     };
 
+    // Par défaut : uniquement les événements à venir dans le catalogue
+    where.AND.push({ eventDate: { gte: new Date() } });
+
     if (query) {
       where.AND.push({
         OR: [

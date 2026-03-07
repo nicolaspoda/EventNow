@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService';
 import { safeFormat } from '../utils/date';
 import type { EventParticipantsResponse } from '../types/dashboard.types';
+import Button from '../components/ui/Button';
 
 export function EventParticipantsPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [data, setData] = useState<EventParticipantsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,18 +77,15 @@ export function EventParticipantsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <nav className="mb-6" aria-label="Fil d'Ariane">
-        <Link
-          to="/dashboard/client"
-          className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+      <div className="mb-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)}
+          aria-label="Retour à la page précédente"
         >
-          Mes événements
-        </Link>
-        <span className="mx-2 text-neutral-400 dark:text-neutral-500" aria-hidden="true">
-          /
-        </span>
-        <span className="text-neutral-700 dark:text-neutral-300">Participants</span>
-      </nav>
+          ← Retour
+        </Button>
+      </div>
 
       <header className="mb-8">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100" id="participants-title">
@@ -157,10 +156,15 @@ export function EventParticipantsPage() {
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
                 {participants.map((p, index) => (
                   <tr key={`${p.userId}-${index}`} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-                    <td className="px-6 py-4 font-medium text-neutral-900 dark:text-neutral-100">
-                      {p.firstName || p.lastName
-                        ? [p.firstName, p.lastName].filter(Boolean).join(' ')
-                        : '–'}
+                    <td className="px-6 py-4 font-medium">
+                      <Link
+                        to={`/user/${p.userId}/profile`}
+                        className="text-primary-600 dark:text-primary-400 hover:underline"
+                      >
+                        {p.firstName || p.lastName
+                          ? [p.firstName, p.lastName].filter(Boolean).join(' ')
+                          : p.email.split('@')[0]}
+                      </Link>
                     </td>
                     <td className="px-6 py-4 text-neutral-700 dark:text-neutral-300">{p.email}</td>
                     <td className="px-6 py-4 text-right text-neutral-700 dark:text-neutral-300">

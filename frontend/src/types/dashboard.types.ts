@@ -128,3 +128,5 @@ export interface UpcomingParticipationEvent extends UpcomingEventBase {
 }
 
 export type UpcomingEvent = UpcomingTicketEvent | UpcomingParticipationEvent;
+
+export type ParticipatedEvent = (UpcomingTicketEvent | UpcomingParticipationEvent) & { isPast: boolean };

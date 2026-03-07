@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { EventType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -11,6 +12,29 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 @Injectable()
 export class ReviewsService {
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * Retourne true si l'utilisateur a assisté à l'événement (billet validé ou participation acceptée pour événement communautaire).
+   */
+  private async hasAttended(eventId: string, userId: string, eventType: EventType): Promise<boolean> {
+    if (eventType === EventType.COMMUNITY) {
+      const participation = await this.prisma.participationRequest.findUnique({
+        where: {
+          eventId_userId: { eventId, userId },
+          status: 'ACCEPTED',
+        },
+      });
+      return !!participation;
+    }
+    const hasAttended = await this.prisma.ticket.findFirst({
+      where: {
+        order: { userId },
+        ticketCategory: { eventId },
+        validatedAt: { not: null },
+      },
+    });
+    return !!hasAttended;
+  }
 
   /**
    * Retourne true si l'événement est considéré comme passé (ou date absente/invalide).
@@ -37,15 +61,8 @@ export class ReviewsService {
       );
     }
 
-    const hasAttended = await this.prisma.ticket.findFirst({
-      where: {
-        order: { userId: userId },
-        ticketCategory: { eventId: eventId },
-        validatedAt: { not: null },
-      },
-    });
-
-    if (!hasAttended) {
+    const attended = await this.hasAttended(eventId, userId, event.type);
+    if (!attended) {
       throw new ForbiddenException(
         "Vous ne pouvez laisser un avis que sur un événement auquel vous avez assisté",
       );
@@ -175,15 +192,8 @@ export class ReviewsService {
       return { canReview: false, reason: 'Événement pas encore passé' };
     }
 
-    const hasAttended = await this.prisma.ticket.findFirst({
-      where: {
-        order: { userId: userId },
-        ticketCategory: { eventId: eventId },
-        validatedAt: { not: null },
-      },
-    });
-
-    if (!hasAttended) {
+    const attended = await this.hasAttended(eventId, userId, event.type);
+    if (!attended) {
       return {
         canReview: false,
         reason: "Vous n'avez pas assisté à cet événement",

@@ -65,6 +65,7 @@ export class ParticipationRequestsService {
       data: {
         eventId: dto.eventId,
         userId,
+        message: dto.message,
         status: ParticipationRequestStatus.PENDING,
       },
       include: {
@@ -108,7 +109,15 @@ export class ParticipationRequestsService {
     return this.prisma.participationRequest.findMany({
       where: { eventId },
       include: {
-        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        user: { 
+          select: { 
+            id: true, 
+            email: true, 
+            firstName: true, 
+            lastName: true,
+            avatarUrl: true,
+          } 
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -155,12 +164,17 @@ export class ParticipationRequestsService {
         status: ParticipationRequestStatus.PENDING,
       },
       include: {
-        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        user: { select: { id: true, email: true, firstName: true, lastName: true, avatarUrl: true } },
         event: { select: { id: true, title: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
-    return requests;
+    return requests.map((r) => ({
+      ...r,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      respondedAt: r.respondedAt?.toISOString() ?? null,
+    }));
   }
 
   async respond(

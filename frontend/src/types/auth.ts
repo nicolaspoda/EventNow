@@ -21,6 +21,10 @@ export interface UserProfile extends User {
     ordersCount: number;
     reviewsCount: number;
     eventsOrganized: number;
+    averageRatingAsParticipant?: number | null;
+    totalReviewsAsParticipant?: number;
+    averageRatingOnMyEvents?: number | null;
+    totalReviewsOnMyEvents?: number;
   };
 }
 

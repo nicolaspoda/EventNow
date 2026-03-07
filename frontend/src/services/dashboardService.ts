@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { UpcomingEvent } from '../types/dashboard.types';
+import type { UpcomingEvent, ParticipatedEvent } from '../types/dashboard.types';
 
 export const dashboardService = {
   getOrganizerOverview: async () => {
@@ -38,6 +38,11 @@ export const dashboardService = {
 
   getMyUpcomingEvents: async (): Promise<UpcomingEvent[]> => {
     const response = await api.get<UpcomingEvent[]>('/dashboard/my-upcoming-events');
+    return response.data;
+  },
+
+  getMyParticipatedEvents: async (): Promise<ParticipatedEvent[]> => {
+    const response = await api.get<ParticipatedEvent[]>('/dashboard/my-participated-events');
     return response.data;
   },
 };

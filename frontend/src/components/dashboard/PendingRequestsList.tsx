@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { participationService } from '../../services/participationService';
 import type { ParticipationRequest } from '../../types/participation.types';
+import { safeFormat } from '../../utils/date';
 
 interface PendingRequestsListProps {
   requests: ParticipationRequest[];
@@ -60,7 +61,17 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
           >
             <div>
               <p className="font-medium text-neutral-900 dark:text-neutral-100">
-                {requesterLabel(req)} souhaite participer à{' '}
+                {req.user?.id ? (
+                  <Link
+                    to={`/user/${req.user.id}/profile`}
+                    className="text-primary-600 dark:text-primary-400 hover:underline"
+                  >
+                    {requesterLabel(req)}
+                  </Link>
+                ) : (
+                  requesterLabel(req)
+                )}{' '}
+                souhaite participer à{' '}
                 {req.event ? (
                   <Link
                     to={`/events/${req.event.id}`}
@@ -72,8 +83,13 @@ export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
                   'votre événement'
                 )}
               </p>
+              {req.message && (
+                <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-1 italic">
+                  "{req.message}"
+                </p>
+              )}
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-                Demandé le {req.createdAt ? new Date(req.createdAt).toLocaleDateString('fr-FR') : ''}
+                Demandé le {safeFormat(req.createdAt, 'd MMMM yyyy')}
               </p>
             </div>
             <div className="flex gap-2">

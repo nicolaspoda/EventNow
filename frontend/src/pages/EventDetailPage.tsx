@@ -9,6 +9,7 @@ import { reviewService } from '../services/reviewService';
 import { useAuth } from '../utils/useAuth';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import EventDetail from '../components/events/EventDetail';
+import { EventParticipantReviewsSection } from '../components/events/EventParticipantReviewsSection';
 import Button from '../components/ui/Button';
 import { ReviewForm } from '../components/reviews/ReviewForm';
 import { ReviewsList } from '../components/reviews/ReviewsList';
@@ -22,6 +23,8 @@ const EventDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [canReview, setCanReview] = useState(false);
+  const [reviewsVersion, setReviewsVersion] = useState(0);
+  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'reviews'>('details');
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -37,7 +40,7 @@ const EventDetailPage: React.FC = () => {
         const data = await eventService.getEventById(id);
         const rawDate = data.eventDate ?? (data as { event_date?: string }).event_date;
         const eventDateStr =
-          rawDate instanceof Date
+          typeof rawDate === 'object' && rawDate !== null && rawDate instanceof Date
             ? (Number.isNaN(rawDate.getTime()) ? undefined : rawDate.toISOString())
             : typeof rawDate === 'string' && rawDate.trim()
               ? (Number.isNaN(new Date(rawDate).getTime()) ? undefined : rawDate.trim())
@@ -115,13 +118,13 @@ const EventDetailPage: React.FC = () => {
     }
   };
 
-  const handleParticipationRequest = async () => {
-    if (!id || !isAuthenticated) return;
+  const handleParticipationRequestSuccess = async () => {
+    if (!id) return;
     try {
-      const created = await participationService.create({ eventId: id });
-      setMyParticipationRequest(created);
-    } catch (err: unknown) {
-      alert(getApiErrorMessage(err, 'Erreur lors de la demande de participation'));
+      const req = await participationService.getMyRequestForEvent(id);
+      setMyParticipationRequest(req ?? null);
+    } catch {
+      setMyParticipationRequest(null);
     }
   };
 
@@ -153,7 +156,7 @@ const EventDetailPage: React.FC = () => {
           </nav>
 
           <div
-            className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl p-6 text-center"
+            className="bg-error-50 dark:bg-neutral-800 border border-error-200 dark:border-neutral-700 rounded-xl p-6 text-center"
             role="alert"
           >
             <svg
@@ -165,11 +168,13 @@ const EventDetailPage: React.FC = () => {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <h1 className="text-2xl font-bold text-error-900 dark:text-error-100 mb-2">
+            <h1 className="text-2xl font-bold text-error-800 dark:text-neutral-100 mb-2">
               Événement introuvable
             </h1>
-            <p className="text-error-700 dark:text-error-300 mb-6">
-              {error || 'L\'événement que vous recherchez n\'existe pas ou a été supprimé.'}
+            <p className="text-error-700 dark:text-neutral-300 mb-6">
+              {error && error !== 'Événement introuvable'
+                ? error
+                : "L'événement que vous recherchez n'existe pas ou a été supprimé."}
             </p>
             <Button variant="primary" onClick={() => navigate('/events')}>
               Retour aux événements
@@ -182,7 +187,7 @@ const EventDetailPage: React.FC = () => {
 
   return (
     <main className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <nav className="mb-6" aria-label="Fil d'Ariane">
           <ol className="flex items-center space-x-2 text-sm text-neutral-600 dark:text-neutral-400">
             <li>
@@ -208,30 +213,88 @@ const EventDetailPage: React.FC = () => {
           </Button>
         </div>
 
-        <EventDetail
-          event={event}
-          onBooking={event.type === 'COMMUNITY' ? undefined : handleBooking}
-          onParticipationRequest={event.type === 'COMMUNITY' ? handleParticipationRequest : undefined}
-          myParticipationRequest={event.type === 'COMMUNITY' ? myParticipationRequest : undefined}
-          onLoginRequired={() => navigate('/login', { state: { from: `/events/${id}` } })}
-          isAuthenticated={isAuthenticated}
-          isOrganizer={isAuthenticated && user != null && event.organizerId === user.id}
-        />
+        {(() => {
+          const showParticipantsTab = event.type === 'COMMUNITY' && isAuthenticated && user != null && event.organizerId === user.id;
+          const tabs: { id: 'details' | 'participants' | 'reviews'; label: string }[] = [
+            { id: 'details', label: 'Détails' },
+            ...(showParticipantsTab ? [{ id: 'participants' as const, label: 'Participants' }] : []),
+            { id: 'reviews', label: 'Avis' },
+          ];
+          return (
+            <>
+              <div className="mb-6">
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  Contenu
+                </p>
+                <div className="flex flex-wrap gap-2" role="tablist" aria-label="Sections de la page">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === tab.id}
+                      aria-controls={`panel-${tab.id}`}
+                      id={`tab-${tab.id}`}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 ${
+                        activeTab === tab.id
+                          ? 'bg-primary-600 text-white dark:bg-primary-500'
+                          : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-600'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-        <section className="mt-12">
-          {canReview && (
-            <div className="mb-8">
-              <ReviewForm
-                eventId={id!}
-                onSuccess={() => {
-                  setCanReview(false);
-                }}
-              />
-            </div>
-          )}
+              <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30 p-6 md:p-8">
+                {activeTab === 'details' && (
+                  <div id="panel-details" role="tabpanel" aria-labelledby="tab-details">
+                    <EventDetail
+                      event={event}
+                      onBooking={event.type === 'COMMUNITY' ? undefined : handleBooking}
+                      onParticipationRequestSuccess={event.type === 'COMMUNITY' ? handleParticipationRequestSuccess : undefined}
+                      myParticipationRequest={event.type === 'COMMUNITY' ? myParticipationRequest : undefined}
+                      onLoginRequired={() => navigate('/login', { state: { from: `/events/${id}` } })}
+                      isAuthenticated={isAuthenticated}
+                      isOrganizer={isAuthenticated && user != null && event.organizerId === user.id}
+                    />
+                  </div>
+                )}
 
-          <ReviewsList eventId={id!} />
-        </section>
+                {activeTab === 'participants' && showParticipantsTab && (
+                  <div id="panel-participants" role="tabpanel" aria-labelledby="tab-participants">
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
+                      Participants
+                    </h2>
+                    <EventParticipantReviewsSection eventId={event.id} hideTitle={true} />
+                  </div>
+                )}
+
+                {activeTab === 'reviews' && (
+                  <div id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews">
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
+                      Avis sur l'événement
+                    </h2>
+                    {canReview && (
+                      <div className="mb-6">
+                        <ReviewForm
+                          eventId={id!}
+                          onSuccess={() => {
+                            setCanReview(false);
+                            setReviewsVersion((v) => v + 1);
+                          }}
+                        />
+                      </div>
+                    )}
+                    <ReviewsList eventId={id!} refreshTrigger={reviewsVersion} />
+                  </div>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </main>
   );

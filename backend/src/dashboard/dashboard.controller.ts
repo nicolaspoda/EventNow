@@ -71,4 +71,10 @@ export class DashboardController {
   async getMyUpcomingEvents(@CurrentUser() user: any) {
     return this.dashboardService.getMyUpcomingEvents(user.id);
   }
+
+  @Get('my-participated-events')
+  @HttpCode(HttpStatus.OK)
+  async getMyParticipatedEvents(@CurrentUser() user: any) {
+    return this.dashboardService.getMyParticipatedEvents(user.id);
+  }
 }

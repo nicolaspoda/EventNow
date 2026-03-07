@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { profileService } from '../services/profile.service';
+import type { PublicUserProfile } from '../services/profile.service';
 import { Input } from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { AvatarUpload } from '../components/upload/AvatarUpload';
+import { StarRating } from '../components/reviews/StarRating';
+import { ProfileViewMode } from '../components/profile/ProfileViewMode';
 import type { UserProfile, UpdateProfileData } from '../types/auth';
 
 const roleLabels: Record<string, string> = {
@@ -21,8 +24,11 @@ const roleColors: Record<string, string> = {
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const { userId: userIdFromRoute } = useParams<{ userId?: string }>();
   const { user, setUser, logout } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [publicProfile, setPublicProfile] = useState<PublicUserProfile | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +38,34 @@ export const ProfilePage: React.FC = () => {
     firstName: '',
     lastName: '',
   });
+
+  const isOwnProfile = !userIdFromRoute || (user && userIdFromRoute === user.id);
+
+  useEffect(() => {
+    if (userIdFromRoute && user && userIdFromRoute !== user.id) {
+      const fetchPublic = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+          const data = await profileService.getUserPublicProfile(userIdFromRoute);
+          setPublicProfile(data);
+          setIsViewMode(true);
+        } catch (err) {
+          console.error('Erreur lors du chargement du profil:', err);
+          setError('Profil introuvable');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchPublic();
+    } else if (!userIdFromRoute) {
+      setIsViewMode(false);
+      setPublicProfile(null);
+      fetchProfile();
+    } else if (userIdFromRoute && user && userIdFromRoute === user.id) {
+      navigate('/profile', { replace: true });
+    }
+  }, [userIdFromRoute, user?.id]);
 
   useEffect(() => {
     fetchProfile();
@@ -216,7 +250,7 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
-  if (!profile) {
+  if (!profile && !isViewMode) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-800 dark:text-error-200 px-4 py-3 rounded-xl">
@@ -225,6 +259,21 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (isViewMode && !publicProfile && !loading) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 text-error-800 dark:text-error-200 px-4 py-3 rounded-xl">
+          <p className="font-medium">Erreur</p>
+          <p className="text-sm">{error || 'Profil introuvable'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isViewMode && publicProfile) {
+    return <ProfileViewMode profile={publicProfile} />;
   }
 
   return (
@@ -326,6 +375,52 @@ export const ProfilePage: React.FC = () => {
                   {profile.stats.eventsOrganized}
                 </span>
               </div>
+
+              {(profile.stats.totalReviewsAsParticipant != null && profile.stats.totalReviewsAsParticipant > 0) && (
+                <div className="flex items-center justify-between pt-2 border-t border-neutral-200 dark:border-neutral-700">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-neutral-600 dark:text-neutral-300">Note reçue (participant)</span>
+                  </div>
+                  <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                    {profile.stats.averageRatingAsParticipant != null
+                      ? `${profile.stats.averageRatingAsParticipant}/5`
+                      : '—'}
+                    {profile.stats.totalReviewsAsParticipant != null && profile.stats.totalReviewsAsParticipant > 0 && (
+                      <span className="text-sm font-normal text-neutral-500 dark:text-neutral-400 ml-1">
+                        ({profile.stats.totalReviewsAsParticipant} avis)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              {(profile.stats.totalReviewsOnMyEvents != null && profile.stats.totalReviewsOnMyEvents > 0) && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <span className="text-sm text-neutral-600 dark:text-neutral-300">Note sur mes événements</span>
+                  </div>
+                  <span className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                    {profile.stats.averageRatingOnMyEvents != null
+                      ? `${profile.stats.averageRatingOnMyEvents}/5`
+                      : '—'}
+                    {profile.stats.totalReviewsOnMyEvents != null && profile.stats.totalReviewsOnMyEvents > 0 && (
+                      <span className="text-sm font-normal text-neutral-500 dark:text-neutral-400 ml-1">
+                        ({profile.stats.totalReviewsOnMyEvents} avis)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>

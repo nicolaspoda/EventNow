@@ -7,6 +7,7 @@ import {
   UseGuards,
   Get,
   Put,
+  Param,
   Req,
   Res,
   UnauthorizedException,
@@ -68,6 +69,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getFullProfile(@CurrentUser() user: any) {
     return this.authService.getFullProfile(user.id);
+  }
+
+  @Get('user/:userId/public-profile')
+  @UseGuards(JwtAuthGuard)
+  async getUserPublicProfile(@Param('userId') userId: string) {
+    return this.authService.getUserPublicProfile(userId);
   }
 
   @Put('profile')

@@ -21,11 +21,15 @@ import OrderSuccessPage from './pages/OrderSuccessPage';
 import MyTicketsPage from './pages/MyTicketsPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import MyUpcomingEventsPage from './pages/MyUpcomingEventsPage';
+import MyParticipatedEventsPage from './pages/MyParticipatedEventsPage';
 import { RefundRequestsPage } from './pages/RefundRequestsPage';
 import { StaffScanPage } from './pages/StaffScanPage';
 import { StaffValidationsPage } from './pages/StaffValidationsPage';
 import LandingPage from './pages/LandingPage';
 import { ProfilePage } from './pages/ProfilePage';
+
+import EventParticipantReviewsPage from './pages/EventParticipantReviewsPage';
+import EventParticipationRequestsPage from './pages/EventParticipationRequestsPage';
 
 function App() {
   return (
@@ -78,6 +82,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <MyUpcomingEventsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-participated-events"
+            element={
+              <ProtectedRoute>
+                <MyParticipatedEventsPage />
               </ProtectedRoute>
             }
           />
@@ -150,6 +162,30 @@ function App() {
             element={
               <ProtectedRoute roles={['CLIENT']}>
                 <EventParticipantsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:eventId/participation-requests"
+            element={
+              <ProtectedRoute>
+                <EventParticipationRequestsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:eventId/participant-reviews"
+            element={
+              <ProtectedRoute>
+                <EventParticipantReviewsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/:userId/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

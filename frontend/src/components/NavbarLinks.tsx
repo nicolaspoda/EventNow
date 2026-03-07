@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { DarkModeToggle } from './DarkModeToggle';
 
@@ -7,20 +8,81 @@ const navLinkClass =
 
 export function NavbarLinks() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
+  const [eventsMenuOpen, setEventsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setEventsMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setEventsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const isEventsPage = location.pathname === '/my-upcoming-events' || location.pathname === '/my-participated-events';
+
   if (isAuthenticated) {
     return (
       <>
         <DarkModeToggle />
-        <Link to="/my-upcoming-events" className={navLinkClass}>
-          À venir
-        </Link>
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setEventsMenuOpen((o) => !o)}
+            className={`${navLinkClass} flex items-center gap-1 ${
+              isEventsPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
+            }`}
+            aria-expanded={eventsMenuOpen}
+            aria-haspopup="true"
+            aria-label="Menu mes événements"
+          >
+            Mes événements
+            <svg
+              className={`w-4 h-4 transition-transform ${eventsMenuOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {eventsMenuOpen && (
+            <div
+              className="absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50"
+              role="menu"
+            >
+              <Link
+                to="/my-upcoming-events"
+                className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-t-lg"
+                role="menuitem"
+                onClick={() => setEventsMenuOpen(false)}
+              >
+                À venir
+              </Link>
+              <Link
+                to="/my-participated-events"
+                className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-b-lg"
+                role="menuitem"
+                onClick={() => setEventsMenuOpen(false)}
+              >
+                Mes participations
+              </Link>
+            </div>
+          )}
+        </div>
         <Link to="/my-tickets" className={navLinkClass}>
           Mes billets
         </Link>
@@ -44,7 +106,7 @@ export function NavbarLinks() {
 
         {user?.role === 'CLIENT' && (
           <Link to="/dashboard/client" className={navLinkClass}>
-            Mes événements
+            Mon tableau de bord
           </Link>
         )}
 

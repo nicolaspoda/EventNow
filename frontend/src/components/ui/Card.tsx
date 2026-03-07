@@ -18,9 +18,9 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={[
-        'bg-white rounded-2xl shadow-md overflow-hidden',
+        'bg-white dark:bg-neutral-800 rounded-2xl shadow-md dark:shadow-neutral-900/50 overflow-hidden',
         hover ? 'hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer' : '',
-        gradient ? 'bg-gradient-to-br from-white to-primary-50' : '',
+        gradient ? 'bg-gradient-to-br from-white to-primary-50 dark:from-neutral-800 dark:to-primary-900/20' : '',
         className,
       ]
         .filter(Boolean)
@@ -36,7 +36,7 @@ export const CardHeader: React.FC<{ children: React.ReactNode; className?: strin
   children,
   className = '',
 }) => (
-  <div className={`px-6 py-5 border-b border-neutral-100 ${className}`}>{children}</div>
+  <div className={`px-6 py-5 border-b border-neutral-100 dark:border-neutral-700 ${className}`}>{children}</div>
 );
 
 export const CardBody: React.FC<{ children: React.ReactNode; className?: string }> = ({
@@ -50,7 +50,7 @@ export const CardFooter: React.FC<{ children: React.ReactNode; className?: strin
   children,
   className = '',
 }) => (
-  <div className={`px-6 py-4 bg-neutral-50 border-t border-neutral-100 ${className}`}>
+  <div className={`px-6 py-4 bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-100 dark:border-neutral-700 ${className}`}>
     {children}
   </div>
 );

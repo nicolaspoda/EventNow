@@ -7,7 +7,7 @@ import { safeFormat } from '../../utils/date';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
 
 interface UpcomingEventCardProps {
-  event: UpcomingEvent;
+  event: UpcomingEvent | (UpcomingEvent & { isPast?: boolean });
 }
 
 const UpcomingEventCard: React.FC<UpcomingEventCardProps> = ({ event }) => {
@@ -27,8 +27,10 @@ const UpcomingEventCard: React.FC<UpcomingEventCardProps> = ({ event }) => {
   const diffTime = isValidDate ? eventDate.getTime() - now.getTime() : 0;
   const diffDays = isValidDate ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
 
+  const isPastEvent = (event as { isPast?: boolean }).isPast ?? (isValidDate && diffDays < 0);
   const getCountdownText = () => {
     if (!isValidDate) return 'Date non renseignée';
+    if (isPastEvent) return 'Terminé';
     if (diffDays === 0) return "Aujourd'hui";
     if (diffDays === 1) return 'Demain';
     if (diffDays < 7) return `Dans ${diffDays} jours`;
@@ -42,6 +44,7 @@ const UpcomingEventCard: React.FC<UpcomingEventCardProps> = ({ event }) => {
 
   const getCountdownColor = () => {
     if (!isValidDate) return 'text-neutral-500 dark:text-neutral-400';
+    if (isPastEvent) return 'text-neutral-500 dark:text-neutral-400';
     if (diffDays <= 1) return 'text-error-500 dark:text-error-400';
     if (diffDays <= 7) return 'text-warning-500 dark:text-warning-400';
     return 'text-success-500 dark:text-success-400';

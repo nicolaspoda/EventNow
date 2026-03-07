@@ -16,10 +16,11 @@ interface Review {
 
 interface ReviewsListProps {
   eventId: string;
+  refreshTrigger?: number;
   onReviewsLoaded?: (stats: { averageRating: number | null; totalReviews: number }) => void;
 }
 
-export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, onReviewsLoaded }) => {
+export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, refreshTrigger, onReviewsLoaded }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 });
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, onReviewsLoad
 
   useEffect(() => {
     fetchReviews();
-  }, [eventId, sortBy]);
+  }, [eventId, sortBy, refreshTrigger]);
 
   const fetchReviews = async () => {
     setLoading(true);

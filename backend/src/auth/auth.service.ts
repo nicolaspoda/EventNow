@@ -170,6 +170,20 @@ export class AuthService {
       throw new UnauthorizedException('Utilisateur non trouvé');
     }
 
+    const participantReviewStats = await this.prisma.participantReview.aggregate({
+      where: { participantId: userId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const organizerReviewStats = await this.prisma.review.aggregate({
+      where: {
+        event: { organizerId: userId },
+      },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
     return {
       id: user.id,
       email: user.email,
@@ -182,6 +196,117 @@ export class AuthService {
         ordersCount: user._count.orders,
         reviewsCount: user._count.reviews,
         eventsOrganized: user._count.organizedEvents,
+        averageRatingAsParticipant: participantReviewStats._avg.rating != null
+          ? Math.round(participantReviewStats._avg.rating * 10) / 10
+          : null,
+        totalReviewsAsParticipant: participantReviewStats._count.rating,
+        averageRatingOnMyEvents: organizerReviewStats._avg.rating != null
+          ? Math.round(organizerReviewStats._avg.rating * 10) / 10
+          : null,
+        totalReviewsOnMyEvents: organizerReviewStats._count.rating,
+      },
+    };
+  }
+
+  async getUserPublicProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Utilisateur non trouvé');
+    }
+
+    const acceptedParticipations = await this.prisma.participationRequest.findMany({
+      where: {
+        userId,
+        status: 'ACCEPTED',
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            eventDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    const participantReviews = await this.prisma.participantReview.findMany({
+      where: { participantId: userId },
+      include: {
+        reviewer: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    const avgRating = await this.prisma.participantReview.aggregate({
+      where: { participantId: userId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const organizerReviewStats = await this.prisma.review.aggregate({
+      where: {
+        event: { organizerId: userId },
+      },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt.toISOString(),
+      participatedEvents: acceptedParticipations.map((p) => ({
+        ...p.event,
+        eventDate: p.event.eventDate.toISOString(),
+      })),
+      participantReviews: participantReviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        createdAt: r.createdAt.toISOString(),
+        reviewerName: r.reviewer.firstName && r.reviewer.lastName
+          ? `${r.reviewer.firstName} ${r.reviewer.lastName}`
+          : 'Anonyme',
+      })),
+      stats: {
+        averageRating: avgRating._avg.rating != null
+          ? Math.round(avgRating._avg.rating * 10) / 10
+          : null,
+        totalReviews: avgRating._count.rating,
+        participatedEventsCount: acceptedParticipations.length,
+        averageRatingOnMyEvents: organizerReviewStats._avg.rating != null
+          ? Math.round(organizerReviewStats._avg.rating * 10) / 10
+          : null,
+        totalReviewsOnMyEvents: organizerReviewStats._count.rating,
       },
     };
   }

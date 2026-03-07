@@ -7,11 +7,12 @@ import type { ParticipationRequest } from '../../types/participation.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import BookingModal from '../bookings/BookingModal';
+import { ParticipationRequestModal } from '../participation/ParticipationRequestModal';
 
 interface EventDetailProps {
   event: Event;
   onBooking?: (categoryId: string, quantity: number) => Promise<void>;
-  onParticipationRequest?: () => Promise<void>;
+  onParticipationRequestSuccess?: () => void;
   myParticipationRequest?: ParticipationRequest | null;
   onLoginRequired?: () => void;
   isAuthenticated?: boolean;
@@ -21,14 +22,14 @@ interface EventDetailProps {
 const EventDetail: React.FC<EventDetailProps> = ({
   event,
   onBooking,
-  onParticipationRequest,
+  onParticipationRequestSuccess,
   myParticipationRequest,
   onLoginRequired,
   isAuthenticated = false,
   isOrganizer = false,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
-  const [participationLoading, setParticipationLoading] = useState(false);
+  const [showParticipationModal, setShowParticipationModal] = useState(false);
   const isCommunity = event.type === 'COMMUNITY';
   const participationCategory = isCommunity && event.ticketCategories?.length
     ? event.ticketCategories.find((c) => c.name === 'Participation') ?? event.ticketCategories[0]
@@ -56,17 +57,16 @@ const EventDetail: React.FC<EventDetailProps> = ({
     }
   };
 
-  const handleParticipationRequest = async () => {
-    if (!onParticipationRequest || !isAuthenticated) {
+  const handleParticipationRequest = () => {
+    if (!isAuthenticated) {
       if (onLoginRequired) onLoginRequired();
       return;
     }
-    setParticipationLoading(true);
-    try {
-      await onParticipationRequest();
-    } finally {
-      setParticipationLoading(false);
-    }
+    setShowParticipationModal(true);
+  };
+
+  const handleParticipationSuccess = () => {
+    onParticipationRequestSuccess?.();
   };
 
   const getStockIndicator = (currentStock: number, initialStock: number) => {
@@ -150,14 +150,12 @@ const EventDetail: React.FC<EventDetailProps> = ({
                 ) : (
                   <Button
                     variant="primary"
-                    disabled={isParticipationFull || participationLoading}
+                    disabled={isParticipationFull}
                     onClick={handleParticipationRequest}
                   >
-                    {participationLoading
-                      ? 'Envoi...'
-                      : !isAuthenticated
-                        ? 'Se connecter pour demander à participer'
-                        : 'Demander à participer'}
+                    {!isAuthenticated
+                      ? 'Se connecter pour demander à participer'
+                      : 'Demander à participer'}
                   </Button>
                 )
               )}
@@ -260,6 +258,14 @@ const EventDetail: React.FC<EventDetailProps> = ({
           onConfirm={handleConfirmBooking}
         />
       )}
+
+      <ParticipationRequestModal
+        eventId={event.id}
+        eventTitle={event.title}
+        isOpen={showParticipationModal}
+        onClose={() => setShowParticipationModal(false)}
+        onSuccess={handleParticipationSuccess}
+      />
     </article>
   );
 };

@@ -3,9 +3,26 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/accessibility.css'
 import App from './App.tsx'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const rootEl = document.getElementById('root')
+if (!rootEl) {
+  console.error('Élément #root introuvable dans le DOM')
+} else {
+  try {
+    createRoot(rootEl).render(
+      <StrictMode>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </StrictMode>,
+    )
+  } catch (err) {
+    console.error('Erreur au montage de l\'application:', err)
+    rootEl.innerHTML = `<div style="padding:24px;font-family:sans-serif;background:#1a1a2e;color:#e2e8f0;min-height:100vh">
+      <h1>Erreur au chargement</h1>
+      <pre style="color:#f87171">${err instanceof Error ? err.message : String(err)}</pre>
+      <p>Ouvre la console (F12) pour plus de détails.</p>
+    </div>`
+  }
+}

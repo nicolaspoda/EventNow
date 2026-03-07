@@ -396,13 +396,16 @@ export class DashboardService {
       }
     }
 
-    const participants = Array.from(participantsMap.values());
+    const participants = Array.from(participantsMap.values()).map((p) => ({
+      ...p,
+      bookedAt: p.bookedAt?.toISOString() ?? null,
+    }));
 
     return {
       event: {
         id: event.id,
         title: event.title,
-        eventDate: event.eventDate,
+        eventDate: event.eventDate?.toISOString() ?? null,
       },
       participants,
       totalParticipants: participants.reduce((sum, p) => sum + p.quantity, 0),
@@ -553,6 +556,158 @@ export class DashboardService {
       const dateA = new Date(a.eventDate);
       const dateB = new Date(b.eventDate);
       return dateA.getTime() - dateB.getTime();
+    });
+
+    return allEvents;
+  }
+
+  /**
+   * Retourne tous les événements auxquels l'utilisateur a participé (billets payés ou participation acceptée), passés et à venir.
+   */
+  async getMyParticipatedEvents(userId: string) {
+    const now = new Date();
+
+    const ticketsWithEvents = await this.prisma.ticket.findMany({
+      where: {
+        order: {
+          userId,
+          status: 'PAID',
+        },
+      },
+      include: {
+        ticketCategory: {
+          include: {
+            event: {
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                eventDate: true,
+                location: true,
+                imageUrl: true,
+                type: true,
+                category: true,
+                organizer: {
+                  select: {
+                    id: true,
+                    email: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        ticketCategory: {
+          event: {
+            eventDate: 'desc',
+          },
+        },
+      },
+    });
+
+    const acceptedParticipations = await this.prisma.participationRequest.findMany({
+      where: {
+        userId,
+        status: 'ACCEPTED',
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+            organizer: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        event: {
+          eventDate: 'desc',
+        },
+      },
+    });
+
+    const ticketEventsMap = new Map<string, {
+      event: typeof ticketsWithEvents[0]['ticketCategory']['event'];
+      ticketCount: number;
+      categoryName: string;
+    }>();
+
+    for (const ticket of ticketsWithEvents) {
+      const eventId = ticket.ticketCategory.event.id;
+      const existing = ticketEventsMap.get(eventId);
+      if (existing) {
+        existing.ticketCount += 1;
+      } else {
+        ticketEventsMap.set(eventId, {
+          event: ticket.ticketCategory.event,
+          ticketCount: 1,
+          categoryName: ticket.ticketCategory.name,
+        });
+      }
+    }
+
+    const professionalEvents = Array.from(ticketEventsMap.values()).map((item) => {
+      const eventDate = item.event.eventDate instanceof Date
+        ? item.event.eventDate.toISOString()
+        : item.event.eventDate;
+      return {
+        id: item.event.id,
+        title: item.event.title,
+        description: item.event.description,
+        eventDate,
+        location: item.event.location,
+        imageUrl: item.event.imageUrl,
+        type: item.event.type,
+        category: item.event.category,
+        organizer: (item.event as any).organizer,
+        participationType: 'TICKET' as const,
+        ticketCount: item.ticketCount,
+        categoryName: item.categoryName,
+        isPast: new Date(eventDate) < now,
+      };
+    });
+
+    const communityEvents = acceptedParticipations.map((participation) => {
+      const eventDate = participation.event.eventDate instanceof Date
+        ? participation.event.eventDate.toISOString()
+        : participation.event.eventDate;
+      return {
+        id: participation.event.id,
+        title: participation.event.title,
+        description: participation.event.description,
+        eventDate,
+        location: participation.event.location,
+        imageUrl: participation.event.imageUrl,
+        type: participation.event.type,
+        category: participation.event.category,
+        organizer: (participation.event as any).organizer,
+        participationType: 'PARTICIPATION' as const,
+        acceptedAt: participation.respondedAt,
+        isPast: new Date(eventDate) < now,
+      };
+    });
+
+    const allEvents = [...professionalEvents, ...communityEvents].sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime();
     });
 
     return allEvents;
