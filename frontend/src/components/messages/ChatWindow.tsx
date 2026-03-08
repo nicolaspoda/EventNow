@@ -58,10 +58,26 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   const groupMessagesByDate = (messages: Message[]) => {
     const groups: { [key: string]: Message[] } = {};
-    messages.forEach((msg) => {
-      const date = format(new Date(msg.createdAt), 'dd MMMM yyyy', {
-        locale: fr,
+    const getDate = (msg: Message): Date | null => {
+      const raw = (msg as Message & { created_at?: string }).createdAt
+        ?? (msg as Message & { created_at?: string }).created_at;
+      console.log('[ChatWindow] Message date debug:', { 
+        messageId: msg.id, 
+        createdAt: (msg as any).createdAt, 
+        created_at: (msg as any).created_at,
+        raw,
+        type: typeof raw
       });
+      if (raw == null) return null;
+      const parsed = typeof raw === 'string' || typeof raw === 'number' ? new Date(raw) : null;
+      return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+    };
+    messages.forEach((msg) => {
+      const parsed = getDate(msg);
+      const date =
+        parsed
+          ? format(parsed, 'dd MMMM yyyy', { locale: fr })
+          : 'Date inconnue';
       if (!groups[date]) {
         groups[date] = [];
       }
@@ -122,12 +138,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                           message.sender.avatarUrl ? (
                             <img
                               src={message.sender.avatarUrl}
-                              alt={`${message.sender.firstName} ${message.sender.lastName}`}
+                            alt={`${message.sender.firstName ?? ''} ${message.sender.lastName ?? ''}`.trim() || 'Expéditeur'}
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                              {message.sender.firstName?.charAt(0).toUpperCase()}
+                            {(message.sender.firstName?.charAt(0) ?? message.sender.email?.charAt(0) ?? '?').toUpperCase()}
                             </div>
                           )
                         ) : (
@@ -139,7 +155,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     <div>
                       {showName && (
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1 px-3">
-                          {message.sender.firstName} {message.sender.lastName}
+                          {message.sender.firstName ?? ''} {message.sender.lastName ?? ''}
                         </p>
                       )}
                       <div
@@ -159,9 +175,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                               : 'text-neutral-500 dark:text-neutral-400'
                           }`}
                         >
-                          {format(new Date(message.createdAt), 'HH:mm', {
-                            locale: fr,
-                          })}
+                          {(() => {
+                            const raw = (message as Message & { created_at?: string }).createdAt
+                              ?? (message as Message & { created_at?: string }).created_at;
+                            if (raw == null) return '—';
+                            const parsed = typeof raw === 'string' || typeof raw === 'number' ? new Date(raw) : null;
+                            return parsed && !Number.isNaN(parsed.getTime())
+                              ? format(parsed, 'HH:mm', { locale: fr })
+                              : '—';
+                          })()}
                         </p>
                       </div>
                     </div>

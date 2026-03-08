@@ -285,7 +285,30 @@ export class MessagesService {
       },
     });
 
-    return messages.reverse();
+    return messages.reverse().map((msg) => this.serializeMessage(msg));
+  }
+
+  private serializeMessage(msg: {
+    id: string;
+    conversationId: string;
+    senderId: string;
+    content: string;
+    createdAt: Date;
+    updatedAt: Date;
+    sender: unknown;
+  }) {
+    const serialized = {
+      ...msg,
+      createdAt: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
+      updatedAt: msg.updatedAt instanceof Date ? msg.updatedAt.toISOString() : msg.updatedAt,
+    };
+    console.log('[MessagesService] Serialized message:', {
+      id: serialized.id,
+      originalCreatedAt: msg.createdAt,
+      serializedCreatedAt: serialized.createdAt,
+      isDate: msg.createdAt instanceof Date,
+    });
+    return serialized;
   }
 
   async sendMessage(
@@ -337,7 +360,7 @@ export class MessagesService {
       });
     }
 
-    return message;
+    return this.serializeMessage(message);
   }
 
   async addMembers(

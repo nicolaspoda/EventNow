@@ -32,9 +32,15 @@ export const CreateConversationModal: React.FC<
 
   const filteredUsers = availableUsers.filter(
     (user) =>
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+      (user.firstName?.toLowerCase() ?? '').includes(
+        (searchTerm ?? '').toLowerCase(),
+      ) ||
+      (user.lastName?.toLowerCase() ?? '').includes(
+        (searchTerm ?? '').toLowerCase(),
+      ) ||
+      (user.email?.toLowerCase() ?? '').includes(
+        (searchTerm ?? '').toLowerCase(),
+      ),
   );
 
   const handleCreate = async () => {
@@ -191,20 +197,20 @@ export const CreateConversationModal: React.FC<
                   {user.avatarUrl ? (
                     <img
                       src={user.avatarUrl}
-                      alt={`${user.firstName} ${user.lastName}`}
+                      alt={`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Utilisateur'}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold">
-                      {user.firstName.charAt(0).toUpperCase()}
+                      {(user.firstName?.charAt(0) ?? user.email?.charAt(0) ?? '?').toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1">
                     <p className="font-medium text-neutral-900 dark:text-white">
-                      {user.firstName} {user.lastName}
+                      {[user.firstName, user.lastName].filter(Boolean).join(' ') || '—'}
                     </p>
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                      {user.email}
+                      {user.email ?? '—'}
                     </p>
                   </div>
                   {isSelected && (
