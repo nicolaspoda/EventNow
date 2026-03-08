@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { DarkModeToggle } from './DarkModeToggle';
 import { NotificationBell } from './NotificationBell';
+import { MessageBell } from './MessageBell';
 
 const navLinkClass =
   'px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1';
@@ -12,16 +13,25 @@ export function NavbarLinks() {
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
   const [eventsMenuOpen, setEventsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [purchasesMenuOpen, setPurchasesMenuOpen] = useState(false);
+  const [organizerMenuOpen, setOrganizerMenuOpen] = useState(false);
+  const [staffMenuOpen, setStaffMenuOpen] = useState(false);
+  const menusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setEventsMenuOpen(false);
+    setPurchasesMenuOpen(false);
+    setOrganizerMenuOpen(false);
+    setStaffMenuOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      if (menusRef.current && !menusRef.current.contains(e.target as Node)) {
         setEventsMenuOpen(false);
+        setPurchasesMenuOpen(false);
+        setOrganizerMenuOpen(false);
+        setStaffMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -34,101 +44,168 @@ export function NavbarLinks() {
   };
 
   const isEventsPage = location.pathname === '/my-upcoming-events' || location.pathname === '/my-participated-events' || location.pathname === '/my-calendar';
+  const isPurchasesPage = location.pathname === '/my-tickets' || location.pathname === '/my-orders' || location.pathname === '/bookings';
+  const isOrganizerPage = location.pathname.startsWith('/dashboard/organizer');
+  const isStaffPage = location.pathname.startsWith('/staff');
+
+  const dropdownPanelClass =
+    'absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50';
+  const dropdownItemClass =
+    'block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30';
 
   if (isAuthenticated) {
     return (
       <>
         <DarkModeToggle />
+        <MessageBell />
         <NotificationBell />
-        <div className="relative" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => setEventsMenuOpen((o) => !o)}
-            className={`${navLinkClass} flex items-center gap-1 ${
-              isEventsPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
-            }`}
-            aria-expanded={eventsMenuOpen}
-            aria-haspopup="true"
-            aria-label="Menu mes événements"
-          >
-            Mes événements
-            <svg
-              className={`w-4 h-4 transition-transform ${eventsMenuOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        <div className="flex flex-wrap items-center gap-1" ref={menusRef}>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setPurchasesMenuOpen(false);
+                setOrganizerMenuOpen(false);
+                setStaffMenuOpen(false);
+                setEventsMenuOpen((o) => !o);
+              }}
+              className={`${navLinkClass} flex items-center gap-1 ${
+                isEventsPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
+              }`}
+              aria-expanded={eventsMenuOpen}
+              aria-haspopup="true"
+              aria-label="Menu mes événements"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {eventsMenuOpen && (
-            <div
-              className="absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50"
-              role="menu"
+              Mes événements
+              <svg
+                className={`w-4 h-4 transition-transform ${eventsMenuOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {eventsMenuOpen && (
+              <div className={dropdownPanelClass} role="menu">
+                <Link to="/my-calendar" className={`${dropdownItemClass} rounded-t-lg`} role="menuitem" onClick={() => setEventsMenuOpen(false)}>
+                  Calendrier
+                </Link>
+                <Link to="/my-upcoming-events" className={dropdownItemClass} role="menuitem" onClick={() => setEventsMenuOpen(false)}>
+                  À venir
+                </Link>
+                <Link to="/my-participated-events" className={`${dropdownItemClass} rounded-b-lg`} role="menuitem" onClick={() => setEventsMenuOpen(false)}>
+                  Mes participations
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mes achats */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setEventsMenuOpen(false);
+                setOrganizerMenuOpen(false);
+                setStaffMenuOpen(false);
+                setPurchasesMenuOpen((o) => !o);
+              }}
+              className={`${navLinkClass} flex items-center gap-1 ${
+                isPurchasesPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
+              }`}
+              aria-expanded={purchasesMenuOpen}
+              aria-haspopup="true"
+              aria-label="Menu achats et réservations"
             >
-              <Link
-                to="/my-calendar"
-                className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-t-lg"
-                role="menuitem"
-                onClick={() => setEventsMenuOpen(false)}
+              Mes achats
+              <svg
+                className={`w-4 h-4 transition-transform ${purchasesMenuOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                Calendrier
-              </Link>
-              <Link
-                to="/my-upcoming-events"
-                className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30"
-                role="menuitem"
-                onClick={() => setEventsMenuOpen(false)}
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {purchasesMenuOpen && (
+              <div className={dropdownPanelClass} role="menu">
+                <Link to="/my-tickets" className={`${dropdownItemClass} rounded-t-lg`} role="menuitem" onClick={() => setPurchasesMenuOpen(false)}>
+                  Mes billets
+                </Link>
+                <Link to="/my-orders" className={dropdownItemClass} role="menuitem" onClick={() => setPurchasesMenuOpen(false)}>
+                  Mes commandes
+                </Link>
+                <Link to="/bookings" className={`${dropdownItemClass} rounded-b-lg`} role="menuitem" onClick={() => setPurchasesMenuOpen(false)}>
+                  Réservations
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {user?.role === 'ORGANIZER' && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setEventsMenuOpen(false);
+                  setPurchasesMenuOpen(false);
+                  setStaffMenuOpen(false);
+                  setOrganizerMenuOpen((o) => !o);
+                }}
+                className={`${navLinkClass} flex items-center gap-1 ${isOrganizerPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''}`}
+                aria-expanded={organizerMenuOpen}
+                aria-haspopup="true"
+                aria-label="Espace organisateur"
               >
-                À venir
-              </Link>
-              <Link
-                to="/my-participated-events"
-                className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 rounded-b-lg"
-                role="menuitem"
-                onClick={() => setEventsMenuOpen(false)}
+                Espace pro
+                <svg className={`w-4 h-4 transition-transform ${organizerMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {organizerMenuOpen && (
+                <div className={dropdownPanelClass} role="menu">
+                  <Link to="/dashboard/organizer" className={`${dropdownItemClass} rounded-t-lg`} role="menuitem" onClick={() => setOrganizerMenuOpen(false)}>Dashboard Pro</Link>
+                  <Link to="/dashboard/organizer/refund-requests" className={`${dropdownItemClass} rounded-b-lg`} role="menuitem" onClick={() => setOrganizerMenuOpen(false)}>Remboursements</Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {user?.role === 'STAFF' && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setEventsMenuOpen(false);
+                  setPurchasesMenuOpen(false);
+                  setOrganizerMenuOpen(false);
+                  setStaffMenuOpen((o) => !o);
+                }}
+                className={`${navLinkClass} flex items-center gap-1 ${isStaffPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''}`}
+                aria-expanded={staffMenuOpen}
+                aria-haspopup="true"
+                aria-label="Espace staff"
               >
-                Mes participations
-              </Link>
+                Staff
+                <svg className={`w-4 h-4 transition-transform ${staffMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {staffMenuOpen && (
+                <div className={dropdownPanelClass} role="menu">
+                  <Link to="/staff/scan" className={`${dropdownItemClass} rounded-t-lg`} role="menuitem" onClick={() => setStaffMenuOpen(false)}>Validation billets</Link>
+                  <Link to="/staff/validations" className={`${dropdownItemClass} rounded-b-lg`} role="menuitem" onClick={() => setStaffMenuOpen(false)}>Historique</Link>
+                </div>
+              )}
             </div>
           )}
         </div>
-        <Link to="/my-tickets" className={navLinkClass}>
-          Mes billets
-        </Link>
-        <Link to="/my-orders" className={navLinkClass}>
-          Mes commandes
-        </Link>
-        <Link to="/bookings" className={navLinkClass}>
-          Réservations
-        </Link>
-
-        {user?.role === 'ORGANIZER' && (
-          <>
-            <Link to="/dashboard/organizer" className={navLinkClass}>
-              Dashboard Pro
-            </Link>
-            <Link to="/dashboard/organizer/refund-requests" className={navLinkClass}>
-              Remboursements
-            </Link>
-          </>
-        )}
 
         {user?.role === 'CLIENT' && (
           <Link to="/dashboard/client" className={navLinkClass}>
             Mon tableau de bord
           </Link>
-        )}
-
-        {user?.role === 'STAFF' && (
-          <>
-            <Link to="/staff/scan" className={navLinkClass}>
-              Validation billets
-            </Link>
-            <Link to="/staff/validations" className={navLinkClass}>
-              Historique
-            </Link>
-          </>
         )}
 
         {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (

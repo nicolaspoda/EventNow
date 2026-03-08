@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './utils/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -31,6 +31,9 @@ import { ProfilePage } from './pages/ProfilePage';
 
 import EventParticipantReviewsPage from './pages/EventParticipantReviewsPage';
 import EventParticipationRequestsPage from './pages/EventParticipationRequestsPage';
+import { MessagesPage } from './pages/messages/MessagesPage';
+import { ConversationPage } from './pages/messages/ConversationPage';
+import { ConversationMembersPage } from './pages/messages/ConversationMembersPage';
 
 function App() {
   return (
@@ -211,6 +214,30 @@ function App() {
             element={
               <ProtectedRoute roles={['STAFF']}>
                 <StaffValidationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:conversationId"
+            element={
+              <ProtectedRoute>
+                <ConversationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages/:conversationId/members"
+            element={
+              <ProtectedRoute>
+                <ConversationMembersPage />
               </ProtectedRoute>
             }
           />

@@ -13,6 +13,7 @@ import { EventParticipantReviewsSection } from '../components/events/EventPartic
 import Button from '../components/ui/Button';
 import { ReviewForm } from '../components/reviews/ReviewForm';
 import { ReviewsList } from '../components/reviews/ReviewsList';
+import messageService from '../services/messageService';
 
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -247,6 +248,29 @@ const EventDetailPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {event.type === 'COMMUNITY' && isAuthenticated && (myParticipationRequest?.status === 'ACCEPTED' || event.organizerId === user?.id) && (
+                <div className="mb-6">
+                  <Button
+                    variant="accent"
+                    onClick={async () => {
+                      try {
+                        const conversation = await messageService.getEventConversation(event.id);
+                        navigate(`/messages/${conversation.id}`);
+                      } catch (err) {
+                        console.error('Erreur:', err);
+                      }
+                    }}
+                    leftIcon={
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    }
+                  >
+                    Accéder à la messagerie de groupe
+                  </Button>
+                </div>
+              )}
 
               <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30 p-6 md:p-8">
                 {activeTab === 'details' && (

@@ -64,6 +64,16 @@ export class NotificationsService {
     });
   }
 
+  async createNotification(data: {
+    userId: string;
+    type: string;
+    title: string;
+    body: string;
+    relatedId?: string;
+  }) {
+    return this.create(data);
+  }
+
   async createForManyUsers(
     userIds: string[],
     data: { type: string; title: string; body: string; relatedId?: string },
