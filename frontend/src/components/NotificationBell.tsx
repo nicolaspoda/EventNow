@@ -90,7 +90,11 @@ export function NotificationBell() {
 
     if (notification.relatedId) {
       switch (notification.type) {
+        case 'NEW_FOLLOWER':
+          navigate(`/user/${notification.relatedId}/profile`);
+          break;
         case 'NEW_EVENT_FROM_FOLLOWED':
+        case 'NEW_EVENT_FROM_FRIEND':
         case 'EVENT_UPDATED':
         case 'EVENT_REMINDER_7_DAYS':
         case 'EVENT_REMINDER_1_DAY':
@@ -124,8 +128,12 @@ export function NotificationBell() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      case 'NEW_FOLLOWER':
+        return '👤';
       case 'NEW_EVENT_FROM_FOLLOWED':
         return '🎉';
+      case 'NEW_EVENT_FROM_FRIEND':
+        return '👋';
       case 'EVENT_REMINDER_7_DAYS':
       case 'EVENT_REMINDER_1_DAY':
         return '⏰';

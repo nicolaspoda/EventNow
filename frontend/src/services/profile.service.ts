@@ -10,8 +10,10 @@ export interface PublicUserProfile {
   avatarUrl?: string;
   createdAt: string;
   isFollowing?: boolean;
+  isFriend?: boolean;
   followersCount?: number;
   followingCount?: number;
+  friendsCount?: number;
   notificationsEnabled?: boolean;
   participatedEvents: Array<{
     id: string;

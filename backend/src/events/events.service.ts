@@ -110,12 +110,28 @@ export class EventsService {
       result.organizer?.firstName && result.organizer?.lastName
         ? `${result.organizer.firstName} ${result.organizer.lastName}`.trim()
         : result.organizer?.email?.split('@')[0] ?? 'Un organisateur';
-    const followerIds = await this.followsService.getFollowerIds(userId);
-    if (followerIds.length > 0) {
-      await this.notificationsService.createForManyUsers(followerIds, {
+    const [followerIds, friendIds] = await Promise.all([
+      this.followsService.getFollowerIds(userId),
+      this.followsService.getFriendIds(userId),
+    ]);
+    const friendIdSet = new Set(friendIds);
+    const followersNotFriends = followerIds.filter((id) => !friendIdSet.has(id));
+    const friendsWithNotif = friendIds.filter((id) =>
+      followerIds.includes(id),
+    );
+    if (followersNotFriends.length > 0) {
+      await this.notificationsService.createForManyUsers(followersNotFriends, {
         type: 'NEW_EVENT_FROM_FOLLOWED',
         title: 'Nouvel événement',
         body: `${organizerName} a créé un événement : ${createEventDto.title}`,
+        relatedId: result.id,
+      });
+    }
+    if (friendsWithNotif.length > 0) {
+      await this.notificationsService.createForManyUsers(friendsWithNotif, {
+        type: 'NEW_EVENT_FROM_FRIEND',
+        title: 'Un ami a créé un événement',
+        body: `${organizerName} (ami) a créé un événement : ${createEventDto.title}`,
         relatedId: result.id,
       });
     }
@@ -510,6 +526,7 @@ export class EventsService {
       availableOnly,
       myEvents,
       followedOnly,
+      friendsOnly,
       sortBy = SortBy.DATE_ASC,
       page = 1,
       limit = 20,
@@ -613,6 +630,24 @@ export class EventsService {
     }
 
     if (followedOnly && !userId) {
+      return {
+        events: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+      };
+    }
+
+    if (friendsOnly && userId) {
+      const friendIds = await this.followsService.getFriendIds(userId);
+      if (friendIds.length === 0) {
+        return {
+          events: [],
+          pagination: { page, limit, total: 0, totalPages: 0 },
+        };
+      }
+      where.AND.push({ organizerId: { in: friendIds } });
+    }
+
+    if (friendsOnly && !userId) {
       return {
         events: [],
         pagination: { page, limit, total: 0, totalPages: 0 },

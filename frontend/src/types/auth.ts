@@ -19,6 +19,7 @@ export interface User {
 export interface UserProfile extends User {
   followersCount?: number;
   followingCount?: number;
+  friendsCount?: number;
   stats: {
     ordersCount: number;
     reviewsCount: number;

@@ -8,6 +8,7 @@ import Button from '../components/ui/Button';
 import { AvatarUpload } from '../components/upload/AvatarUpload';
 import { StarRating } from '../components/reviews/StarRating';
 import { ProfileViewMode } from '../components/profile/ProfileViewMode';
+import { ProfileStatsRow } from '../components/profile/ProfileStatsRow';
 import type { UserProfile, UpdateProfileData } from '../types/auth';
 
 const roleLabels: Record<string, string> = {
@@ -329,12 +330,15 @@ export const ProfilePage: React.FC = () => {
                 {roleLabels[profile.role] || profile.role}
               </span>
 
-              {(typeof profile.followersCount === 'number' || typeof profile.followingCount === 'number') && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
-                  {profile.followersCount ?? 0} abonné{(profile.followersCount ?? 0) !== 1 ? 's' : ''}
-                  {' · '}
-                  {profile.followingCount ?? 0} abonnement{(profile.followingCount ?? 0) !== 1 ? 's' : ''}
-                </p>
+              {(typeof profile.followersCount === 'number' || typeof profile.followingCount === 'number' || typeof profile.friendsCount === 'number') && (
+                <ProfileStatsRow
+                  profileUserId={user?.id ?? ''}
+                  currentUserId={user?.id}
+                  followersCount={profile.followersCount ?? 0}
+                  followingCount={profile.followingCount ?? 0}
+                  friendsCount={profile.friendsCount ?? 0}
+                  onUpdate={fetchProfile}
+                />
               )}
 
               <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700 w-full text-center">

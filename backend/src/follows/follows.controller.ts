@@ -57,12 +57,26 @@ export class FollowsController {
   }
 
   @Get('user/:userId/followers')
-  async getFollowers(@Param('userId') userId: string) {
-    return this.followsService.getFollowers(userId);
+  async getFollowers(
+    @Param('userId') userId: string,
+    @CurrentUser() user?: { id: string },
+  ) {
+    return this.followsService.getFollowers(userId, 50, user?.id);
   }
 
   @Get('user/:userId/following')
-  async getFollowing(@Param('userId') userId: string) {
-    return this.followsService.getFollowing(userId);
+  async getFollowing(
+    @Param('userId') userId: string,
+    @CurrentUser() user?: { id: string },
+  ) {
+    return this.followsService.getFollowing(userId, 50, user?.id);
+  }
+
+  @Get('user/:userId/friends')
+  async getFriends(
+    @Param('userId') userId: string,
+    @CurrentUser() user?: { id: string },
+  ) {
+    return this.followsService.getFriends(userId, 50, user?.id);
   }
 }

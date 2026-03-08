@@ -5,6 +5,7 @@ import { followService } from '../services/followService';
 import type { PublicUserProfile } from '../services/profile.service';
 import { useAuth } from '../utils/useAuth';
 import { Card } from '../components/ui/Card';
+import { ProfileStatsRow } from '../components/profile/ProfileStatsRow';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import { StarRating } from '../components/reviews/StarRating';
@@ -18,8 +19,10 @@ export default function UserPublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [followLoading, setFollowLoading] = useState(false);
+  const [confirmUnfollow, setConfirmUnfollow] = useState(false);
 
   const isOwnProfile = currentUser && userId === currentUser.id;
+  const isFriend = profile?.isFriend === true;
 
   const refreshProfile = async () => {
     if (!userId) return;
@@ -54,11 +57,23 @@ export default function UserPublicProfilePage() {
     if (!userId || !currentUser || followLoading || profile?.isFollowing === undefined) return;
     setFollowLoading(true);
     try {
-      if (profile.isFollowing) {
-        await followService.unfollow(userId);
-      } else {
-        await followService.follow(userId);
-      }
+      await followService.follow(userId);
+      await refreshProfile();
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleUnfollowClick = () => {
+    setConfirmUnfollow(true);
+  };
+
+  const handleConfirmUnfollow = async () => {
+    if (!userId || !currentUser || followLoading) return;
+    setFollowLoading(true);
+    try {
+      await followService.unfollow(userId);
+      setConfirmUnfollow(false);
       await refreshProfile();
     } finally {
       setFollowLoading(false);
@@ -109,25 +124,80 @@ export default function UserPublicProfilePage() {
                 {displayName}
               </h1>
               
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
                 Membre depuis {new Date(profile.createdAt).toLocaleDateString('fr-FR', { 
                   month: 'long', 
                   year: 'numeric' 
                 })}
-                {typeof profile.followersCount === 'number' && (
-                  <> · {profile.followersCount} abonné{profile.followersCount !== 1 ? 's' : ''}</>
-                )}
               </p>
+              {(typeof profile.followersCount === 'number' || typeof profile.followingCount === 'number' || typeof profile.friendsCount === 'number') && (
+                <div className="mb-4">
+                  <ProfileStatsRow
+                    profileUserId={userId!}
+                    currentUserId={currentUser?.id}
+                    followersCount={profile.followersCount ?? 0}
+                    followingCount={profile.followingCount ?? 0}
+                    friendsCount={profile.friendsCount ?? 0}
+                    onUpdate={refreshProfile}
+                  />
+                </div>
+              )}
               {!isOwnProfile && currentUser && profile.isFollowing !== undefined && (
                 <div className="mb-4">
-                  <Button
-                    variant={profile.isFollowing ? 'outline' : 'primary'}
-                    onClick={handleFollow}
-                    disabled={followLoading}
-                    aria-label={profile.isFollowing ? 'Ne plus suivre' : 'Suivre'}
-                  >
-                    {followLoading ? 'Chargement...' : profile.isFollowing ? 'Ne plus suivre' : 'Suivre'}
-                  </Button>
+                  {profile.isFollowing ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={handleUnfollowClick}
+                        disabled={followLoading}
+                        aria-label={isFriend ? 'Ne plus suivre (vous ne serez plus amis)' : 'Ne plus suivre'}
+                      >
+                        {followLoading ? 'Chargement...' : isFriend ? 'Amis' : 'Abonné'}
+                      </Button>
+                      {confirmUnfollow && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                          <div
+                            className="fixed inset-0 bg-black/50"
+                            onClick={() => setConfirmUnfollow(false)}
+                            aria-hidden="true"
+                          />
+                          <div className="relative z-10 bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 max-w-sm w-full">
+                            <p className="text-neutral-700 dark:text-neutral-200 mb-4">
+                              {isFriend
+                                ? 'Se désabonner ? Vous ne serez plus amis.'
+                                : 'Se désabonner ? Vous ne verrez plus les publications de cette personne.'}
+                            </p>
+                            <div className="flex gap-3">
+                              <Button
+                                variant="outline"
+                                onClick={() => setConfirmUnfollow(false)}
+                                disabled={followLoading}
+                              >
+                                Annuler
+                              </Button>
+                              <Button
+                                variant="primary"
+                                onClick={handleConfirmUnfollow}
+                                disabled={followLoading}
+                                className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                              >
+                                {followLoading ? 'Chargement...' : 'Se désabonner'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      onClick={handleFollow}
+                      disabled={followLoading}
+                      aria-label="Suivre"
+                    >
+                      {followLoading ? 'Chargement...' : 'Suivre'}
+                    </Button>
+                  )}
                 </div>
               )}
 
