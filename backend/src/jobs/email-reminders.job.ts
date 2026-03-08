@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class EmailRemindersJob {
@@ -10,6 +11,7 @@ export class EmailRemindersJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   @Cron('0 9 * * *')
@@ -95,6 +97,15 @@ export class EmailRemindersJob {
             ticketsCount: ticketCount,
             orderId: order.id,
           });
+
+          await this.notificationsService.create({
+            userId: order.user.id,
+            type: 'EVENT_REMINDER_7_DAYS',
+            title: 'Événement dans 7 jours',
+            body: `L'événement "${event.title}" aura lieu dans 7 jours`,
+            relatedId: event.id,
+          });
+
           sentCount++;
         } catch (error) {
           this.logger.error(
@@ -190,6 +201,15 @@ export class EmailRemindersJob {
             ticketsCount: ticketCount,
             orderId: order.id,
           });
+
+          await this.notificationsService.create({
+            userId: order.user.id,
+            type: 'EVENT_REMINDER_1_DAY',
+            title: 'Événement demain',
+            body: `L'événement "${event.title}" aura lieu demain !`,
+            relatedId: event.id,
+          });
+
           sentCount++;
         } catch (error) {
           this.logger.error(

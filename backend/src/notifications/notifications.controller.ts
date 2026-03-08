@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Param,
   Query,
   UseGuards,
@@ -54,5 +55,50 @@ export class NotificationsController {
   @HttpCode(HttpStatus.OK)
   markAllAsRead(@CurrentUser() user: { id: string }) {
     return this.notificationsService.markAllAsRead(user.id);
+  }
+
+  @Post('test/create-samples')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @HttpCode(HttpStatus.CREATED)
+  async createTestNotifications(@CurrentUser() user: { id: string }) {
+    if (process.env.NODE_ENV === 'production') {
+      return { error: 'Endpoint disponible uniquement en développement' };
+    }
+
+    const notifications = [
+      {
+        userId: user.id,
+        type: 'NEW_EVENT_FROM_FOLLOWED',
+        title: 'Nouvel événement',
+        body: 'Un organisateur que vous suivez a créé un événement : Festival de Musique 2026',
+      },
+      {
+        userId: user.id,
+        type: 'EVENT_REMINDER_7_DAYS',
+        title: 'Événement dans 7 jours',
+        body: 'L\'événement "Concert Rock" aura lieu dans 7 jours',
+      },
+      {
+        userId: user.id,
+        type: 'ORDER_CONFIRMED',
+        title: 'Commande confirmée',
+        body: 'Votre commande pour "Conférence Tech 2026" a été confirmée',
+      },
+      {
+        userId: user.id,
+        type: 'PARTICIPATION_ACCEPTED',
+        title: 'Demande acceptée',
+        body: 'Votre demande pour participer à « Atelier Cuisine » a été acceptée.',
+      },
+    ];
+
+    for (const notification of notifications) {
+      await this.notificationsService.create(notification);
+    }
+
+    return {
+      message: `${notifications.length} notifications de test créées`,
+      count: notifications.length,
+    };
   }
 }

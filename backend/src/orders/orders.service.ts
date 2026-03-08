@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 
@@ -14,15 +15,18 @@ export class OrdersService {
   private readonly prisma: PrismaService;
   private readonly paymentService: PaymentService;
   private readonly mailService: MailService;
+  private readonly notificationsService: NotificationsService;
 
   constructor(
     prisma: PrismaService,
     paymentService: PaymentService,
     mailService: MailService,
+    notificationsService: NotificationsService,
   ) {
     this.prisma = prisma;
     this.paymentService = paymentService;
     this.mailService = mailService;
+    this.notificationsService = notificationsService;
   }
 
   async initiatePayment(bookingId: string, userId: string) {
@@ -101,6 +105,14 @@ export class OrdersService {
     this.sendOrderConfirmationEmail(result, userId).catch((err) =>
       console.error('Erreur envoi email confirmation:', err),
     );
+
+    await this.notificationsService.create({
+      userId: userId,
+      type: 'ORDER_CONFIRMED',
+      title: 'Commande confirmée',
+      body: `Votre commande pour "${result.event.title}" a été confirmée`,
+      relatedId: result.order.id,
+    });
 
     return result;
   }
@@ -362,6 +374,16 @@ export class OrdersService {
         },
       });
 
+      await tx.notification.create({
+        data: {
+          userId: order.userId,
+          type: 'REFUND_APPROVED',
+          title: 'Remboursement approuvé',
+          body: `Votre demande de remboursement pour "${event.title}" a été approuvée`,
+          relatedId: orderId,
+        },
+      });
+
       return this.mapOrderDecimalToNumber(updated);
     });
   }
@@ -388,16 +410,30 @@ export class OrdersService {
       throw new NotFoundException('Commande introuvable ou non autorisée');
     }
 
-    const updated = await this.prisma.order.update({
-      where: { id: orderId },
-      data: { status: OrderStatus.PAID },
-      include: {
-        tickets: {
-          include: {
-            ticketCategory: { include: { event: true } },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedOrder = await tx.order.update({
+        where: { id: orderId },
+        data: { status: OrderStatus.PAID },
+        include: {
+          tickets: {
+            include: {
+              ticketCategory: { include: { event: true } },
+            },
           },
         },
-      },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: order.userId,
+          type: 'REFUND_REJECTED',
+          title: 'Demande de remboursement refusée',
+          body: `Votre demande de remboursement pour "${event.title}" a été refusée`,
+          relatedId: orderId,
+        },
+      });
+
+      return updatedOrder;
     });
 
     return this.mapOrderDecimalToNumber(updated);

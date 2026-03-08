@@ -6,6 +6,17 @@ import { Card } from '../ui/Card';
 import Button from '../ui/Button';
 import { UserRatingBadge } from './UserRatingBadge';
 
+function formatRequestDate(value: string | undefined | null): string {
+  if (value == null) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 interface ParticipationRequestCardProps {
   request: ParticipationRequest;
   onRespond?: () => void;
@@ -65,11 +76,7 @@ export function ParticipationRequestCard({ request, onRespond }: ParticipationRe
               <UserRatingBadge userId={request.userId} />
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Demande envoyée le {new Date(request.createdAt).toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
+              Demande envoyée le {formatRequestDate(request.createdAt)}
             </p>
           </div>
 
@@ -117,7 +124,7 @@ export function ParticipationRequestCard({ request, onRespond }: ParticipationRe
               </span>
               {request.respondedAt && (
                 <span className="text-sm text-gray-500 dark:text-gray-500">
-                  le {new Date(request.respondedAt).toLocaleDateString('fr-FR')}
+                  le {formatRequestDate(request.respondedAt)}
                 </span>
               )}
             </div>

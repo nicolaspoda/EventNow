@@ -85,7 +85,7 @@ export class ParticipationRequestsService {
         type: 'PARTICIPATION_REQUEST',
         title: 'Nouvelle demande de participation',
         body: `${requesterLabel} a demandé à participer à « ${request.event.title} ».`,
-        relatedId: request.id,
+        relatedId: request.eventId,
       },
     });
 
@@ -106,21 +106,51 @@ export class ParticipationRequestsService {
       );
     }
 
-    return this.prisma.participationRequest.findMany({
+    const requests = await this.prisma.participationRequest.findMany({
       where: { eventId },
       include: {
-        user: { 
-          select: { 
-            id: true, 
-            email: true, 
-            firstName: true, 
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
             lastName: true,
             avatarUrl: true,
-          } 
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
+    return requests.map((r) => ({
+      ...r,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      respondedAt: r.respondedAt?.toISOString() ?? null,
+    }));
+  }
+
+  /**
+   * Résout un relatedId (eventId ou ancien requestId) vers l'eventId pour la redirection
+   * depuis une notification PARTICIPATION_REQUEST. Gère les anciennes notifs (requestId) et les nouvelles (eventId).
+   */
+  async resolveEventIdForNotification(relatedId: string, userId: string): Promise<{ eventId: string }> {
+    const event = await this.prisma.event.findUnique({
+      where: { id: relatedId },
+      select: { id: true, organizerId: true },
+    });
+    if (event && event.organizerId === userId) {
+      return { eventId: event.id };
+    }
+
+    const request = await this.prisma.participationRequest.findUnique({
+      where: { id: relatedId },
+      include: { event: { select: { organizerId: true } } },
+    });
+    if (request && request.event.organizerId === userId) {
+      return { eventId: request.eventId };
+    }
+
+    throw new NotFoundException('Événement ou demande introuvable');
   }
 
   async getMyRequests(userId: string) {
