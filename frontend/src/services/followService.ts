@@ -26,6 +26,11 @@ export const followService = {
     return response.data;
   },
 
+  getFriends: async (userId: string) => {
+    const response = await api.get(`/follows/user/${userId}/friends`);
+    return response.data;
+  },
+
   setNotifications: async (userId: string, enabled: boolean) => {
     const response = await api.patch(`/follows/user/${userId}/notifications`, { enabled });
     return response.data;

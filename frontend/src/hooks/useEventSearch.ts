@@ -14,6 +14,7 @@ interface SearchFilters {
   availableOnly?: boolean;
   myEvents?: boolean;
   followedOnly?: boolean;
+  friendsOnly?: boolean;
   sortBy?: string;
   radiusKm?: number;
 }
@@ -86,6 +87,7 @@ export const useEventSearch = () => {
       availableOnly: searchParams.get('availableOnly') === 'true',
       myEvents: searchParams.get('myEvents') === 'true',
       followedOnly: searchParams.get('followedOnly') === 'true',
+      friendsOnly: searchParams.get('friendsOnly') === 'true',
       sortBy: searchParams.get('sortBy') || 'DATE_ASC',
       ...(radiusKm != null && !Number.isNaN(radiusKm) && radiusKm > 0 && { radiusKm }),
     };
@@ -199,6 +201,8 @@ export const useEventSearch = () => {
       nextFilters.myEvents = value === true || value === 'true';
     } else if (filterKey === 'followedOnly') {
       nextFilters.followedOnly = value === true || value === 'true';
+    } else if (filterKey === 'friendsOnly') {
+      nextFilters.friendsOnly = value === true || value === 'true';
     } else if (filterKey === 'categories' && Array.isArray(value)) {
       nextFilters.categories = value.length > 0 ? (value as string[]) : undefined;
     } else if (filterKey === 'priceRanges' && Array.isArray(value)) {
@@ -224,6 +228,7 @@ export const useEventSearch = () => {
     if (nextFilters.availableOnly === true) newParams.set('availableOnly', 'true');
     if (nextFilters.myEvents === true) newParams.set('myEvents', 'true');
     if (nextFilters.followedOnly === true) newParams.set('followedOnly', 'true');
+    if (nextFilters.friendsOnly === true) newParams.set('friendsOnly', 'true');
     if (nextFilters.sortBy && nextFilters.sortBy !== 'DATE_ASC') newParams.set('sortBy', nextFilters.sortBy);
     if (nextFilters.radiusKm != null && nextFilters.radiusKm > 0) newParams.set('radiusKm', String(nextFilters.radiusKm));
 
@@ -245,6 +250,7 @@ export const useEventSearch = () => {
     if (filters.availableOnly) count++;
     if (filters.myEvents) count++;
     if (filters.followedOnly) count++;
+    if (filters.friendsOnly) count++;
     if (filters.radiusKm != null && filters.radiusKm > 0) count++;
     return count;
   }, [filters]);

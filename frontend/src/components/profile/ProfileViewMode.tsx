@@ -4,6 +4,7 @@ import type { PublicUserProfile } from '../../services/profile.service';
 import { followService } from '../../services/followService';
 import { useAuth } from '../../utils/useAuth';
 import Button from '../ui/Button';
+import { ProfileStatsRow } from './ProfileStatsRow';
 import { StarRating } from '../reviews/StarRating';
 
 const roleLabels: Record<string, string> = {
@@ -34,10 +35,12 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
   const { user: currentUser } = useAuth();
   const [followLoading, setFollowLoading] = useState(false);
   const [localProfile, setLocalProfile] = useState(profile);
+  const [confirmUnfollow, setConfirmUnfollow] = useState(false);
 
   const isOwnProfile = currentUser && userId === currentUser.id;
   const showFollowButton = !isOwnProfile && currentUser && localProfile.isFollowing !== undefined;
   const notificationsOn = localProfile.notificationsEnabled !== false;
+  const isFriend = localProfile.isFriend === true;
 
   useEffect(() => {
     setLocalProfile(profile);
@@ -47,11 +50,23 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
     if (!currentUser || followLoading || localProfile.isFollowing === undefined) return;
     setFollowLoading(true);
     try {
-      if (localProfile.isFollowing) {
-        await followService.unfollow(userId);
-      } else {
-        await followService.follow(userId);
-      }
+      await followService.follow(userId);
+      if (onProfileUpdate) await onProfileUpdate();
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleUnfollowClick = () => {
+    setConfirmUnfollow(true);
+  };
+
+  const handleConfirmUnfollow = async () => {
+    if (!currentUser || followLoading) return;
+    setFollowLoading(true);
+    try {
+      await followService.unfollow(userId);
+      setConfirmUnfollow(false);
       if (onProfileUpdate) await onProfileUpdate();
     } finally {
       setFollowLoading(false);
@@ -88,12 +103,15 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
                   {roleLabels[localProfile.role] || localProfile.role}
                 </span>
               )}
-              {(typeof localProfile.followersCount === 'number' || typeof localProfile.followingCount === 'number') && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-2">
-                  {localProfile.followersCount ?? 0} abonné{(localProfile.followersCount ?? 0) !== 1 ? 's' : ''}
-                  {' · '}
-                  {localProfile.followingCount ?? 0} abonnement{(localProfile.followingCount ?? 0) !== 1 ? 's' : ''}
-                </p>
+              {(typeof localProfile.followersCount === 'number' || typeof localProfile.followingCount === 'number' || typeof localProfile.friendsCount === 'number') && (
+                <ProfileStatsRow
+                  profileUserId={userId}
+                  currentUserId={currentUser?.id}
+                  followersCount={localProfile.followersCount ?? 0}
+                  followingCount={localProfile.followingCount ?? 0}
+                  friendsCount={localProfile.friendsCount ?? 0}
+                  onUpdate={onProfileUpdate}
+                />
               )}
               {showFollowButton && (
                 <div className="mt-3 space-y-2">
@@ -101,7 +119,7 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
                     <>
                       <div className="flex items-center justify-center gap-2 flex-wrap">
                         <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-800">
-                          Suivi(e)
+                          {isFriend ? 'Amis' : 'Suivi(e)'}
                         </span>
                         <button
                           type="button"
@@ -141,13 +159,46 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={handleFollow}
+                        onClick={handleUnfollowClick}
                         disabled={followLoading}
                         className="w-full text-neutral-600 dark:text-neutral-400 hover:text-error-600 dark:hover:text-error-400"
-                        aria-label="Ne plus suivre"
+                        aria-label={isFriend ? 'Ne plus suivre (vous ne serez plus amis)' : 'Ne plus suivre'}
                       >
                         Ne plus suivre
                       </Button>
+                      {confirmUnfollow && (
+                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                          <div
+                            className="fixed inset-0 bg-black/50"
+                            onClick={() => setConfirmUnfollow(false)}
+                            aria-hidden="true"
+                          />
+                          <div className="relative z-10 bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 max-w-sm w-full">
+                            <p className="text-neutral-700 dark:text-neutral-200 mb-4">
+                              {isFriend
+                                ? 'Se désabonner ? Vous ne serez plus amis.'
+                                : 'Se désabonner ? Vous ne verrez plus les publications de cette personne.'}
+                            </p>
+                            <div className="flex gap-3">
+                              <Button
+                                variant="outline"
+                                onClick={() => setConfirmUnfollow(false)}
+                                disabled={followLoading}
+                              >
+                                Annuler
+                              </Button>
+                              <Button
+                                variant="primary"
+                                onClick={handleConfirmUnfollow}
+                                disabled={followLoading}
+                                className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                              >
+                                {followLoading ? 'Chargement...' : 'Se désabonner'}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <Button

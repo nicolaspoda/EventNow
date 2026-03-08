@@ -188,9 +188,10 @@ export class AuthService {
       _count: { rating: true },
     });
 
-    const [followersCount, followingCount] = await Promise.all([
+    const [followersCount, followingCount, friendsCount] = await Promise.all([
       this.followsService.getFollowersCount(userId),
       this.followsService.getFollowingCount(userId),
+      this.followsService.getFriendsCount(userId),
     ]);
 
     return {
@@ -203,6 +204,7 @@ export class AuthService {
       createdAt: user.createdAt.toISOString(),
       followersCount,
       followingCount,
+      friendsCount,
       stats: {
         ordersCount: user._count.orders,
         reviewsCount: user._count.reviews,
@@ -287,13 +289,18 @@ export class AuthService {
       _count: { rating: true },
     });
 
-    const [followRecord, followersCount, followingCount] = await Promise.all([
-      currentUserId
-        ? this.followsService.getFollowRecord(currentUserId, userId)
-        : Promise.resolve(null),
-      this.followsService.getFollowersCount(userId),
-      this.followsService.getFollowingCount(userId),
-    ]);
+    const [followRecord, followersCount, followingCount, friendsCount, isFriend] =
+      await Promise.all([
+        currentUserId
+          ? this.followsService.getFollowRecord(currentUserId, userId)
+          : Promise.resolve(null),
+        this.followsService.getFollowersCount(userId),
+        this.followsService.getFollowingCount(userId),
+        this.followsService.getFriendsCount(userId),
+        currentUserId
+          ? this.followsService.isFriend(currentUserId, userId)
+          : Promise.resolve(false),
+      ]);
 
     return {
       id: user.id,
@@ -305,10 +312,12 @@ export class AuthService {
       createdAt: user.createdAt.toISOString(),
       ...(currentUserId && {
         isFollowing: !!followRecord,
+        isFriend: !!isFriend,
         ...(followRecord && { notificationsEnabled: followRecord.notificationsEnabled }),
       }),
       followersCount,
       followingCount,
+      friendsCount,
       participatedEvents: acceptedParticipations.map((p) => ({
         ...p.event,
         eventDate: p.event.eventDate.toISOString(),

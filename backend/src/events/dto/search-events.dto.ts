@@ -107,6 +107,16 @@ export class SearchEventsDto {
   @IsBoolean()
   followedOnly?: boolean;
 
+  /** Uniquement les événements dont l'organisateur est ami avec l'utilisateur connecté (follow mutuel). */
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  friendsOnly?: boolean;
+
   @IsOptional()
   @IsEnum(SortBy)
   sortBy?: SortBy;
