@@ -14,6 +14,14 @@ export const participationService = {
     return response.data;
   },
 
+  /** Résout un relatedId de notification (eventId ou requestId) vers l'eventId pour la redirection. */
+  resolveEventIdForNotification: async (relatedId: string): Promise<{ eventId: string }> => {
+    const response = await api.get<{ eventId: string }>(
+      `/participation-requests/resolve-event-id/${encodeURIComponent(relatedId)}`,
+    );
+    return response.data;
+  },
+
   getMyRequests: async (): Promise<ParticipationRequest[]> => {
     const response = await api.get<ParticipationRequest[]>('/participation-requests/my');
     return response.data;

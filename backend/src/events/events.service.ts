@@ -436,6 +436,35 @@ export class EventsService {
         },
       });
 
+      const hasSignificantChanges =
+        updateEventDto.event_date ||
+        updateEventDto.location ||
+        updateEventDto.title;
+
+      if (hasSignificantChanges) {
+        const participantUserIds = await tx.ticket.findMany({
+          where: {
+            ticketCategory: { eventId: id },
+            order: { status: OrderStatus.PAID },
+          },
+          select: { order: { select: { userId: true } } },
+          distinct: ['orderId'],
+        });
+
+        const uniqueUserIds = [
+          ...new Set(participantUserIds.map((t) => t.order.userId)),
+        ];
+
+        if (uniqueUserIds.length > 0) {
+          await this.notificationsService.createForManyUsers(uniqueUserIds, {
+            type: 'EVENT_UPDATED',
+            title: 'Événement modifié',
+            body: `L'événement "${updatedEvent.title}" a été modifié`,
+            relatedId: id,
+          });
+        }
+      }
+
       return {
         ...updatedEvent,
         ticketCategories: updatedEvent.ticketCategories.map((c) => ({

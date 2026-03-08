@@ -46,6 +46,19 @@ export class ParticipationRequestsController {
     return this.participationRequestsService.getByEvent(eventId, user.id);
   }
 
+  @Get('resolve-event-id/:relatedId')
+  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @HttpCode(HttpStatus.OK)
+  resolveEventIdForNotification(
+    @Param('relatedId') relatedId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.participationRequestsService.resolveEventIdForNotification(
+      relatedId,
+      user.id,
+    );
+  }
+
   @Get('my')
   @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)

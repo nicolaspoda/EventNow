@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { DarkModeToggle } from './DarkModeToggle';
+import { NotificationBell } from './NotificationBell';
 
 const navLinkClass =
   'px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1';
@@ -38,6 +39,7 @@ export function NavbarLinks() {
     return (
       <>
         <DarkModeToggle />
+        <NotificationBell />
         <div className="relative" ref={menuRef}>
           <button
             type="button"

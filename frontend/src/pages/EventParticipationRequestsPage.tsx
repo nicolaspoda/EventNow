@@ -47,26 +47,22 @@ export default function EventParticipationRequestsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      {/* Bouton retour dans la zone à gauche (pleine largeur, aligné à gauche) */}
+      <div className="w-full flex justify-start pl-4 sm:pl-6 lg:pl-8 mb-6">
+        <Link
+          to={`/events/${eventId}`}
+          className="inline-flex items-center justify-center font-medium transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.98] border-2 border-primary-600 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 focus:ring-primary-500 px-4 py-2.5 text-base rounded-xl no-underline"
+        >
+          Retour à l'événement
+        </Link>
+      </div>
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Demandes de participation
             </h1>
-            <div className="flex items-center gap-3">
-              <Link
-                to={`/events/${eventId}/participant-reviews`}
-                className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
-              >
-                Noter les participants
-              </Link>
-              <Link
-                to={`/events/${eventId}`}
-                className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
-              >
-                Retour à l'événement
-              </Link>
-            </div>
           </div>
 
           {/* Statistiques */}
@@ -98,7 +94,7 @@ export default function EventParticipationRequestsPage() {
           </div>
 
           {/* Filtres */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-6">
             <Button
               onClick={() => setFilter('all')}
               variant={filter === 'all' ? 'primary' : 'outline'}

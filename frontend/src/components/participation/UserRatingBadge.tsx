@@ -17,7 +17,10 @@ export function UserRatingBadge({ userId }: UserRatingBadgeProps) {
 
   useEffect(() => {
     const fetchRating = async () => {
-      if (!token) return;
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const data = await participantReviewService.getReviewsByParticipant(token, userId);
@@ -34,8 +37,8 @@ export function UserRatingBadge({ userId }: UserRatingBadgeProps) {
 
   if (loading) {
     return (
-      <div className="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-500">
-        Chargement...
+      <div className="inline-flex items-center gap-1 text-sm text-gray-400 dark:text-gray-500">
+        —
       </div>
     );
   }
