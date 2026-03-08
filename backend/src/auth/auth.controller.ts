@@ -80,6 +80,12 @@ export class AuthController {
     return this.authService.getUserPublicProfile(userId, user?.id);
   }
 
+  @Get('users')
+  @UseGuards(JwtAuthGuard)
+  async getAllUsers() {
+    return this.authService.getAllUsers();
+  }
+
   @Put('profile')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)

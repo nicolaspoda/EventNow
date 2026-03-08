@@ -24,6 +24,7 @@ import { ParticipationRequestsModule } from './participation-requests/participat
 import { ParticipantReviewsModule } from './participant-reviews/participant-reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FollowsModule } from './follows/follows.module';
+import { MessagesModule } from './messages/messages.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -65,6 +66,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     ParticipantReviewsModule,
     NotificationsModule,
     FollowsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [
