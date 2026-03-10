@@ -16,7 +16,7 @@ export function AppNavbar({ rightContent }: AppNavbarProps) {
           <div className="flex justify-between items-center h-16">
             <Logo variant="nav" />
             {rightContent && (
-              <div className="flex items-center gap-1">{rightContent}</div>
+              <div className="flex items-center flex-nowrap gap-2 min-h-10">{rightContent}</div>
             )}
           </div>
         </div>

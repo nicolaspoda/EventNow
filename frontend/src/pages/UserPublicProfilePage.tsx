@@ -84,9 +84,7 @@ export default function UserPublicProfilePage() {
   if (error) return <ErrorState message={error} />;
   if (!profile) return <ErrorState message="Profil introuvable" />;
 
-  const displayName = profile.firstName && profile.lastName
-    ? `${profile.firstName} ${profile.lastName}`
-    : profile.email.split('@')[0];
+  const displayName = profile.username?.trim() || profile.email.split('@')[0];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">

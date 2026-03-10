@@ -188,6 +188,9 @@ export class ParticipationRequestsService {
       select: { id: true, title: true, eventDate: true },
     });
     const eventIds = events.map((e) => e.id);
+    if (eventIds.length === 0) {
+      return [];
+    }
     const requests = await this.prisma.participationRequest.findMany({
       where: {
         eventId: { in: eventIds },

@@ -56,7 +56,7 @@ export function NavbarLinks() {
 
   if (isAuthenticated) {
     return (
-      <>
+      <div className="flex items-center flex-nowrap gap-2">
         <DarkModeToggle />
         <div className="hidden sm:block w-48 lg:w-56 flex-shrink-0">
           <UserSearchAutocomplete
@@ -67,7 +67,7 @@ export function NavbarLinks() {
         </div>
         <MessageBell />
         <NotificationBell />
-        <div className="flex flex-wrap items-center gap-1" ref={menusRef}>
+        <div className="flex flex-nowrap items-center gap-1 flex-shrink-0" ref={menusRef}>
           <div className="relative">
             <button
               type="button"
@@ -211,7 +211,7 @@ export function NavbarLinks() {
         </div>
 
         {user?.role === 'CLIENT' && (
-          <Link to="/dashboard/client" className={navLinkClass}>
+          <Link to="/dashboard/client" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
             Mon tableau de bord
           </Link>
         )}
@@ -219,14 +219,14 @@ export function NavbarLinks() {
         {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (
           <Link
             to="/events/create"
-            className="px-3 py-2 rounded-lg text-sm font-medium text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30 hover:text-accent-700 dark:hover:text-accent-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"
+            className="flex-shrink-0 flex items-center px-3 py-2 rounded-lg text-sm font-medium text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30 hover:text-accent-700 dark:hover:text-accent-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"
           >
             + Créer
           </Link>
         )}
 
         {/* Avatar + Profile + logout */}
-        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700">
+        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700 flex-shrink-0">
           <Link
             to="/profile"
             className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity"
@@ -235,11 +235,6 @@ export function NavbarLinks() {
             <span className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 dark:hover:ring-offset-neutral-900">
               {user?.username?.charAt(0)?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
             </span>
-            {user?.username && (
-              <span className="hidden md:inline text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[100px]">
-                @{user.username}
-              </span>
-            )}
           </Link>
           <button
             type="button"
@@ -249,7 +244,7 @@ export function NavbarLinks() {
             Déconnexion
           </button>
         </div>
-      </>
+      </div>
     );
   }
 

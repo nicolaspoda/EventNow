@@ -3,13 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { profileService } from '../services/profile.service';
 import type { PublicUserProfile } from '../services/profile.service';
-import { Input } from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import { AvatarUpload } from '../components/upload/AvatarUpload';
-import { StarRating } from '../components/reviews/StarRating';
 import { ProfileViewMode } from '../components/profile/ProfileViewMode';
 import { ProfileStatsRow } from '../components/profile/ProfileStatsRow';
-import type { UserProfile, UpdateProfileData } from '../types/auth';
+import type { UserProfile } from '../types/auth';
 
 const roleLabels: Record<string, string> = {
   CLIENT: 'Client',
@@ -31,14 +29,8 @@ export const ProfilePage: React.FC = () => {
   const [publicProfile, setPublicProfile] = useState<PublicUserProfile | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<UpdateProfileData>({
-    firstName: '',
-    lastName: '',
-  });
 
   const isOwnProfile = !userIdFromRoute || (user && userIdFromRoute === user.id);
 
@@ -92,21 +84,12 @@ export const ProfilePage: React.FC = () => {
       setError(null);
       const data = await profileService.getProfile();
       setProfile(data);
-      setFormData({
-        firstName: data.firstName || '',
-        lastName: data.lastName || '',
-      });
     } catch (err) {
       console.error('Erreur lors du chargement du profil:', err);
       setError('Impossible de charger le profil');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAvatarUpload = async (url: string) => {
@@ -149,54 +132,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setSaving(true);
-      setError(null);
-      setSuccess(null);
-      const updatedUser = await profileService.updateProfile(formData);
-      setProfile((prev) => prev ? {
-        ...prev,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-      } : prev);
-      setIsEditing(false);
-      setSuccess('Profil mis à jour avec succès');
-
-      if (user) {
-        setUser({
-          ...user,
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-        });
-        const storedUser = sessionStorage.getItem('user');
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          sessionStorage.setItem('user', JSON.stringify({
-            ...parsed,
-            firstName: updatedUser.firstName,
-            lastName: updatedUser.lastName,
-          }));
-        }
-      }
-    } catch (err) {
-      console.error('Erreur lors de la mise à jour du profil:', err);
-      setError('Impossible de mettre à jour le profil');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      firstName: profile?.firstName || '',
-      lastName: profile?.lastName || '',
-    });
-    setIsEditing(false);
-    setError(null);
-  };
-
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -218,23 +153,13 @@ export const ProfilePage: React.FC = () => {
   };
 
   const getInitials = () => {
-    if (profile?.firstName && profile?.lastName) {
-      return `${profile.firstName[0]}${profile.lastName[0]}`.toUpperCase();
-    }
-    if (profile?.firstName) {
-      return profile.firstName[0].toUpperCase();
-    }
-    if (profile?.email) {
-      return profile.email[0].toUpperCase();
-    }
+    const name = profile?.username || profile?.email;
+    if (name) return name[0].toUpperCase();
     return '?';
   };
 
   const getDisplayName = () => {
-    if (profile?.firstName || profile?.lastName) {
-      return `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
-    }
-    return profile?.email?.split('@')[0] || 'Utilisateur';
+    return profile?.username || profile?.email?.split('@')[0] || 'Utilisateur';
   };
 
   if (loading) {
@@ -451,80 +376,23 @@ export const ProfilePage: React.FC = () => {
         <div className="lg:col-span-8 space-y-4">
           {/* Informations personnelles */}
           <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-                Informations personnelles
-              </h3>
-              {!isEditing && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                  leftIcon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  }
-                >
-                  Modifier
-                </Button>
-              )}
-            </div>
-
-            {isEditing ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input
-                    label="Prénom"
-                    name="firstName"
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Votre prénom"
-                  />
-                  <Input
-                    label="Nom"
-                    name="lastName"
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Votre nom"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button type="submit" loading={saving} size="sm">
-                    Enregistrer
-                  </Button>
-                  <Button type="button" variant="secondary" onClick={handleCancel} disabled={saving} size="sm">
-                    Annuler
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Prénom</label>
-                  <p className="text-neutral-900 dark:text-neutral-100">
-                    {profile.firstName || <span className="text-neutral-400 italic text-sm">Non renseigné</span>}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom</label>
-                  <p className="text-neutral-900 dark:text-neutral-100">
-                    {profile.lastName || <span className="text-neutral-400 italic text-sm">Non renseigné</span>}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</label>
-                  <p className="text-neutral-900 dark:text-neutral-100 text-sm truncate">{profile.email}</p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Rôle</label>
-                  <p className="text-neutral-900 dark:text-neutral-100">{roleLabels[profile.role]}</p>
-                </div>
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+              Informations personnelles
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</label>
+                <p className="text-neutral-900 dark:text-neutral-100">{profile.username || '—'}</p>
               </div>
-            )}
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</label>
+                <p className="text-neutral-900 dark:text-neutral-100 text-sm truncate">{profile.email}</p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Rôle</label>
+                <p className="text-neutral-900 dark:text-neutral-100">{roleLabels[profile.role]}</p>
+              </div>
+            </div>
           </div>
 
           {/* Liens rapides */}

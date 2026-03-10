@@ -3,6 +3,7 @@ import type { User, UserProfile, UpdateProfileData } from '../types/auth';
 
 export interface PublicUserProfile {
   id: string;
+  username?: string | null;
   email: string;
   role?: string;
   firstName?: string;

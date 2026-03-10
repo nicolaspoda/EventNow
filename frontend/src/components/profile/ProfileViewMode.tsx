@@ -73,12 +73,8 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
     }
   };
 
-  const displayName = localProfile.firstName && localProfile.lastName
-    ? `${localProfile.firstName} ${localProfile.lastName}`.trim()
-    : localProfile.email.split('@')[0];
-  const initials = localProfile.firstName && localProfile.lastName
-    ? `${localProfile.firstName[0]}${localProfile.lastName[0]}`.toUpperCase()
-    : displayName.charAt(0).toUpperCase();
+  const displayName = localProfile.username?.trim() || localProfile.email.split('@')[0];
+  const initials = displayName.charAt(0).toUpperCase();
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
@@ -250,12 +246,8 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
             <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Informations</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Prénom</label>
-                <p className="text-neutral-900 dark:text-neutral-100">{localProfile.firstName || '—'}</p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom</label>
-                <p className="text-neutral-900 dark:text-neutral-100">{localProfile.lastName || '—'}</p>
+                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</label>
+                <p className="text-neutral-900 dark:text-neutral-100">{localProfile.username || '—'}</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</label>
