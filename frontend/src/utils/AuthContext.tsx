@@ -11,26 +11,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => authService.getUser());
   const [isSessionReady, setIsSessionReady] = useState<boolean>(() => !authService.getUser());
   const lastVisibilityRefreshRef = useRef<number>(0);
+  const initialRefreshDoneRef = useRef(false);
 
   useEffect(() => {
+    if (initialRefreshDoneRef.current) return;
+    
+    const initialUser = authService.getUser();
     const refreshToken = sessionStorage.getItem('refreshToken');
-    if (!user || !refreshToken) {
+    
+    if (!initialUser || !refreshToken) {
       setIsSessionReady(true);
+      initialRefreshDoneRef.current = true;
       return;
     }
+    
     api
       .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken })
       .then((res) => res.data)
       .then((data) => {
-        authService.saveAuthData({ ...data, user });
+        authService.saveAuthData({ ...data, user: initialUser });
         setIsSessionReady(true);
+        initialRefreshDoneRef.current = true;
       })
       .catch(() => {
         authService.logout();
         setUser(null);
         setIsSessionReady(true);
+        initialRefreshDoneRef.current = true;
       });
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     if (!user || !isSessionReady) return;

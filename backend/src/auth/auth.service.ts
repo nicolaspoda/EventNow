@@ -31,18 +31,29 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    const existingUser = await this.prisma.user.findUnique({
+    const existingByEmail = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
 
-    if (existingUser) {
+    if (existingByEmail) {
       throw new ConflictException('Cet email est déjà utilisé');
+    }
+
+    const existingByUsername = await this.prisma.user.findFirst({
+      where: {
+        username: { equals: dto.username, mode: 'insensitive' },
+      },
+    });
+
+    if (existingByUsername) {
+      throw new ConflictException('Ce nom d’utilisateur est déjà pris');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = await this.prisma.user.create({
       data: {
+        username: dto.username,
         email: dto.email,
         passwordHash,
         role: dto.role,
@@ -54,6 +65,7 @@ export class AuthService {
     return {
       user: {
         id: user.id,
+        username: user.username,
         email: user.email,
         role: user.role,
       },
@@ -62,9 +74,16 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    const isEmail = dto.email.includes('@');
+    const user = isEmail
+      ? await this.prisma.user.findUnique({
+          where: { email: dto.email.trim() },
+        })
+      : await this.prisma.user.findFirst({
+          where: {
+            username: { equals: dto.email.trim(), mode: 'insensitive' },
+          },
+        });
 
     if (!user) {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
@@ -81,6 +100,7 @@ export class AuthService {
     return {
       user: {
         id: user.id,
+        username: user.username,
         email: user.email,
         role: user.role,
       },
@@ -154,6 +174,7 @@ export class AuthService {
       where: { id: userId },
       select: {
         id: true,
+        username: true,
         email: true,
         role: true,
         firstName: true,
@@ -196,6 +217,7 @@ export class AuthService {
 
     return {
       id: user.id,
+      username: user.username,
       email: user.email,
       role: user.role,
       firstName: user.firstName,
@@ -226,6 +248,7 @@ export class AuthService {
       where: { id: userId },
       select: {
         id: true,
+        username: true,
         email: true,
         role: true,
         firstName: true,
@@ -304,6 +327,7 @@ export class AuthService {
 
     return {
       id: user.id,
+      username: user.username,
       email: user.email,
       role: user.role,
       firstName: user.firstName,
@@ -355,6 +379,7 @@ export class AuthService {
       },
       select: {
         id: true,
+        username: true,
         email: true,
         role: true,
         firstName: true,
@@ -400,8 +425,11 @@ export class AuthService {
       return user;
     }
 
+    const username = await this.generateUniqueUsernameFromEmail(googleUser.email);
+
     user = await this.prisma.user.create({
       data: {
+        username,
         email: googleUser.email,
         googleId: googleUser.googleId,
         firstName: googleUser.firstName,
@@ -413,10 +441,29 @@ export class AuthService {
     return user;
   }
 
+  private async generateUniqueUsernameFromEmail(email: string): Promise<string> {
+    const base = email
+      .split('@')[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 20) || 'user';
+    let username = base;
+    let suffix = 0;
+    while (true) {
+      const existing = await this.prisma.user.findFirst({
+        where: { username: { equals: username, mode: 'insensitive' } },
+      });
+      if (!existing) return username;
+      suffix += 1;
+      username = `${base}_${suffix}`;
+    }
+  }
+
   async getAllUsers() {
     return this.prisma.user.findMany({
       select: {
         id: true,
+        username: true,
         email: true,
         firstName: true,
         lastName: true,
@@ -425,6 +472,30 @@ export class AuthService {
       orderBy: {
         firstName: 'asc',
       },
+    });
+  }
+
+  async searchUsersByUsername(query: string, limit = 15) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+
+    return this.prisma.user.findMany({
+      where: {
+        username: {
+          not: null,
+          startsWith: q,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+      },
+      take: limit,
+      orderBy: { username: 'asc' },
     });
   }
 }

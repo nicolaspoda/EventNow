@@ -80,6 +80,17 @@ export class AuthController {
     return this.authService.getUserPublicProfile(userId, user?.id);
   }
 
+  @Get('users/search')
+  @UseGuards(JwtAuthGuard)
+  async searchUsers(@Req() req: Request) {
+    const q = typeof req.query?.q === 'string' ? req.query.q : '';
+    const limit = Math.min(
+      20,
+      Math.max(1, Number(req.query?.limit) || 15),
+    );
+    return this.authService.searchUsersByUsername(q, limit);
+  }
+
   @Get('users')
   @UseGuards(JwtAuthGuard)
   async getAllUsers() {
@@ -110,7 +121,12 @@ export class AuthController {
       user.role,
     );
 
-    const userPayload = { id: user.id, email: user.email, role: user.role };
+    const userPayload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      username: user.username ?? null,
+    };
     const code = randomUUID();
     await this.redis.setOAuthCode(code, {
       accessToken: tokens.accessToken,
@@ -133,7 +149,7 @@ export class AuthController {
     return data as {
       accessToken: string;
       refreshToken: string;
-      user: { id: string; email: string; role: string };
+      user: { id: string; email: string; role: string; username: string | null };
     };
   }
 }

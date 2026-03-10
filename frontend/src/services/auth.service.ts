@@ -1,11 +1,26 @@
 import { api } from './api';
-import type { AuthResponse, LoginData, RegisterData, User } from '../types/auth';
+import type {
+  AuthResponse,
+  LoginData,
+  RegisterData,
+  User,
+  SearchUserResult,
+} from '../types/auth';
 
 export const authService = {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', data);
     this.saveAuthData(response.data);
     return response.data;
+  },
+
+  async searchUsersByUsername(query: string, limit = 15): Promise<SearchUserResult[]> {
+    const q = encodeURIComponent(query.trim());
+    if (!q) return [];
+    const { data } = await api.get<SearchUserResult[]>(
+      `/auth/users/search?q=${q}&limit=${limit}`,
+    );
+    return data;
   },
 
   async login(data: LoginData): Promise<AuthResponse> {

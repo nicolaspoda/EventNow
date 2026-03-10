@@ -10,6 +10,7 @@ async function main() {
     where: { email: 'organizer@eventnow.fr' },
     update: {},
     create: {
+      username: 'organizer_eventnow',
       email: 'organizer@eventnow.fr',
       passwordHash: hash,
       firstName: 'Marie',
@@ -22,6 +23,7 @@ async function main() {
     where: { email: 'client@eventnow.fr' },
     update: {},
     create: {
+      username: 'client_eventnow',
       email: 'client@eventnow.fr',
       passwordHash: hash,
       firstName: 'Jean',
@@ -34,6 +36,7 @@ async function main() {
     where: { email: 'staff@eventnow.fr' },
     update: {},
     create: {
+      username: 'staff_eventnow',
       email: 'staff@eventnow.fr',
       passwordHash: hash,
       firstName: 'Sophie',

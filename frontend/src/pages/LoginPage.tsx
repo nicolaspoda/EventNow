@@ -47,7 +47,7 @@ export function LoginPage() {
           ? msg
           : data && typeof data === 'object' && 'error' in data
             ? String((data as { error?: unknown }).error)
-            : 'Email ou mot de passe incorrect';
+            : 'Identifiant ou mot de passe incorrect';
       setError(messageStr);
     } finally {
       setLoading(false);
@@ -70,12 +70,12 @@ export function LoginPage() {
 
         <FormField
           id="email"
-          label="Email"
-          type="email"
+          label="Email ou nom d'utilisateur"
+          type="text"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          placeholder="votre@email.com"
+          autoComplete="username"
         />
 
         <FormField
@@ -85,7 +85,6 @@ export function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          placeholder="••••••••"
         />
 
         <PrimaryButton loading={loading}>

@@ -10,7 +10,6 @@ import { CreateConversationModal } from '../../components/messages/CreateConvers
 import Button from '../../components/ui/Button';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
-import { api } from '../../services/api';
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
@@ -19,11 +18,9 @@ export const MessagesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
 
   useEffect(() => {
     loadConversations();
-    loadAvailableUsers();
   }, []);
 
   const loadConversations = async () => {
@@ -36,17 +33,6 @@ export const MessagesPage: React.FC = () => {
       setError(err.response?.data?.message || 'Erreur lors du chargement');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadAvailableUsers = async () => {
-    try {
-      const response = await api.get('/auth/users');
-      setAvailableUsers(
-        response.data.filter((u: any) => u.id !== user?.id),
-      );
-    } catch (err) {
-      console.error('Erreur lors du chargement des utilisateurs:', err);
     }
   };
 
@@ -136,7 +122,7 @@ export const MessagesPage: React.FC = () => {
         onClose={() => setShowCreateModal(false)}
         onCreateDirect={handleCreateDirect}
         onCreateGroup={handleCreateGroup}
-        availableUsers={availableUsers}
+        currentUserId={user?.id ?? ''}
       />
     </div>
   );

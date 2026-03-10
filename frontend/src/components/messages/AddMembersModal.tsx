@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
 import Button from '../ui/Button';
-import { Input } from '../ui/Input';
+import { UserSearchAutocomplete } from '../user/UserSearchAutocomplete';
+import type { SearchUserResult } from '../../types/auth';
 
 interface AddMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddMembers: (memberIds: string[]) => Promise<void>;
-  availableUsers: Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    avatarUrl?: string;
-  }>;
   currentMemberIds: string[];
 }
 
@@ -20,35 +14,33 @@ export const AddMembersModal: React.FC<AddMembersModalProps> = ({
   isOpen,
   onClose,
   onAddMembers,
-  availableUsers,
   currentMemberIds,
 }) => {
-  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedMembers, setSelectedMembers] = useState<SearchUserResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const availableToAdd = availableUsers.filter(
-    (user) => !currentMemberIds.includes(user.id),
-  );
+  const excludeIds = [...currentMemberIds, ...selectedMembers.map((m) => m.id)];
 
-  const filteredUsers = availableToAdd.filter(
-    (user) =>
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const handleAddUser = (user: SearchUserResult) => {
+    if (selectedMembers.some((m) => m.id === user.id)) return;
+    setSelectedMembers((prev) => [...prev, user]);
+  };
+
+  const removeMember = (userId: string) => {
+    setSelectedMembers((prev) => prev.filter((m) => m.id !== userId));
+  };
 
   const handleAdd = async () => {
-    if (selectedMemberIds.length === 0) {
+    if (selectedMembers.length === 0) {
       alert('Veuillez sélectionner au moins un membre');
       return;
     }
 
     setLoading(true);
     try {
-      await onAddMembers(selectedMemberIds);
+      await onAddMembers(selectedMembers.map((m) => m.id));
       handleClose();
     } catch (error) {
       console.error('Erreur lors de l\'ajout des membres:', error);
@@ -58,18 +50,12 @@ export const AddMembersModal: React.FC<AddMembersModalProps> = ({
   };
 
   const handleClose = () => {
-    setSelectedMemberIds([]);
-    setSearchTerm('');
+    setSelectedMembers([]);
     onClose();
   };
 
-  const toggleMember = (userId: string) => {
-    setSelectedMemberIds((prev) =>
-      prev.includes(userId)
-        ? prev.filter((id) => id !== userId)
-        : [...prev, userId],
-    );
-  };
+  const displayName = (u: SearchUserResult) =>
+    [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username || '—';
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -102,79 +88,68 @@ export const AddMembersModal: React.FC<AddMembersModalProps> = ({
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mb-4">
-            <Input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Rechercher par nom ou email..."
-              className="w-full"
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              Rechercher par nom d&apos;utilisateur
+            </label>
+            <UserSearchAutocomplete
+              placeholder="Tapez un nom d'utilisateur..."
+              navigateOnSelect={false}
+              onSelect={handleAddUser}
+              excludeIds={excludeIds}
             />
           </div>
 
-          {selectedMemberIds.length > 0 && (
+          {selectedMembers.length > 0 && (
             <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-              <p className="text-sm text-primary-700 dark:text-primary-300">
-                {selectedMemberIds.length} membre(s) sélectionné(s)
+              <p className="text-sm text-primary-700 dark:text-primary-300 mb-2">
+                {selectedMembers.length} membre(s) sélectionné(s)
               </p>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            {filteredUsers.length === 0 ? (
-              <p className="text-center text-neutral-500 dark:text-neutral-400 py-8">
-                Aucun utilisateur disponible
-              </p>
-            ) : (
-              filteredUsers.map((user) => {
-                const isSelected = selectedMemberIds.includes(user.id);
-
-                return (
+              <div className="space-y-2">
+                {selectedMembers.map((user) => (
                   <div
                     key={user.id}
-                    onClick={() => toggleMember(user.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-primary-100 dark:bg-primary-900/30 border-2 border-primary-500'
-                        : 'bg-neutral-50 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-600 border-2 border-transparent'
-                    }`}
+                    className="flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-neutral-800 border border-primary-200 dark:border-primary-800"
                   >
                     {user.avatarUrl ? (
                       <img
                         src={user.avatarUrl}
-                        alt={`${user.firstName} ${user.lastName}`}
-                        className="w-10 h-10 rounded-full object-cover"
+                        alt=""
+                        className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold">
-                        {user.firstName.charAt(0).toUpperCase()}
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                        {(user.username ?? '?').charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div className="flex-1">
-                      <p className="font-medium text-neutral-900 dark:text-white">
-                        {user.firstName} {user.lastName}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-neutral-900 dark:text-white truncate">
+                        @{user.username ?? '—'}
                       </p>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        {user.email}
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                        {displayName(user)}
                       </p>
                     </div>
-                    {isSelected && (
-                      <svg
-                        className="w-6 h-6 text-primary-600 dark:text-primary-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
+                    <button
+                      type="button"
+                      onClick={() => removeMember(user.id)}
+                      className="text-neutral-500 hover:text-red-600 dark:hover:text-red-400 p-1"
+                      aria-label="Retirer"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                    )}
+                    </button>
                   </div>
-                );
-              })
-            )}
-          </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedMembers.length === 0 && (
+            <p className="text-center text-neutral-500 dark:text-neutral-400 py-4 text-sm">
+              Tapez un nom d&apos;utilisateur ci-dessus pour trouver et ajouter des membres
+            </p>
+          )}
         </div>
 
         <div className="px-6 py-4 bg-neutral-50 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 flex justify-end gap-3">
@@ -185,7 +160,7 @@ export const AddMembersModal: React.FC<AddMembersModalProps> = ({
             variant="primary"
             onClick={handleAdd}
             loading={loading}
-            disabled={loading || selectedMemberIds.length === 0}
+            disabled={loading || selectedMembers.length === 0}
           >
             Ajouter
           </Button>

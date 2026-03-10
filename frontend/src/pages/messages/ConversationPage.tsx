@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../utils/useAuth';
 import messageService, {
@@ -14,7 +14,6 @@ import { EditConversationModal } from '../../components/messages/EditConversatio
 import { ConversationMembersModal } from '../../components/messages/ConversationMembersModal';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
-import { api } from '../../services/api';
 
 export const ConversationPage: React.FC = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -31,13 +30,11 @@ export const ConversationPage: React.FC = () => {
   const [showAddMembers, setShowAddMembers] = useState(false);
   const [showEditConversation, setShowEditConversation] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
 
   useEffect(() => {
     if (conversationId) {
       loadConversation();
       loadMessages();
-      loadAvailableUsers();
     }
   }, [conversationId]);
 
@@ -160,17 +157,6 @@ export const ConversationPage: React.FC = () => {
     }
   };
 
-  const loadAvailableUsers = async () => {
-    try {
-      const response = await api.get('/auth/users');
-      setAvailableUsers(
-        response.data.filter((u: any) => u.id !== user?.id),
-      );
-    } catch (err) {
-      console.error('Erreur lors du chargement des utilisateurs:', err);
-    }
-  };
-
   const handleSendMessage = async (content: string) => {
     if (!conversationId) return;
     
@@ -276,7 +262,6 @@ export const ConversationPage: React.FC = () => {
             isOpen={showAddMembers}
             onClose={() => setShowAddMembers(false)}
             onAddMembers={handleAddMembers}
-            availableUsers={availableUsers}
             currentMemberIds={currentMemberIds}
           />
 

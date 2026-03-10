@@ -4,6 +4,7 @@ import { useAuth } from '../utils/useAuth';
 import { DarkModeToggle } from './DarkModeToggle';
 import { NotificationBell } from './NotificationBell';
 import { MessageBell } from './MessageBell';
+import { UserSearchAutocomplete } from './user/UserSearchAutocomplete';
 
 const navLinkClass =
   'px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1';
@@ -57,6 +58,13 @@ export function NavbarLinks() {
     return (
       <>
         <DarkModeToggle />
+        <div className="hidden sm:block w-48 lg:w-56 flex-shrink-0">
+          <UserSearchAutocomplete
+            placeholder="Rechercher un utilisateur..."
+            navigateOnSelect
+            inputClassName="py-1.5 text-sm"
+          />
+        </div>
         <MessageBell />
         <NotificationBell />
         <div className="flex flex-wrap items-center gap-1" ref={menusRef}>
@@ -221,10 +229,17 @@ export function NavbarLinks() {
         <div className="flex items-center gap-2 ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700">
           <Link
             to="/profile"
-            className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 dark:hover:ring-offset-neutral-900 transition-all"
-            title="Mon profil"
+            className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity"
+            title={user?.username ? `@${user.username}` : 'Mon profil'}
           >
-            {user?.email?.[0]?.toUpperCase() ?? '?'}
+            <span className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 dark:hover:ring-offset-neutral-900">
+              {user?.username?.charAt(0)?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}
+            </span>
+            {user?.username && (
+              <span className="hidden md:inline text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[100px]">
+                @{user.username}
+              </span>
+            )}
           </Link>
           <button
             type="button"

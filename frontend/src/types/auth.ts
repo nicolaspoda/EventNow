@@ -8,6 +8,7 @@ export type Role = typeof Role[keyof typeof Role];
 
 export interface User {
   id: string;
+  username?: string | null;
   email: string;
   role: Role;
   firstName?: string | null;
@@ -44,6 +45,7 @@ export interface AuthResponse {
 }
 
 export interface RegisterData {
+  username: string;
   email: string;
   password: string;
   role: Role;
@@ -52,4 +54,12 @@ export interface RegisterData {
 export interface LoginData {
   email: string;
   password: string;
+}
+
+export interface SearchUserResult {
+  id: string;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  avatarUrl: string | null;
 }

@@ -13,7 +13,18 @@ const ROLE_OPTIONS = [
   { value: Role.STAFF, label: 'Staff' },
 ];
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
+
+function validateUsername(value: string): string | null {
+  if (!value.trim()) return 'Le nom d’utilisateur est obligatoire';
+  if (value.length < 3) return 'Le nom d’utilisateur doit contenir au moins 3 caractères';
+  if (value.length > 30) return 'Le nom d’utilisateur ne peut pas dépasser 30 caractères';
+  if (!USERNAME_REGEX.test(value)) return 'Lettres, chiffres et underscores uniquement';
+  return null;
+}
+
 export function RegisterPage() {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,10 +47,16 @@ export function RegisterPage() {
       return;
     }
 
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await authService.register({ email, password, role });
+      await authService.register({ username: username.trim(), email, password, role });
       navigate('/login', { state: { registered: true } });
     } catch (err: unknown) {
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message || 'Erreur lors de l’inscription');
@@ -54,13 +71,24 @@ export function RegisterPage() {
         {error && <Alert message={error} />}
 
         <FormField
+          id="username"
+          label="Nom d'utilisateur"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+          required
+          minLength={3}
+          maxLength={30}
+          autoComplete="username"
+        />
+
+        <FormField
           id="email"
           label="Email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          placeholder="votre@email.com"
         />
 
         <FormField
@@ -70,7 +98,6 @@ export function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          placeholder="••••••••"
         />
 
         <FormField
@@ -80,7 +107,6 @@ export function RegisterPage() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          placeholder="••••••••"
         />
 
         <FormSelect

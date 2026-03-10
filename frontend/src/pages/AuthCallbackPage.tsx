@@ -22,7 +22,7 @@ export default function AuthCallbackPage() {
         const { data } = await api.post<{
           accessToken: string;
           refreshToken: string;
-          user: { id: string; email: string; role: string };
+          user: { id: string; email: string; role: string; username?: string | null };
         }>('/auth/google/exchange', { code });
 
         sessionStorage.setItem('accessToken', data.accessToken);
