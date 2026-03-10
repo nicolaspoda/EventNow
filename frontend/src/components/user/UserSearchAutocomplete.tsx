@@ -81,9 +81,6 @@ export function UserSearchAutocomplete({
     }
   };
 
-  const displayName = (u: SearchUserResult) =>
-    [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username || '—';
-
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
       <div className="relative">
@@ -126,15 +123,12 @@ export function UserSearchAutocomplete({
                   />
                 ) : (
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                    {(user.username ?? user.firstName ?? '?').charAt(0).toUpperCase()}
+                    {(user.username ?? '?').charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-neutral-900 dark:text-white truncate">
                     @{user.username ?? '—'}
-                  </p>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
-                    {displayName(user)}
                   </p>
                 </div>
               </button>
