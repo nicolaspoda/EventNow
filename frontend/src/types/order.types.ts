@@ -38,8 +38,7 @@ export interface OrderWithUser extends Order {
   user?: {
     id: string;
     email: string;
-    firstName?: string | null;
-    lastName?: string | null;
+    username?: string | null;
   };
 }
 

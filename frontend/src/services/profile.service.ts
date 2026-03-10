@@ -6,8 +6,6 @@ export interface PublicUserProfile {
   username?: string | null;
   email: string;
   role?: string;
-  firstName?: string;
-  lastName?: string;
   avatarUrl?: string;
   createdAt: string;
   isFollowing?: boolean;

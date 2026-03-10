@@ -17,6 +17,7 @@ describe('AuthService', () => {
   const mockPrismaService = {
     user: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
@@ -63,6 +64,7 @@ describe('AuthService', () => {
 
   describe('register', () => {
     const registerDto = {
+      username: 'testuser',
       email: 'test@example.com',
       password: 'password123',
       role: Role.CLIENT,
@@ -72,6 +74,7 @@ describe('AuthService', () => {
       const hashedPassword = 'hashedPassword';
       const mockUser = {
         id: '1',
+        username: registerDto.username,
         email: registerDto.email,
         passwordHash: hashedPassword,
         role: registerDto.role,
@@ -80,6 +83,7 @@ describe('AuthService', () => {
       };
 
       mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
       mockPrismaService.user.create.mockResolvedValue(mockUser);
       mockJwtService.signAsync.mockResolvedValueOnce('access-token');
@@ -90,6 +94,7 @@ describe('AuthService', () => {
       expect(result).toEqual({
         user: {
           id: mockUser.id,
+          username: mockUser.username,
           email: mockUser.email,
           role: mockUser.role,
         },
@@ -99,6 +104,10 @@ describe('AuthService', () => {
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: registerDto.email },
       });
+      expect(prisma.user.findFirst).toHaveBeenCalledWith({
+        where: { username: { equals: registerDto.username, mode: 'insensitive' } },
+      });
+      expect(prisma.user.create).toHaveBeenCalled();
       expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 10);
       expect(prisma.user.create).toHaveBeenCalled();
     });
@@ -124,6 +133,7 @@ describe('AuthService', () => {
     it('should successfully login a user', async () => {
       const mockUser = {
         id: '1',
+        username: 'testuser',
         email: loginDto.email,
         passwordHash: 'hashedPassword',
         role: Role.CLIENT,
@@ -141,6 +151,7 @@ describe('AuthService', () => {
       expect(result).toEqual({
         user: {
           id: mockUser.id,
+          username: mockUser.username,
           email: mockUser.email,
           role: mockUser.role,
         },
@@ -326,8 +337,6 @@ describe('AuthService', () => {
       const result = await service.validateGoogleUser({
         googleId: 'google-123',
         email: 'test@gmail.com',
-        firstName: 'John',
-        lastName: 'Doe',
       });
 
       expect(result).toEqual(mockUser);
@@ -347,8 +356,6 @@ describe('AuthService', () => {
       const updatedUser = {
         ...existingUser,
         googleId: 'google-456',
-        firstName: 'Jane',
-        lastName: 'Smith',
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
@@ -358,8 +365,6 @@ describe('AuthService', () => {
       const result = await service.validateGoogleUser({
         googleId: 'google-456',
         email: 'test@gmail.com',
-        firstName: 'Jane',
-        lastName: 'Smith',
       });
 
       expect(result).toEqual(updatedUser);
@@ -367,8 +372,6 @@ describe('AuthService', () => {
         where: { id: 'user-123' },
         data: {
           googleId: 'google-456',
-          firstName: 'Jane',
-          lastName: 'Smith',
         },
       });
     });
@@ -378,44 +381,43 @@ describe('AuthService', () => {
         id: 'user-789',
         email: 'new@gmail.com',
         googleId: 'google-789',
-        firstName: 'Bob',
-        lastName: 'Martin',
+        username: 'newuser',
         role: Role.CLIENT,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
       mockPrismaService.user.create.mockResolvedValue(newUser);
 
       const result = await service.validateGoogleUser({
         googleId: 'google-789',
         email: 'new@gmail.com',
-        firstName: 'Bob',
-        lastName: 'Martin',
       });
 
       expect(result).toEqual(newUser);
       expect(prisma.user.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           email: 'new@gmail.com',
           googleId: 'google-789',
-          firstName: 'Bob',
-          lastName: 'Martin',
           role: 'CLIENT',
-        },
+          username: expect.any(String),
+        }),
       });
     });
 
-    it('should handle Google user without firstName/lastName', async () => {
+    it('should create new user with generated username when no match found', async () => {
       const newUser = {
         id: 'user-999',
         email: 'test3@gmail.com',
         googleId: 'google-999',
+        username: 'test3',
         role: Role.CLIENT,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
       mockPrismaService.user.create.mockResolvedValue(newUser);
 
       const result = await service.validateGoogleUser({
@@ -425,13 +427,12 @@ describe('AuthService', () => {
 
       expect(result).toEqual(newUser);
       expect(prisma.user.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           email: 'test3@gmail.com',
           googleId: 'google-999',
-          firstName: undefined,
-          lastName: undefined,
           role: 'CLIENT',
-        },
+          username: expect.any(String),
+        }),
       });
     });
   });

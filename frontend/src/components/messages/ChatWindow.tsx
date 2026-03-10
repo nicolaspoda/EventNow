@@ -131,12 +131,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                           message.sender.avatarUrl ? (
                             <img
                               src={message.sender.avatarUrl}
-                            alt={`${message.sender.firstName ?? ''} ${message.sender.lastName ?? ''}`.trim() || 'Expéditeur'}
+                            alt={message.sender.username || message.sender.email || 'Expéditeur'}
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm">
-                            {(message.sender.firstName?.charAt(0) ?? message.sender.email?.charAt(0) ?? '?').toUpperCase()}
+                            {(message.sender.username?.charAt(0) ?? message.sender.email?.charAt(0) ?? '?').toUpperCase()}
                             </div>
                           )
                         ) : (
@@ -148,7 +148,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     <div>
                       {showName && (
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1 px-3">
-                          {message.sender.firstName ?? ''} {message.sender.lastName ?? ''}
+                          {message.sender.username || message.sender.email || 'Expéditeur'}
                         </p>
                       )}
                       <div

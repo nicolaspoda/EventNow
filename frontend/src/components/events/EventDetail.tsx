@@ -236,9 +236,9 @@ const EventDetail: React.FC<EventDetailProps> = ({
                 </svg>
               </div>
               <div>
-                {event.organizer.firstName && event.organizer.lastName ? (
+                {event.organizer.username ? (
                   <p className="text-sm font-medium">
-                    {event.organizer.firstName} {event.organizer.lastName}
+                    {event.organizer.username}
                   </p>
                 ) : null}
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">{event.organizer.email}</p>

@@ -2,8 +2,7 @@ import { api } from './api';
 
 export interface User {
   id: string;
-  firstName: string;
-  lastName: string;
+  username?: string | null;
   email: string;
   avatarUrl?: string;
 }

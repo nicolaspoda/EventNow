@@ -65,8 +65,7 @@ export const RefundRequestsPage: React.FC = () => {
   const getUserLabel = (order: OrderWithUser): string => {
     const u = order.user;
     if (!u) return order.userId.slice(0, 8);
-    const name = [u.firstName, u.lastName].filter(Boolean).join(' ');
-    return name.trim() || u.email;
+    return u.username?.trim() || u.email;
   };
 
   if (loading) {

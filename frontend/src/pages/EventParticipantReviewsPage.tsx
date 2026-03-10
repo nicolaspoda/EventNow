@@ -93,13 +93,13 @@ export default function EventParticipantReviewsPage() {
                     {participant.avatarUrl ? (
                       <img
                         src={participant.avatarUrl}
-                        alt={`${participant.firstName} ${participant.lastName}`}
+                        alt={participant.username ?? participant.email ?? 'Participant'}
                         className="w-16 h-16 rounded-full object-cover hover:opacity-80 transition-opacity"
                       />
                     ) : (
                       <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center hover:opacity-80 transition-opacity">
                         <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                          {participant.firstName?.charAt(0) || 'U'}
+                        {(participant.username ?? participant.email ?? 'U').charAt(0)}
                         </span>
                       </div>
                     )}
@@ -110,9 +110,7 @@ export default function EventParticipantReviewsPage() {
                       to={`/user/${participant.id}/profile`}
                       className="text-lg font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                     >
-                      {participant.firstName && participant.lastName
-                        ? `${participant.firstName} ${participant.lastName}`
-                        : participant.email}
+                      {participant.username ?? participant.email}
                     </Link>
 
                     {participant.hasReview && participant.review ? (

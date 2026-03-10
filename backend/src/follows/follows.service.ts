@@ -40,12 +40,9 @@ export class FollowsService {
 
     const follower = await this.prisma.user.findUnique({
       where: { id: followerId },
-      select: { firstName: true, lastName: true, email: true },
+      select: { username: true, email: true },
     });
-    const followerName =
-      follower?.firstName && follower?.lastName
-        ? `${follower.firstName} ${follower.lastName}`.trim()
-        : follower?.email?.split('@')[0] ?? 'Quelqu\'un';
+    const followerName = follower?.username ?? follower?.email?.split('@')[0] ?? 'Quelqu\'un';
     await this.notificationsService.create({
       userId: followingId,
       type: 'NEW_FOLLOWER',
@@ -107,8 +104,7 @@ export class FollowsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             avatarUrl: true,
           },
         },
@@ -140,8 +136,7 @@ export class FollowsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             avatarUrl: true,
           },
         },
@@ -211,8 +206,7 @@ export class FollowsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             avatarUrl: true,
           },
         },

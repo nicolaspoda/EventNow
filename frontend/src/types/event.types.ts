@@ -11,8 +11,7 @@ export interface TicketCategory {
 export interface Organizer {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  username?: string | null;
 }
 
 export interface Event {

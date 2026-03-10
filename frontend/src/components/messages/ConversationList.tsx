@@ -21,10 +21,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       const otherMember = conversation.members.find(
         (m) => m.userId !== currentUserId,
       );
+      const u = otherMember?.user;
+      const name = !u
+        ? 'Utilisateur inconnu'
+        : (u.username || 'Utilisateur inconnu');
       return {
-        name: otherMember
-          ? `${otherMember.user.firstName} ${otherMember.user.lastName}`
-          : 'Utilisateur inconnu',
+        name,
         avatar: otherMember?.user.avatarUrl,
       };
     }

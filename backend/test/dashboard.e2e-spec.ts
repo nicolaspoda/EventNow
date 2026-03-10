@@ -38,10 +38,9 @@ describe('Dashboard (e2e)', () => {
     const organizerRes = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
+        username: 'organizer_test',
         email: 'organizer@test.com',
         password: 'Test1234!',
-        firstName: 'Organizer',
-        lastName: 'Test',
         role: 'ORGANIZER',
       });
 
@@ -51,10 +50,9 @@ describe('Dashboard (e2e)', () => {
     const clientRes = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
       .send({
+        username: 'client_test',
         email: 'client@test.com',
         password: 'Test1234!',
-        firstName: 'Client',
-        lastName: 'Test',
         role: 'CLIENT',
       });
 
@@ -182,10 +180,9 @@ describe('Dashboard (e2e)', () => {
       const otherOrganizerRes = await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({
+          username: 'other_organizer',
           email: 'other@test.com',
           password: 'Test1234!',
-          firstName: 'Other',
-          lastName: 'Organizer',
           role: 'ORGANIZER',
         });
 

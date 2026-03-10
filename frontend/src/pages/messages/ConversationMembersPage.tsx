@@ -120,17 +120,17 @@ export const ConversationMembersPage: React.FC = () => {
                   {member.user.avatarUrl ? (
                     <img
                       src={member.user.avatarUrl}
-                      alt={`${member.user.firstName} ${member.user.lastName}`}
+                      alt={member.user.username ?? member.user.email ?? 'Membre'}
                       className="w-14 h-14 rounded-full object-cover"
                     />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xl">
-                      {member.user.firstName.charAt(0).toUpperCase()}
+                      {(member.user.username ?? member.user.email ?? 'U').charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div className="flex-1">
                     <p className="font-semibold text-neutral-900 dark:text-white">
-                      {member.user.firstName} {member.user.lastName}
+                      {member.user.username ?? member.user.email}
                       {isCurrentUser && (
                         <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">
                           (Vous)

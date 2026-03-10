@@ -177,8 +177,6 @@ export class AuthService {
         username: true,
         email: true,
         role: true,
-        firstName: true,
-        lastName: true,
         avatarUrl: true,
         createdAt: true,
         _count: {
@@ -220,8 +218,6 @@ export class AuthService {
       username: user.username,
       email: user.email,
       role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
       avatarUrl: user.avatarUrl,
       createdAt: user.createdAt.toISOString(),
       followersCount,
@@ -251,8 +247,6 @@ export class AuthService {
         username: true,
         email: true,
         role: true,
-        firstName: true,
-        lastName: true,
         avatarUrl: true,
         createdAt: true,
       },
@@ -289,8 +283,7 @@ export class AuthService {
       include: {
         reviewer: {
           select: {
-            firstName: true,
-            lastName: true,
+            username: true,
           },
         },
       },
@@ -330,8 +323,6 @@ export class AuthService {
       username: user.username,
       email: user.email,
       role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName,
       avatarUrl: user.avatarUrl,
       createdAt: user.createdAt.toISOString(),
       ...(currentUserId && {
@@ -351,9 +342,7 @@ export class AuthService {
         rating: r.rating,
         comment: r.comment,
         createdAt: r.createdAt.toISOString(),
-        reviewerName: r.reviewer.firstName && r.reviewer.lastName
-          ? `${r.reviewer.firstName} ${r.reviewer.lastName}`
-          : 'Anonyme',
+        reviewerName: r.reviewer.username ?? 'Anonyme',
       })),
       stats: {
         averageRating: avgRating._avg.rating != null
@@ -373,8 +362,6 @@ export class AuthService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        firstName: dto.firstName || null,
-        lastName: dto.lastName || null,
         avatarUrl: dto.avatarUrl || null,
       },
       select: {
@@ -382,8 +369,6 @@ export class AuthService {
         username: true,
         email: true,
         role: true,
-        firstName: true,
-        lastName: true,
         avatarUrl: true,
         createdAt: true,
       },
@@ -398,8 +383,6 @@ export class AuthService {
   async validateGoogleUser(googleUser: {
     googleId: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
   }) {
     let user = await this.prisma.user.findUnique({
       where: { googleId: googleUser.googleId },
@@ -418,8 +401,6 @@ export class AuthService {
         where: { id: user.id },
         data: {
           googleId: googleUser.googleId,
-          firstName: googleUser.firstName,
-          lastName: googleUser.lastName,
         },
       });
       return user;
@@ -432,8 +413,6 @@ export class AuthService {
         username,
         email: googleUser.email,
         googleId: googleUser.googleId,
-        firstName: googleUser.firstName,
-        lastName: googleUser.lastName,
         role: 'CLIENT',
       },
     });
@@ -465,12 +444,10 @@ export class AuthService {
         id: true,
         username: true,
         email: true,
-        firstName: true,
-        lastName: true,
         avatarUrl: true,
       },
       orderBy: {
-        firstName: 'asc',
+        username: 'asc',
       },
     });
   }
@@ -490,8 +467,6 @@ export class AuthService {
       select: {
         id: true,
         username: true,
-        firstName: true,
-        lastName: true,
         avatarUrl: true,
       },
       take: limit,

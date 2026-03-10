@@ -71,8 +71,7 @@ export interface EventStatsDetail {
 export interface EventParticipant {
   userId: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  username?: string | null;
   quantity: number;
   status: string;
   bookedAt: string;
@@ -100,8 +99,7 @@ export type EventCategory =
 interface UpcomingEventOrganizer {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  username?: string | null;
 }
 
 interface UpcomingEventBase {

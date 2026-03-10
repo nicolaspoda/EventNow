@@ -27,14 +27,12 @@ export interface ParticipantReview {
   reviewer?: {
     id: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
+    username?: string | null;
   };
   participant?: {
     id: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
+    username?: string | null;
   };
 }
 
@@ -49,8 +47,7 @@ export interface ParticipantReviewsResponse {
 export interface ParticipantForReview {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  username?: string | null;
   avatarUrl?: string;
   hasReview: boolean;
   review?: ParticipantReview;

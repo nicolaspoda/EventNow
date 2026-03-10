@@ -98,16 +98,14 @@ export class ParticipantReviewsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
           },
         },
         participant: {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
           },
         },
       },
@@ -122,8 +120,7 @@ export class ParticipantReviewsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
           },
         },
       },
@@ -169,8 +166,7 @@ export class ParticipantReviewsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
           },
         },
       },
@@ -250,8 +246,7 @@ export class ParticipantReviewsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             avatarUrl: true,
           },
         },

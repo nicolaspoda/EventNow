@@ -8,8 +8,7 @@ export type ProfileListTab = 'followers' | 'following' | 'friends';
 export interface ProfileListUser {
   id: string;
   email: string;
-  firstName?: string | null;
-  lastName?: string | null;
+  username?: string | null;
   avatarUrl?: string | null;
   followedAt: string;
   isFollowingByCurrentUser?: boolean;
@@ -86,9 +85,7 @@ export function ProfileListsModal({
   }, [isOpen, tab, currentUserId, fetchList]);
 
   const getDisplayName = (u: ProfileListUser) =>
-    u.firstName && u.lastName
-      ? `${u.firstName} ${u.lastName}`.trim()
-      : u.email?.split('@')[0] ?? 'Utilisateur';
+    u.username ?? u.email?.split('@')[0] ?? 'Utilisateur';
 
   const handleFollow = async (userId: string) => {
     if (!currentUserId || userId === currentUserId) return;

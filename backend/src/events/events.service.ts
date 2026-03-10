@@ -84,8 +84,7 @@ export class EventsService {
             select: {
               id: true,
               email: true,
-              firstName: true,
-              lastName: true,
+              username: true,
             },
           },
         },
@@ -107,9 +106,9 @@ export class EventsService {
     });
 
     const organizerName =
-      result.organizer?.firstName && result.organizer?.lastName
-        ? `${result.organizer.firstName} ${result.organizer.lastName}`.trim()
-        : result.organizer?.email?.split('@')[0] ?? 'Un organisateur';
+      result.organizer?.username ||
+      result.organizer?.email?.split('@')[0] ||
+      'Un organisateur';
     const [followerIds, friendIds] = await Promise.all([
       this.followsService.getFollowerIds(userId),
       this.followsService.getFriendIds(userId),
@@ -195,12 +194,11 @@ export class EventsService {
           },
         },
         organizer: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
         },
         reviews: {
           select: {
@@ -252,12 +250,11 @@ export class EventsService {
           },
         },
         organizer: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
         },
         reviews: {
           select: {
@@ -445,8 +442,7 @@ export class EventsService {
             select: {
               id: true,
               email: true,
-              firstName: true,
-              lastName: true,
+              username: true,
             },
           },
         },
@@ -685,8 +681,7 @@ export class EventsService {
             select: {
               id: true,
               email: true,
-              firstName: true,
-              lastName: true,
+              username: true,
             },
           },
           reviews: {
@@ -816,8 +811,7 @@ export class EventsService {
             select: {
               id: true,
               email: true,
-              firstName: true,
-              lastName: true,
+              username: true,
             },
           },
           reviews: {

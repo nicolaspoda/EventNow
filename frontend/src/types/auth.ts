@@ -11,8 +11,6 @@ export interface User {
   username?: string | null;
   email: string;
   role: Role;
-  firstName?: string | null;
-  lastName?: string | null;
   avatarUrl?: string | null;
   createdAt?: string;
 }
@@ -33,8 +31,6 @@ export interface UserProfile extends User {
 }
 
 export interface UpdateProfileData {
-  firstName?: string;
-  lastName?: string;
   avatarUrl?: string;
 }
 
@@ -59,7 +55,5 @@ export interface LoginData {
 export interface SearchUserResult {
   id: string;
   username: string | null;
-  firstName: string | null;
-  lastName: string | null;
   avatarUrl: string | null;
 }

@@ -87,8 +87,6 @@ describe('GoogleStrategy', () => {
       expect(authService.validateGoogleUser).toHaveBeenCalledWith({
         googleId: 'google-123',
         email: 'test@gmail.com',
-        firstName: 'John',
-        lastName: 'Doe',
       });
       expect(done).toHaveBeenCalledWith(null, mockUser);
     });
@@ -118,8 +116,6 @@ describe('GoogleStrategy', () => {
       expect(authService.validateGoogleUser).toHaveBeenCalledWith({
         googleId: 'google-456',
         email: 'test2@gmail.com',
-        firstName: undefined,
-        lastName: undefined,
       });
       expect(done).toHaveBeenCalledWith(null, mockUser);
     });

@@ -275,8 +275,7 @@ export class DashboardService {
                   select: {
                     id: true,
                     email: true,
-                    firstName: true,
-                    lastName: true,
+                    username: true,
                   },
                 },
               },
@@ -292,8 +291,7 @@ export class DashboardService {
                       select: {
                         id: true,
                         email: true,
-                        firstName: true,
-                        lastName: true,
+                        username: true,
                       },
                     },
                   },
@@ -309,8 +307,7 @@ export class DashboardService {
               select: {
                 id: true,
                 email: true,
-                firstName: true,
-                lastName: true,
+                username: true,
               },
             },
           },
@@ -331,8 +328,7 @@ export class DashboardService {
       {
         userId: string;
         email: string;
-        firstName: string | null;
-        lastName: string | null;
+        username: string | null;
         quantity: number;
         status: string;
         bookedAt: Date;
@@ -348,8 +344,7 @@ export class DashboardService {
           participantsMap.set(booking.user.id, {
             userId: booking.user.id,
             email: booking.user.email,
-            firstName: booking.user.firstName,
-            lastName: booking.user.lastName,
+            username: booking.user.username,
             quantity: booking.quantity,
             status: booking.status,
             bookedAt: booking.createdAt,
@@ -369,8 +364,7 @@ export class DashboardService {
           participantsMap.set(user.id, {
             userId: user.id,
             email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
+            username: user.username,
             quantity: 1,
             status: 'CONFIRMED',
             bookedAt: ticket.order.createdAt,
@@ -387,8 +381,7 @@ export class DashboardService {
         participantsMap.set(request.user.id, {
           userId: request.user.id,
           email: request.user.email,
-          firstName: request.user.firstName,
-          lastName: request.user.lastName,
+          username: request.user.username,
           quantity: 1,
           status: 'CONFIRMED',
           bookedAt: request.createdAt,
@@ -444,8 +437,7 @@ export class DashboardService {
                   select: {
                     id: true,
                     email: true,
-                    firstName: true,
-                    lastName: true,
+                    username: true,
                   },
                 },
               },
@@ -485,8 +477,7 @@ export class DashboardService {
               select: {
                 id: true,
                 email: true,
-                firstName: true,
-                lastName: true,
+                username: true,
               },
             },
           },
@@ -591,8 +582,7 @@ export class DashboardService {
                   select: {
                     id: true,
                     email: true,
-                    firstName: true,
-                    lastName: true,
+                    username: true,
                   },
                 },
               },
@@ -629,8 +619,7 @@ export class DashboardService {
               select: {
                 id: true,
                 email: true,
-                firstName: true,
-                lastName: true,
+                username: true,
               },
             },
           },

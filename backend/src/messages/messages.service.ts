@@ -80,8 +80,7 @@ export class MessagesService {
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 email: true,
                 avatarUrl: true,
               },
@@ -95,8 +94,7 @@ export class MessagesService {
             sender: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 avatarUrl: true,
               },
             },
@@ -126,8 +124,7 @@ export class MessagesService {
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 email: true,
                 avatarUrl: true,
               },
@@ -141,8 +138,7 @@ export class MessagesService {
             sender: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 avatarUrl: true,
               },
             },
@@ -174,8 +170,7 @@ export class MessagesService {
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 email: true,
                 avatarUrl: true,
               },
@@ -189,8 +184,7 @@ export class MessagesService {
             sender: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 avatarUrl: true,
               },
             },
@@ -226,8 +220,7 @@ export class MessagesService {
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 email: true,
                 avatarUrl: true,
               },
@@ -276,8 +269,7 @@ export class MessagesService {
         sender: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             email: true,
             avatarUrl: true,
           },
@@ -322,8 +314,7 @@ export class MessagesService {
         sender: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             email: true,
             avatarUrl: true,
           },
@@ -342,7 +333,7 @@ export class MessagesService {
     for (const member of otherMembers) {
       const conversationName =
         conversation.type === ConversationType.DIRECT
-          ? `${message.sender.firstName} ${message.sender.lastName}`
+          ? (message.sender.username || 'Quelqu\'un')
           : conversation.name || 'Conversation';
 
       await this.notificationsService.createNotification({
@@ -469,8 +460,7 @@ export class MessagesService {
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 email: true,
                 avatarUrl: true,
               },
@@ -556,8 +546,7 @@ export class MessagesService {
             user: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 email: true,
                 avatarUrl: true,
               },
@@ -571,8 +560,7 @@ export class MessagesService {
             sender: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
+                username: true,
                 avatarUrl: true,
               },
             },
@@ -615,8 +603,7 @@ export class MessagesService {
               user: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  username: true,
                   email: true,
                   avatarUrl: true,
                 },
@@ -630,8 +617,7 @@ export class MessagesService {
               sender: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
+                  username: true,
                   avatarUrl: true,
                 },
               },

@@ -39,9 +39,7 @@ export function ParticipationRequestCard({ request, onRespond }: ParticipationRe
     }
   };
 
-  const displayName = request.user?.firstName && request.user?.lastName
-    ? `${request.user.firstName} ${request.user.lastName}`
-    : request.user?.email || 'Utilisateur';
+  const displayName = request.user?.username ?? request.user?.email ?? 'Utilisateur';
 
   return (
     <Card className="hover:shadow-lg transition-shadow p-6">

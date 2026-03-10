@@ -35,8 +35,7 @@ describe('EventsController', () => {
     organizer: {
       id: 'user-1',
       email: 'organizer@test.com',
-      firstName: 'John',
-      lastName: 'Doe',
+      username: 'johndoe',
     },
   };
 

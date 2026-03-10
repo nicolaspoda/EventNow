@@ -132,10 +132,7 @@ export class OrdersService {
 
     if (!user) return;
 
-    const userName =
-      user.firstName && user.lastName
-        ? `${user.firstName} ${user.lastName}`
-        : user.email.split('@')[0];
+    const userName = user.username ?? user.email.split('@')[0];
 
     await this.mailService.sendOrderConfirmation({
       userEmail: user.email,
@@ -312,7 +309,7 @@ export class OrdersService {
       },
       include: {
         user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
+          select: { id: true, email: true, username: true },
         },
         tickets: {
           include: {

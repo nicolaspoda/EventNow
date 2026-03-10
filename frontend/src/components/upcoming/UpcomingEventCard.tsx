@@ -199,9 +199,7 @@ const UpcomingEventCard: React.FC<UpcomingEventCardProps> = ({ event }) => {
                 />
               </svg>
               <span className="text-sm truncate">
-                {event.organizer.firstName || event.organizer.lastName
-                  ? `${event.organizer.firstName || ''} ${event.organizer.lastName || ''}`.trim()
-                  : event.organizer.email.split('@')[0]}
+                {event.organizer.username || event.organizer.email?.split('@')[0]}
               </span>
             </div>
           )}

@@ -62,7 +62,7 @@ export function EventParticipantReviewsSection({ eventId, hideTitle = false }: E
   };
 
   const displayName = (p: ParticipantForReview) =>
-    p.firstName && p.lastName ? `${p.firstName} ${p.lastName}` : p.email.split('@')[0];
+    p.username ? p.username : p.email.split('@')[0];
 
   return (
     <div className={hideTitle === true ? 'mb-0' : 'border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6'}>

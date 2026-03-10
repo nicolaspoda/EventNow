@@ -81,9 +81,7 @@ export class EmailRemindersJob {
       for (const [, { event, ticketCount }] of eventsMap) {
         try {
           const userName =
-            order.user.firstName && order.user.lastName
-              ? `${order.user.firstName} ${order.user.lastName}`
-              : order.user.email.split('@')[0];
+            order.user.username ?? order.user.email.split('@')[0];
 
           await this.mailService.sendEventReminder7Days({
             userEmail: order.user.email,
@@ -185,9 +183,7 @@ export class EmailRemindersJob {
       for (const [, { event, ticketCount }] of eventsMap) {
         try {
           const userName =
-            order.user.firstName && order.user.lastName
-              ? `${order.user.firstName} ${order.user.lastName}`
-              : order.user.email.split('@')[0];
+            order.user.username ?? order.user.email.split('@')[0];
 
           await this.mailService.sendEventReminder1Day({
             userEmail: order.user.email,

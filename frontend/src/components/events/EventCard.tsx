@@ -219,9 +219,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
                 className="text-sm truncate hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                {event.organizer.firstName || event.organizer.lastName
-                  ? `${event.organizer.firstName || ''} ${event.organizer.lastName || ''}`.trim()
-                  : event.organizer.email.split('@')[0]}
+                {event.organizer.username || event.organizer.email?.split('@')[0]}
               </Link>
             </div>
           )}

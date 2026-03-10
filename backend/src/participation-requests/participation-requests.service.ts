@@ -70,14 +70,11 @@ export class ParticipationRequestsService {
       },
       include: {
         event: { select: { title: true } },
-        user: { select: { email: true, firstName: true, lastName: true } },
+        user: { select: { email: true, username: true } },
       },
     });
 
-    const requesterLabel =
-      request.user.firstName && request.user.lastName
-        ? `${request.user.firstName} ${request.user.lastName}`
-        : request.user.email;
+    const requesterLabel = request.user.username ?? request.user.email;
 
     await this.prisma.notification.create({
       data: {
@@ -113,8 +110,7 @@ export class ParticipationRequestsService {
           select: {
             id: true,
             email: true,
-            firstName: true,
-            lastName: true,
+            username: true,
             avatarUrl: true,
           },
         },
@@ -197,7 +193,7 @@ export class ParticipationRequestsService {
         status: ParticipationRequestStatus.PENDING,
       },
       include: {
-        user: { select: { id: true, email: true, firstName: true, lastName: true, avatarUrl: true } },
+        user: { select: { id: true, email: true, username: true, avatarUrl: true } },
         event: { select: { id: true, title: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -221,7 +217,7 @@ export class ParticipationRequestsService {
         event: {
           include: { ticketCategories: true },
         },
-        user: { select: { id: true, email: true, firstName: true, lastName: true } },
+        user: { select: { id: true, email: true, username: true } },
       },
     });
 
@@ -267,7 +263,7 @@ export class ParticipationRequestsService {
         },
         include: {
           event: { select: { title: true } },
-          user: { select: { id: true, email: true, firstName: true, lastName: true } },
+          user: { select: { id: true, email: true, username: true } },
         },
       });
 

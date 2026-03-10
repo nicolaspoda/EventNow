@@ -161,9 +161,7 @@ export function EventParticipantsPage() {
                         to={`/user/${p.userId}/profile`}
                         className="text-primary-600 dark:text-primary-400 hover:underline"
                       >
-                        {p.firstName || p.lastName
-                          ? [p.firstName, p.lastName].filter(Boolean).join(' ')
-                          : p.email.split('@')[0]}
+                        {p.username ?? p.email.split('@')[0]}
                       </Link>
                     </td>
                     <td className="px-6 py-4 text-neutral-700 dark:text-neutral-300">{p.email}</td>

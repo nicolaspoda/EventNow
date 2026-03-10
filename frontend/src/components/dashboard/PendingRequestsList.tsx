@@ -12,8 +12,7 @@ interface PendingRequestsListProps {
 function requesterLabel(req: ParticipationRequest): string {
   const u = req.user;
   if (!u) return 'Un utilisateur';
-  if (u.firstName && u.lastName) return `${u.firstName} ${u.lastName}`;
-  return u.email;
+  return u.username ?? u.email;
 }
 
 export const PendingRequestsList: React.FC<PendingRequestsListProps> = ({

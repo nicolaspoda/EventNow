@@ -13,8 +13,6 @@ async function main() {
       username: 'organizer_eventnow',
       email: 'organizer@eventnow.fr',
       passwordHash: hash,
-      firstName: 'Marie',
-      lastName: 'Martin',
       role: 'ORGANIZER',
     },
   });
@@ -26,8 +24,6 @@ async function main() {
       username: 'client_eventnow',
       email: 'client@eventnow.fr',
       passwordHash: hash,
-      firstName: 'Jean',
-      lastName: 'Dupont',
       role: 'CLIENT',
     },
   });
@@ -39,8 +35,6 @@ async function main() {
       username: 'staff_eventnow',
       email: 'staff@eventnow.fr',
       passwordHash: hash,
-      firstName: 'Sophie',
-      lastName: 'Leroy',
       role: 'STAFF',
     },
   });
