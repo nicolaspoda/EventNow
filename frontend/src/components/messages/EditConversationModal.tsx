@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../ui/Button';
 import { Input } from '../ui/Input';
+import { ImageUpload } from '../upload/ImageUpload';
 import type { Conversation } from '../../services/messageService';
 
 interface EditConversationModalProps {
@@ -90,16 +91,21 @@ export const EditConversationModal: React.FC<EditConversationModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              URL de l'image (optionnel)
-            </label>
-            <Input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full"
+            <ImageUpload
+              currentImage={imageUrl || undefined}
+              onUploadSuccess={(url) => setImageUrl(url)}
+              label="Image du groupe (optionnel)"
+              maxSize={2}
             />
+            {imageUrl && (
+              <button
+                type="button"
+                onClick={() => setImageUrl('')}
+                className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+              >
+                Supprimer l'image
+              </button>
+            )}
           </div>
         </div>
 

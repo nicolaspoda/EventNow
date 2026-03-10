@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { uploadService } from '../../services/uploadService';
 
 interface ImageUploadProps {
@@ -21,6 +21,10 @@ export function ImageUpload({
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setPreview(currentImage ?? null);
+  }, [currentImage]);
 
   const handleFileChange = async (file: File | null) => {
     if (!file) return;
