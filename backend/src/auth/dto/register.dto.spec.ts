@@ -1,43 +1,52 @@
 import 'reflect-metadata';
 import { validate } from 'class-validator';
 import { plainToClass } from 'class-transformer';
-import { RegisterDto } from './register.dto';
-import { Role } from '@prisma/client';
+import { RegisterDto, RegisterOrganizerDto } from './register.dto';
 
 describe('RegisterDto', () => {
-  it('should validate with Role.CLIENT', async () => {
+  it('should validate a valid client registration', async () => {
+    const plain = {
+      username: 'testuser',
+      email: 'client@test.com',
+      password: 'password123',
+    };
+    const dto = plainToClass(RegisterDto, plain);
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
+  it('should fail without username', async () => {
     const plain = {
       email: 'client@test.com',
       password: 'password123',
-      role: Role.CLIENT,
     };
     const dto = plainToClass(RegisterDto, plain);
     const errors = await validate(dto);
-    expect(errors).toHaveLength(0);
-    expect(dto.role).toBe(Role.CLIENT);
+    expect(errors.length).toBeGreaterThan(0);
   });
+});
 
-  it('should validate with Role.ORGANIZER', async () => {
+describe('RegisterOrganizerDto', () => {
+  it('should validate a valid organizer registration', async () => {
     const plain = {
+      username: 'organizer1',
       email: 'org@test.com',
       password: 'password123',
-      role: Role.ORGANIZER,
+      confirmOrganizer: true,
     };
-    const dto = plainToClass(RegisterDto, plain);
+    const dto = plainToClass(RegisterOrganizerDto, plain);
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
-    expect(dto.role).toBe(Role.ORGANIZER);
   });
 
-  it('should validate with Role.STAFF', async () => {
+  it('should fail without confirmOrganizer', async () => {
     const plain = {
-      email: 'staff@test.com',
+      username: 'organizer1',
+      email: 'org@test.com',
       password: 'password123',
-      role: Role.STAFF,
     };
-    const dto = plainToClass(RegisterDto, plain);
+    const dto = plainToClass(RegisterOrganizerDto, plain);
     const errors = await validate(dto);
-    expect(errors).toHaveLength(0);
-    expect(dto.role).toBe(Role.STAFF);
+    expect(errors.length).toBeGreaterThan(0);
   });
 });

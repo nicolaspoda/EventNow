@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
+if (import.meta.env.DEV) {
+  console.log('[EventNow] API utilisée:', API_URL);
+}
+
 export const api = axios.create({
   baseURL: `${API_URL}/api/v1`,
   headers: {
@@ -31,6 +35,7 @@ api.interceptors.response.use(
     const isAuthEndpoint =
       originalRequest?.url?.includes('/auth/login') ||
       originalRequest?.url?.includes('/auth/register') ||
+      originalRequest?.url?.includes('/auth/register-organizer') ||
       originalRequest?.url?.includes('/auth/google/exchange') ||
       originalRequest?.url?.includes('/auth/refresh');
 

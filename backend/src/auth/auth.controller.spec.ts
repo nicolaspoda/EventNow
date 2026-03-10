@@ -11,6 +11,7 @@ describe('AuthController', () => {
 
   const mockAuthService = {
     register: jest.fn(),
+    registerOrganizer: jest.fn(),
     login: jest.fn(),
     refreshTokens: jest.fn(),
     logout: jest.fn(),
@@ -46,18 +47,19 @@ describe('AuthController', () => {
   });
 
   describe('register', () => {
-    it('should register a new user', async () => {
+    it('should register a new client user', async () => {
       const registerDto = {
+        username: 'testuser',
         email: 'test@example.com',
         password: 'password123',
-        role: Role.CLIENT,
       };
 
       const expectedResult = {
         user: {
           id: '1',
+          username: 'testuser',
           email: registerDto.email,
-          role: registerDto.role,
+          role: Role.CLIENT,
         },
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -69,38 +71,32 @@ describe('AuthController', () => {
 
       expect(result).toEqual(expectedResult);
       expect(authService.register).toHaveBeenCalledWith(registerDto);
+      expect(result.user.role).toBe(Role.CLIENT);
     });
+  });
 
-    it('should register with ORGANIZER role', async () => {
+  describe('registerOrganizer', () => {
+    it('should register a new organizer', async () => {
       const registerDto = {
+        username: 'organizer1',
         email: 'org@example.com',
         password: 'password123',
-        role: Role.ORGANIZER,
+        confirmOrganizer: true,
       };
       const expectedResult = {
-        user: { id: '2', email: registerDto.email, role: Role.ORGANIZER },
+        user: {
+          id: '2',
+          username: 'organizer1',
+          email: registerDto.email,
+          role: Role.ORGANIZER,
+        },
         accessToken: 'at',
         refreshToken: 'rt',
       };
-      mockAuthService.register.mockResolvedValue(expectedResult);
-      const result = await controller.register(registerDto);
+      mockAuthService.registerOrganizer.mockResolvedValue(expectedResult);
+      const result = await controller.registerOrganizer(registerDto);
       expect(result.user.role).toBe(Role.ORGANIZER);
-    });
-
-    it('should register with STAFF role', async () => {
-      const registerDto = {
-        email: 'staff@example.com',
-        password: 'password123',
-        role: Role.STAFF,
-      };
-      const expectedResult = {
-        user: { id: '3', email: registerDto.email, role: Role.STAFF },
-        accessToken: 'at',
-        refreshToken: 'rt',
-      };
-      mockAuthService.register.mockResolvedValue(expectedResult);
-      const result = await controller.register(registerDto);
-      expect(result.user.role).toBe(Role.STAFF);
+      expect(authService.registerOrganizer).toHaveBeenCalledWith(registerDto);
     });
   });
 

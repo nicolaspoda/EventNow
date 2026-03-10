@@ -44,7 +44,14 @@ export interface RegisterData {
   username: string;
   email: string;
   password: string;
-  role: Role;
+}
+
+export interface RegisterOrganizerData {
+  username: string;
+  email: string;
+  password: string;
+  organizationName?: string;
+  confirmOrganizer: boolean;
 }
 
 export interface LoginData {

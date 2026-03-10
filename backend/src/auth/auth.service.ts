@@ -2,13 +2,14 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { FollowsService } from '../follows/follows.service';
-import { RegisterDto, LoginDto, UpdateProfileDto } from './dto';
+import { RegisterDto, RegisterOrganizerDto, LoginDto, UpdateProfileDto } from './dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -56,7 +57,7 @@ export class AuthService {
         username: dto.username,
         email: dto.email,
         passwordHash,
-        role: dto.role,
+        role: 'CLIENT',
       },
     });
 
@@ -68,6 +69,55 @@ export class AuthService {
         username: user.username,
         email: user.email,
         role: user.role,
+      },
+      ...tokens,
+    };
+  }
+
+  async registerOrganizer(dto: RegisterOrganizerDto) {
+    const existingByEmail = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingByEmail) {
+      throw new ConflictException('Cet email est deja utilise');
+    }
+
+    const existingByUsername = await this.prisma.user.findFirst({
+      where: {
+        username: { equals: dto.username, mode: 'insensitive' },
+      },
+    });
+
+    if (existingByUsername) {
+      throw new ConflictException('Ce nom d\'utilisateur est deja pris');
+    }
+
+    if (!dto.confirmOrganizer) {
+      throw new BadRequestException('Vous devez confirmer etre un organisateur d\'evenement');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        username: dto.username,
+        email: dto.email,
+        passwordHash,
+        role: 'ORGANIZER',
+        organizationName: dto.organizationName || null,
+      },
+    });
+
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    return {
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        organizationName: user.organizationName,
       },
       ...tokens,
     };

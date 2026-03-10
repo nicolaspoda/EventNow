@@ -56,16 +56,24 @@ enum EventCategory {
   OTHER
 }
 
+enum StaffInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
 model User {
-  id           String   @id @default(uuid())
-  username     String?  @unique
-  email        String   @unique
-  passwordHash String?  @map("password_hash")
-  googleId     String?  @unique @map("google_id")
-  avatarUrl    String?  @map("avatar_url")
-  role         Role     @default(CLIENT)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id               String   @id @default(uuid())
+  username         String?  @unique
+  email            String   @unique
+  passwordHash     String?  @map("password_hash")
+  googleId         String?  @unique @map("google_id")
+  avatarUrl        String?  @map("avatar_url")
+  organizationName String?  @map("organization_name")
+  role             Role     @default(CLIENT)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   organizedEvents Event[]
   bookings        Booking[]
@@ -81,6 +89,8 @@ model User {
 
   conversationMemberships ConversationMember[]
   sentMessages            Message[]
+  staffInvitationsSent    StaffInvitation[] @relation("InvitationSender")
+  staffInvitationsReceived StaffInvitation[] @relation("InvitationReceiver")
 
   @@index([username])
   @@map("users")
@@ -347,4 +357,25 @@ model Message {
   @@index([senderId])
   @@index([createdAt])
   @@map("messages")
+}
+
+model StaffInvitation {
+  id          String                @id @default(uuid())
+  email       String
+  token       String                @unique
+  invitedById String                @map("invited_by_id")
+  acceptedById String?              @map("accepted_by_id")
+  status      StaffInvitationStatus @default(PENDING)
+  expiresAt   DateTime              @map("expires_at")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  invitedBy  User  @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Cascade)
+  acceptedBy User? @relation("InvitationReceiver", fields: [acceptedById], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([token])
+  @@index([invitedById])
+  @@index([status])
+  @@map("staff_invitations")
 }

@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppLayout } from './components/AppLayout';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { RegisterOrganizerPage } from './pages/RegisterOrganizerPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { OrganizerDashboardPage } from './pages/OrganizerDashboardPage';
 import { ClientDashboardPage } from './pages/ClientDashboardPage';
@@ -43,6 +44,9 @@ function AppContent() {
     <Routes>
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
       <Route element={<AppLayout />}>
+        <Route path="/register-organizer" element={<RegisterOrganizerPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/events/create" element={
           <ProtectedRoute>
@@ -55,8 +59,6 @@ function AppContent() {
             <EventEditPage />
           </ProtectedRoute>
         } />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/bookings"
           element={

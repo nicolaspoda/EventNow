@@ -3,6 +3,7 @@ import type {
   AuthResponse,
   LoginData,
   RegisterData,
+  RegisterOrganizerData,
   User,
   SearchUserResult,
 } from '../types/auth';
@@ -10,6 +11,12 @@ import type {
 export const authService = {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', data);
+    this.saveAuthData(response.data);
+    return response.data;
+  },
+
+  async registerOrganizer(data: RegisterOrganizerData): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/register-organizer', data);
     this.saveAuthData(response.data);
     return response.data;
   },

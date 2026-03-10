@@ -17,7 +17,7 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RedisService } from '../redis/redis.service';
-import { RegisterDto, LoginDto, ExchangeCodeDto, UpdateProfileDto } from './dto';
+import { RegisterDto, RegisterOrganizerDto, LoginDto, ExchangeCodeDto, UpdateProfileDto } from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -37,6 +37,13 @@ export class AuthController {
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('register-organizer')
+  @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  async registerOrganizer(@Body() dto: RegisterOrganizerDto) {
+    return this.authService.registerOrganizer(dto);
   }
 
   @Post('login')

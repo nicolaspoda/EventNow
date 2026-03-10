@@ -36,15 +36,15 @@ describe('Dashboard (e2e)', () => {
     await prisma.event.deleteMany();
 
     const organizerRes = await request(app.getHttpServer())
-      .post('/api/v1/auth/register')
+      .post('/api/v1/auth/register-organizer')
       .send({
         username: 'organizer_test',
         email: 'organizer@test.com',
         password: 'Test1234!',
-        role: 'ORGANIZER',
+        confirmOrganizer: true,
       });
 
-    organizerToken = organizerRes.body.access_token;
+    organizerToken = organizerRes.body.accessToken;
     organizerId = organizerRes.body.user.id;
 
     const clientRes = await request(app.getHttpServer())
@@ -53,10 +53,9 @@ describe('Dashboard (e2e)', () => {
         username: 'client_test',
         email: 'client@test.com',
         password: 'Test1234!',
-        role: 'CLIENT',
       });
 
-    clientToken = clientRes.body.access_token;
+    clientToken = clientRes.body.accessToken;
     clientId = clientRes.body.user.id;
 
     const eventRes = await request(app.getHttpServer())
@@ -178,15 +177,15 @@ describe('Dashboard (e2e)', () => {
 
     it('should return 403 when accessing other user events', async () => {
       const otherOrganizerRes = await request(app.getHttpServer())
-        .post('/api/v1/auth/register')
+        .post('/api/v1/auth/register-organizer')
         .send({
           username: 'other_organizer',
           email: 'other@test.com',
           password: 'Test1234!',
-          role: 'ORGANIZER',
+          confirmOrganizer: true,
         });
 
-      const otherToken = otherOrganizerRes.body.access_token;
+      const otherToken = otherOrganizerRes.body.accessToken;
 
       return request(app.getHttpServer())
         .get(`/api/v1/dashboard/organizer/events/${eventId}/stats`)

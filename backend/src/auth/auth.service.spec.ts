@@ -67,17 +67,16 @@ describe('AuthService', () => {
       username: 'testuser',
       email: 'test@example.com',
       password: 'password123',
-      role: Role.CLIENT,
     };
 
-    it('should successfully register a new user', async () => {
+    it('should successfully register a new client user', async () => {
       const hashedPassword = 'hashedPassword';
       const mockUser = {
         id: '1',
         username: registerDto.username,
         email: registerDto.email,
         passwordHash: hashedPassword,
-        role: registerDto.role,
+        role: Role.CLIENT,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
