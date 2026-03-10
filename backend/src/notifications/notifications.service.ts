@@ -10,6 +10,9 @@ export class NotificationsService {
       where: {
         userId,
         ...(unreadOnly ? { read: false } : {}),
+        type: {
+          notIn: ['NEW_MESSAGE', 'ADDED_TO_CONVERSATION'],
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: 100,
@@ -42,7 +45,13 @@ export class NotificationsService {
 
   async getUnreadCount(userId: string) {
     return this.prisma.notification.count({
-      where: { userId, read: false },
+      where: {
+        userId,
+        read: false,
+        type: {
+          notIn: ['NEW_MESSAGE', 'ADDED_TO_CONVERSATION'],
+        },
+      },
     });
   }
 

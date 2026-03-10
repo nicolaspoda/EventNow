@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { configureHelmet } from './security/helmet.config';
 import { corsConfig } from './security/cors.config';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -10,6 +11,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new CustomLoggerService(),
   });
+
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   configureHelmet(app);
 

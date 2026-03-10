@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['react-big-calendar', 'date-fns'],
+    include: ['react-big-calendar', 'date-fns', 'socket.io-client'],
   },
 })

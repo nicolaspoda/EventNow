@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../utils/useAuth';
 import messageService, {
@@ -6,6 +6,7 @@ import messageService, {
   type Message,
   ConversationType,
 } from '../../services/messageService';
+import socketService from '../../services/socketService';
 import { ChatWindow } from '../../components/messages/ChatWindow';
 import { ConversationHeader } from '../../components/messages/ConversationHeader';
 import { AddMembersModal } from '../../components/messages/AddMembersModal';
@@ -45,6 +46,83 @@ export const ConversationPage: React.FC = () => {
       messageService.markAsRead(conversationId).catch(console.error);
     }
   }, [conversationId, user?.id]);
+
+  useEffect(() => {
+    const token = sessionStorage.getItem('accessToken');
+    if (!token) {
+      console.error('[ConversationPage] No access token found');
+      return;
+    }
+
+    const initSocket = async () => {
+      try {
+        if (!socketService.isConnected()) {
+          await socketService.connect(token);
+        }
+
+        if (conversationId) {
+          await socketService.joinConversation(conversationId);
+        }
+      } catch (error) {
+        console.error('[ConversationPage] Socket connection error:', error);
+      }
+    };
+
+    initSocket();
+
+    const handleNewMessage = (data: { conversationId: string; message: Message }) => {
+      if (data.conversationId === conversationId) {
+        setMessages((prev) => {
+          const messageExists = prev.some((m) => m.id === data.message.id);
+          if (messageExists) {
+            return prev;
+          }
+          return [...prev, data.message];
+        });
+
+        if (data.message.senderId !== user?.id) {
+          messageService.markAsRead(conversationId!).catch(console.error);
+        }
+      }
+    };
+
+    const handleConversationUpdated = (data: { conversationId: string; conversation: any }) => {
+      if (data.conversationId === conversationId) {
+        setConversation(data.conversation);
+      }
+    };
+
+    const handleMemberAdded = (data: { conversationId: string; userId: string }) => {
+      if (data.conversationId === conversationId) {
+        loadConversation();
+      }
+    };
+
+    const handleMemberRemoved = (data: { conversationId: string; userId: string }) => {
+      if (data.conversationId === conversationId) {
+        if (data.userId === user?.id) {
+          navigate('/messages');
+        } else {
+          loadConversation();
+        }
+      }
+    };
+
+    socketService.on('newMessage', handleNewMessage);
+    socketService.on('conversationUpdated', handleConversationUpdated);
+    socketService.on('memberAdded', handleMemberAdded);
+    socketService.on('memberRemoved', handleMemberRemoved);
+
+    return () => {
+      if (conversationId) {
+        socketService.leaveConversation(conversationId);
+      }
+      socketService.off('newMessage', handleNewMessage);
+      socketService.off('conversationUpdated', handleConversationUpdated);
+      socketService.off('memberAdded', handleMemberAdded);
+      socketService.off('memberRemoved', handleMemberRemoved);
+    };
+  }, [conversationId, user?.id, navigate]);
 
   const loadConversation = async () => {
     if (!conversationId) return;
@@ -95,10 +173,23 @@ export const ConversationPage: React.FC = () => {
 
   const handleSendMessage = async (content: string) => {
     if (!conversationId) return;
-    const newMessage = await messageService.sendMessage(conversationId, {
-      content,
-    });
-    setMessages((prev) => [...prev, newMessage]);
+    
+    try {
+      if (socketService.isConnected()) {
+        await socketService.sendMessage(conversationId, content);
+      } else {
+        const newMessage = await messageService.sendMessage(conversationId, {
+          content,
+        });
+        setMessages((prev) => [...prev, newMessage]);
+      }
+    } catch (error) {
+      console.error('[ConversationPage] Error sending message:', error);
+      const newMessage = await messageService.sendMessage(conversationId, {
+        content,
+      });
+      setMessages((prev) => [...prev, newMessage]);
+    }
   };
 
   const handleLoadMore = () => {

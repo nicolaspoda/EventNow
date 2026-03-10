@@ -61,13 +61,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const getDate = (msg: Message): Date | null => {
       const raw = (msg as Message & { created_at?: string }).createdAt
         ?? (msg as Message & { created_at?: string }).created_at;
-      console.log('[ChatWindow] Message date debug:', { 
-        messageId: msg.id, 
-        createdAt: (msg as any).createdAt, 
-        created_at: (msg as any).created_at,
-        raw,
-        type: typeof raw
-      });
       if (raw == null) return null;
       const parsed = typeof raw === 'string' || typeof raw === 'number' ? new Date(raw) : null;
       return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;

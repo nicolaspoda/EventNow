@@ -48,7 +48,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     if (!conversation.messages || conversation.messages.length === 0) {
       return '';
     }
-    return formatDistanceToNow(new Date(conversation.messages[0].createdAt), {
+    const raw = conversation.messages[0].createdAt ?? (conversation.messages[0] as { created_at?: string }).created_at;
+    if (raw == null) return '';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '';
+    return formatDistanceToNow(date, {
       addSuffix: true,
       locale: fr,
     });

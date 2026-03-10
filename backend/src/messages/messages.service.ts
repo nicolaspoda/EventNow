@@ -206,7 +206,7 @@ export class MessagesService {
       const currentUserMember = conv.members.find((m) => m.userId === userId);
       const unreadCount = conv.messages.length > 0 && currentUserMember
         ? conv.messages.filter(
-            (msg) => msg.createdAt > currentUserMember.lastReadAt,
+            (msg) => msg.createdAt > currentUserMember.lastReadAt && msg.senderId !== userId,
           ).length
         : 0;
 
@@ -302,12 +302,6 @@ export class MessagesService {
       createdAt: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
       updatedAt: msg.updatedAt instanceof Date ? msg.updatedAt.toISOString() : msg.updatedAt,
     };
-    console.log('[MessagesService] Serialized message:', {
-      id: serialized.id,
-      originalCreatedAt: msg.createdAt,
-      serializedCreatedAt: serialized.createdAt,
-      isDate: msg.createdAt instanceof Date,
-    });
     return serialized;
   }
 

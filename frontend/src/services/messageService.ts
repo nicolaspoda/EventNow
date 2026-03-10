@@ -114,10 +114,6 @@ const messageService = {
     const response = await api.get(
       `/messages/conversations/${conversationId}/messages?${params.toString()}`,
     );
-    console.log('[messageService] getMessages response:', response.data);
-    if (response.data.length > 0) {
-      console.log('[messageService] First message:', response.data[0]);
-    }
     return response.data;
   },
 
@@ -129,7 +125,6 @@ const messageService = {
       `/messages/conversations/${conversationId}/messages`,
       dto,
     );
-    console.log('[messageService] sendMessage response:', response.data);
     return response.data;
   },
 
