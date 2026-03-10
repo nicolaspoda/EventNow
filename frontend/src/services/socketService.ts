@@ -48,7 +48,6 @@ class SocketService {
       });
 
       this.socket.on('connect', () => {
-        console.log('[Socket] Connected to WebSocket server');
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         resolve();
@@ -65,27 +64,22 @@ class SocketService {
       });
 
       this.socket.on('disconnect', (reason) => {
-        console.log('[Socket] Disconnected:', reason);
         this.isConnecting = false;
       });
 
       this.socket.on('newMessage', (data: { conversationId: string; message: Message }) => {
-        console.log('[Socket] New message received:', data);
         this.emit('newMessage', data);
       });
 
       this.socket.on('conversationUpdated', (data: { conversationId: string; conversation: any }) => {
-        console.log('[Socket] Conversation updated:', data);
         this.emit('conversationUpdated', data);
       });
 
       this.socket.on('memberAdded', (data: { conversationId: string; userId: string }) => {
-        console.log('[Socket] Member added:', data);
         this.emit('memberAdded', data);
       });
 
       this.socket.on('memberRemoved', (data: { conversationId: string; userId: string }) => {
-        console.log('[Socket] Member removed:', data);
         this.emit('memberRemoved', data);
       });
 
@@ -108,7 +102,6 @@ class SocketService {
       this.socket = null;
       this.eventHandlers.clear();
       this.isConnecting = false;
-      console.log('[Socket] Disconnected and cleaned up');
     }
   }
 
@@ -124,7 +117,6 @@ class SocketService {
           console.error('[Socket] Error joining conversation:', response.error);
           reject(new Error(response.error));
         } else {
-          console.log('[Socket] Joined conversation:', conversationId);
           resolve();
         }
       });
@@ -134,7 +126,6 @@ class SocketService {
   leaveConversation(conversationId: string) {
     if (this.socket?.connected) {
       this.socket.emit('leaveConversation', { conversationId });
-      console.log('[Socket] Left conversation:', conversationId);
     }
   }
 
@@ -153,7 +144,6 @@ class SocketService {
             console.error('[Socket] Error sending message:', response.error);
             reject(new Error(response.error));
           } else {
-            console.log('[Socket] Message sent successfully');
             resolve(response.message);
           }
         }
