@@ -53,6 +53,13 @@ export class TicketsController {
     return this.ticketsService.getStaffValidations(user.id, eventId);
   }
 
+  @Get('staff-events')
+  @Roles('STAFF')
+  @HttpCode(HttpStatus.OK)
+  getStaffEvents(@CurrentUser() user: any) {
+    return this.ticketsService.getStaffEvents(user.id);
+  }
+
   @Get('my-tickets')
   @Roles('CLIENT', 'ORGANIZER', 'STAFF')
   @HttpCode(HttpStatus.OK)

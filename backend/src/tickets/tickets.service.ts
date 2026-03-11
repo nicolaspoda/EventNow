@@ -52,6 +52,19 @@ export class TicketsService {
       };
     }
 
+    const eventId = ticket.ticketCategory.event.id;
+    const isStaffForEvent = await this.prisma.eventStaff.findUnique({
+      where: {
+        eventId_userId: { eventId, userId: staffUserId },
+      },
+    });
+
+    if (!isStaffForEvent) {
+      throw new ForbiddenException(
+        'Vous n\'êtes pas autorisé à valider des billets pour cet événement',
+      );
+    }
+
     if (ticket.validatedAt) {
       return {
         valid: false,
@@ -147,12 +160,30 @@ export class TicketsService {
       throw new ForbiddenException('Accès réservé au personnel');
     }
 
+    const staffEventIds = await this.prisma.eventStaff.findMany({
+      where: { userId: staffUserId },
+      select: { eventId: true },
+    });
+    const allowedEventIds = staffEventIds.map((e) => e.eventId);
+
+    if (allowedEventIds.length === 0) {
+      return [];
+    }
+
+    if (eventId && !allowedEventIds.includes(eventId)) {
+      throw new ForbiddenException(
+        'Vous n\'êtes pas autorisé à consulter les validations de cet événement',
+      );
+    }
+
     const tickets = await this.prisma.ticket.findMany({
       where: {
         validatedAt: { not: null },
-        ...(eventId && {
-          ticketCategory: { eventId },
-        }),
+        ticketCategory: {
+          eventId: eventId
+            ? eventId
+            : { in: allowedEventIds },
+        },
       },
       include: {
         ticketCategory: { include: { event: true } },
@@ -179,6 +210,18 @@ export class TicketsService {
 
     if (!staff || staff.role !== 'STAFF') {
       throw new ForbiddenException('Accès réservé au personnel');
+    }
+
+    const isStaffForEvent = await this.prisma.eventStaff.findUnique({
+      where: {
+        eventId_userId: { eventId, userId: staffUserId },
+      },
+    });
+
+    if (!isStaffForEvent) {
+      throw new ForbiddenException(
+        'Vous n\'êtes pas autorisé à consulter les stats de cet événement',
+      );
     }
 
     const event = await this.prisma.event.findUnique({
@@ -218,6 +261,36 @@ export class TicketsService {
             : 0,
       },
     };
+  }
+
+  async getStaffEvents(staffUserId: string) {
+    const staff = await this.prisma.user.findUnique({
+      where: { id: staffUserId },
+    });
+
+    if (!staff || staff.role !== 'STAFF') {
+      throw new ForbiddenException('Accès réservé au personnel');
+    }
+
+    const assignments = await this.prisma.eventStaff.findMany({
+      where: { userId: staffUserId },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            eventDate: true,
+          },
+        },
+      },
+      orderBy: { event: { eventDate: 'asc' } },
+    });
+
+    return assignments.map((a) => ({
+      id: a.event.id,
+      title: a.event.title,
+      eventDate: a.event.eventDate,
+    }));
   }
 
   async getUserTickets(userId: string) {

@@ -46,4 +46,11 @@ export const validationService = {
     });
     return response.data;
   },
+
+  getStaffEvents: async (): Promise<{ id: string; title: string; eventDate: string }[]> => {
+    const response = await api.get<{ id: string; title: string; eventDate: string }[]>(
+      '/tickets/staff-events',
+    );
+    return response.data;
+  },
 };

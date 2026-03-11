@@ -27,6 +27,8 @@ import MyCalendarPage from './pages/MyCalendarPage';
 import { RefundRequestsPage } from './pages/RefundRequestsPage';
 import { StaffScanPage } from './pages/StaffScanPage';
 import { StaffValidationsPage } from './pages/StaffValidationsPage';
+import { StaffInvitationsPage } from './pages/StaffInvitationsPage';
+import { AcceptStaffInvitationPage } from './pages/AcceptStaffInvitationPage';
 import LandingPage from './pages/LandingPage';
 import { ProfilePage } from './pages/ProfilePage';
 
@@ -154,6 +156,18 @@ function AppContent() {
               <RefundRequestsPage />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/dashboard/organizer/staff-invitations"
+          element={
+            <ProtectedRoute roles={['ORGANIZER']}>
+              <StaffInvitationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/invite/staff/:token"
+          element={<AcceptStaffInvitationPage />}
         />
         <Route
           path="/dashboard/client"

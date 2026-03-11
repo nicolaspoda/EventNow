@@ -2,6 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationService } from '../services/notificationService';
 import { participationService } from '../services/participationService';
+import { staffInvitationsService } from '../services/staffInvitationsService';
+import { authService } from '../services/auth.service';
+import socketService from '../services/socketService';
+import { useAuth } from '../utils/useAuth';
 import type { Notification } from '../types/notification.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -11,8 +15,10 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [staffActionLoading, setStaffActionLoading] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const fetchUnreadCount = async () => {
     try {
@@ -41,6 +47,19 @@ export function NotificationBell() {
     const interval = setInterval(fetchUnreadCount, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const handleNewNotification = () => {
+      fetchUnreadCount();
+      if (isOpen) {
+        fetchNotifications();
+      }
+    };
+    socketService.on('newNotification', handleNewNotification);
+    return () => {
+      socketService.off('newNotification', handleNewNotification);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -82,6 +101,7 @@ export function NotificationBell() {
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    if (notification.type === 'STAFF_INVITATION') return;
     if (!notification.read) {
       await handleMarkAsRead(notification.id);
     }
@@ -120,6 +140,8 @@ export function NotificationBell() {
         case 'PARTICIPATION_REFUSED':
           navigate(`/my-upcoming-events`);
           break;
+        case 'STAFF_INVITATION':
+          break;
         default:
           break;
       }
@@ -151,6 +173,8 @@ export function NotificationBell() {
         return '❌';
       case 'EVENT_UPDATED':
         return '📝';
+      case 'STAFF_INVITATION':
+        return '🎫';
       default:
         return '🔔';
     }
@@ -161,6 +185,51 @@ export function NotificationBell() {
     const date = new Date(createdAt);
     if (Number.isNaN(date.getTime())) return '—';
     return formatDistanceToNow(date, { addSuffix: true, locale: fr });
+  };
+
+  const handleStaffInvitationAccept = async (notification: Notification, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!notification.relatedId) return;
+    setStaffActionLoading(notification.id);
+    try {
+      const response = await staffInvitationsService.accept(notification.relatedId);
+      await handleMarkAsRead(notification.id);
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      if (response.accessToken && response.refreshToken && response.user) {
+        authService.saveAuthData({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: response.user,
+        });
+        setUser(response.user);
+        setIsOpen(false);
+        navigate('/staff/scan');
+      } else {
+        window.location.reload();
+      }
+    } catch (err) {
+      console.error('Erreur lors de l\'acceptation de l\'invitation staff:', err);
+    } finally {
+      setStaffActionLoading(null);
+    }
+  };
+
+  const handleStaffInvitationDecline = async (notification: Notification, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!notification.relatedId) return;
+    if (!window.confirm('Refuser cette invitation ?')) return;
+    setStaffActionLoading(notification.id);
+    try {
+      await staffInvitationsService.decline(notification.relatedId);
+      await handleMarkAsRead(notification.id);
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Erreur lors du refus de l\'invitation staff:', err);
+    } finally {
+      setStaffActionLoading(null);
+    }
   };
 
   return (
@@ -240,6 +309,56 @@ export function NotificationBell() {
               <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
                 {notifications.map((notification) => (
                   <li key={notification.id}>
+                    {notification.type === 'STAFF_INVITATION' ? (
+                      <div
+                        className={`px-4 py-3 ${
+                          !notification.read
+                            ? 'bg-primary-50/50 dark:bg-primary-900/10'
+                            : ''
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl flex-shrink-0 mt-0.5">
+                            {getNotificationIcon(notification.type)}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p
+                              className={`text-sm font-medium ${
+                                !notification.read
+                                  ? 'text-neutral-900 dark:text-white'
+                                  : 'text-neutral-700 dark:text-neutral-300'
+                              }`}
+                            >
+                              {notification.title}
+                            </p>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-0.5">
+                              {notification.body}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
+                              {formatNotificationDate(notification.createdAt)}
+                            </p>
+                            <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                disabled={!!staffActionLoading}
+                                onClick={(e) => handleStaffInvitationAccept(notification, e)}
+                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
+                              >
+                                {staffActionLoading === notification.id ? '...' : 'Accepter'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={!!staffActionLoading}
+                                onClick={(e) => handleStaffInvitationDecline(notification, e)}
+                                className="px-3 py-1.5 text-sm font-medium rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 disabled:opacity-50"
+                              >
+                                Refuser
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
                     <button
                       type="button"
                       onClick={() => handleNotificationClick(notification)}
@@ -277,6 +396,7 @@ export function NotificationBell() {
                         </div>
                       </div>
                     </button>
+                    )}
                   </li>
                 ))}
               </ul>

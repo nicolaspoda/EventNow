@@ -8,18 +8,26 @@ import Button from '../components/ui/Button';
 
 export const StaffValidationsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [staffEvents, setStaffEvents] = useState<{ id: string; title: string; eventDate: string }[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>('');
   const [validations, setValidations] = useState<ValidationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchValidations();
+    validationService.getStaffEvents().then(setStaffEvents).catch(() => setStaffEvents([]));
   }, []);
+
+  useEffect(() => {
+    fetchValidations();
+  }, [selectedEventId]);
 
   const fetchValidations = async () => {
     try {
       setError(null);
-      const data = await validationService.getValidations();
+      const data = await validationService.getValidations(
+        selectedEventId || undefined,
+      );
       setValidations(data);
     } catch (err) {
       setError(getApiErrorMessage(err, 'Impossible de charger les validations'));
@@ -43,14 +51,34 @@ export const StaffValidationsPage: React.FC = () => {
                 {validations.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <Button
-              type="button"
-              variant="primary"
-              size="lg"
-              onClick={() => navigate('/staff/scan')}
-            >
-              Retour au scan
-            </Button>
+            <div className="flex items-center gap-3 flex-wrap">
+              {staffEvents.length > 1 && (
+                <select
+                  value={selectedEventId}
+                  onChange={(e) => {
+                    setSelectedEventId(e.target.value);
+                    setLoading(true);
+                  }}
+                  className="px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 text-sm"
+                  aria-label="Filtrer par événement"
+                >
+                  <option value="">Tous les événements</option>
+                  {staffEvents.map((ev) => (
+                    <option key={ev.id} value={ev.id}>
+                      {ev.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <Button
+                type="button"
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/staff/scan')}
+              >
+                Retour au scan
+              </Button>
+            </div>
           </div>
         </header>
 

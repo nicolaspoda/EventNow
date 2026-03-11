@@ -120,6 +120,24 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({ ticket, onClose, onDownload }
           </p>
         </div>
 
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">
+          Pour saisie manuelle (entrée) :
+        </p>
+        <div className="flex gap-2 mb-6">
+          <code className="flex-1 px-3 py-2 bg-neutral-100 dark:bg-neutral-800 rounded text-xs truncate" title={ticket.qrCode}>
+            {ticket.qrCode}
+          </code>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              navigator.clipboard.writeText(ticket.qrCode);
+            }}
+          >
+            Copier
+          </Button>
+        </div>
+
         <div className="flex gap-3">
           <Button variant="ghost" onClick={onClose} className="flex-1">
             Fermer

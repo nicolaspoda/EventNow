@@ -74,6 +74,8 @@ export class MessagesGateway
       }
       this.userSockets.get(userId)!.add(client.id);
 
+      client.join(`user:${userId}`);
+
       const conversations = await this.prisma.conversation.findMany({
         where: {
           members: {
@@ -250,5 +252,9 @@ export class MessagesGateway
       conversationId,
       userId,
     });
+  }
+
+  emitNewNotificationToUser(userId: string) {
+    this.server.to(`user:${userId}`).emit('newNotification', {});
   }
 }

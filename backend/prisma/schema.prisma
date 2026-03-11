@@ -91,6 +91,7 @@ model User {
   sentMessages            Message[]
   staffInvitationsSent    StaffInvitation[] @relation("InvitationSender")
   staffInvitationsReceived StaffInvitation[] @relation("InvitationReceiver")
+  eventStaffAssignments   EventStaff[]
 
   @@index([username])
   @@map("users")
@@ -121,6 +122,8 @@ model Event {
   ticketCategories TicketCategory[]
   reviews          Review[]
   participationRequests ParticipationRequest[]
+  staffAssignments EventStaff[]
+  staffInvitations StaffInvitation[]
 
   @@index([organizerId])
   @@index([eventDate])
@@ -363,6 +366,7 @@ model StaffInvitation {
   id          String                @id @default(uuid())
   email       String
   token       String                @unique
+  eventId     String                @map("event_id")
   invitedById String                @map("invited_by_id")
   acceptedById String?              @map("accepted_by_id")
   status      StaffInvitationStatus @default(PENDING)
@@ -370,12 +374,29 @@ model StaffInvitation {
   createdAt   DateTime              @default(now()) @map("created_at")
   updatedAt   DateTime              @updatedAt @map("updated_at")
 
-  invitedBy  User  @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Cascade)
-  acceptedBy User? @relation("InvitationReceiver", fields: [acceptedById], references: [id], onDelete: SetNull)
+  event       Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  invitedBy   User   @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Cascade)
+  acceptedBy  User?  @relation("InvitationReceiver", fields: [acceptedById], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([token])
+  @@index([eventId])
   @@index([invitedById])
   @@index([status])
   @@map("staff_invitations")
+}
+
+model EventStaff {
+  id        String   @id @default(uuid())
+  eventId   String   @map("event_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@map("event_staff")
 }

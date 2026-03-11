@@ -98,4 +98,15 @@ export class NotificationsService {
       })),
     });
   }
+
+  async deleteByTypeAndRelatedId(
+    userId: string,
+    type: string,
+    relatedId: string,
+  ): Promise<number> {
+    const result = await this.prisma.notification.deleteMany({
+      where: { userId, type, relatedId },
+    });
+    return result.count;
+  }
 }

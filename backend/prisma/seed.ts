@@ -80,6 +80,20 @@ async function main() {
     },
   });
 
+  await prisma.eventStaff.upsert({
+    where: {
+      eventId_userId: {
+        eventId: '00000000-0000-0000-0000-000000000001',
+        userId: staff.id,
+      },
+    },
+    create: {
+      eventId: '00000000-0000-0000-0000-000000000001',
+      userId: staff.id,
+    },
+    update: {},
+  });
+
   await prisma.event.upsert({
     where: { id: '00000000-0000-0000-0000-000000000002' },
     update: {

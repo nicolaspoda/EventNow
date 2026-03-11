@@ -174,6 +174,7 @@ export function NavbarLinks() {
               {organizerMenuOpen && (
                 <div className={dropdownPanelClass} role="menu">
                   <Link to="/dashboard/organizer" className={`${dropdownItemClass} rounded-t-lg`} role="menuitem" onClick={() => setOrganizerMenuOpen(false)}>Dashboard Pro</Link>
+                  <Link to="/dashboard/organizer/staff-invitations" className={dropdownItemClass} role="menuitem" onClick={() => setOrganizerMenuOpen(false)}>Inviter du staff</Link>
                   <Link to="/dashboard/organizer/refund-requests" className={`${dropdownItemClass} rounded-b-lg`} role="menuitem" onClick={() => setOrganizerMenuOpen(false)}>Remboursements</Link>
                 </div>
               )}

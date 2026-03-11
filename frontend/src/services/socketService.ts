@@ -10,6 +10,7 @@ interface SocketEvents {
   memberAdded: (data: { conversationId: string; userId: string }) => void;
   memberRemoved: (data: { conversationId: string; userId: string }) => void;
   userTyping: (data: { conversationId: string; userId: string; isTyping: boolean }) => void;
+  newNotification: () => void;
 }
 
 class SocketService {
@@ -85,6 +86,10 @@ class SocketService {
 
       this.socket.on('userTyping', (data: { conversationId: string; userId: string; isTyping: boolean }) => {
         this.emit('userTyping', data);
+      });
+
+      this.socket.on('newNotification', () => {
+        this.emit('newNotification', undefined);
       });
 
       setTimeout(() => {
