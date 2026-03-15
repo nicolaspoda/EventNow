@@ -1,4 +1,4 @@
-# EventNow - Plateforme de Billetterie Événementielle
+# EventNow - Plateforme d'événements et de billetterie
 
 [![CI Pipeline](https://github.com/nicolaspoda/EventNow/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolaspoda/EventNow/actions/workflows/ci.yml)
 
@@ -6,38 +6,107 @@
 
 ## Description
 
-EventNow est une plateforme de billetterie en ligne permettant la vente de billets pour des événements avec gestion avancée de la concurrence lors des pics de charge.
+EventNow est une **plateforme sociale centrée sur les événements** : billetterie en ligne pour les événements professionnels (concerts, conférences, festivals, etc.) et espace communautaire pour les événements sur invitation ou sur demande de participation. Au-delà de l’achat de billets, elle propose un **graphe social** (suivre des organisateurs ou d’autres utilisateurs, voir qui participe à quels événements), une **messagerie temps réel** (conversations directes, de groupe ou liées à un événement), des **avis entre participants** et des **profils publics**. La billetterie reste au cœur du produit (Stripe, QR codes, validation à l’entrée, gestion des stocks et de la concurrence), mais l’ensemble forme plutôt une plateforme « événements + communauté + billetterie » qu’une simple billetterie.
 
-### Fonctionnalités Principales
+### Fonctionnalités principales
 
-- Vente de billets en ligne avec gestion des stocks en temps réel
-- Gestion des rôles (Client, Organisateur, Staff)
-- Authentification JWT sécurisée + OAuth Google
-- Intégration paiement (Stripe)
-- Validation des billets par QR Code
-- **Dashboard Organisateur** avec analytics avancés (revenus, graphiques)
-- **Dashboard Client** pour événements communautaires (participants, simplicité)
-- Accessibilité RGAA Level AA
-- Sécurité OWASP Top 10
+**Billetterie & événements**
+- Création d’événements (titre, description, lieu, adresse, ville, CP, coordonnées GPS, image de couverture, galerie d’images)
+- Catégories de billets (nom, prix, stock initial / temps réel)
+- Recherche et filtres avancés (catégorie, type, date, lieu, ville), suggestions de recherche, liste des lieux/villes disponibles
+- Types d’événements : Professionnel (vente de billets) / Communautaire (demandes de participation)
 
-## Stack Technique
+**Authentification & utilisateurs**
+- Inscription Client et Inscription Organisateur (avec nom d’organisation)
+- Connexion JWT (email/mot de passe) + **OAuth Google** (échange de code via Redis)
+- Profil utilisateur (avatar, username, organisation), mise à jour du profil
+- **Profil public** consultable par d’autres utilisateurs (`/user/:userId/profile`)
+- Recherche d’utilisateurs (autocomplétion pour créer des conversations)
+
+**Paiement & commandes**
+- Paiement Stripe (création d’intention de paiement, confirmation)
+- Historique des commandes, annulation de commande
+- **Demande de remboursement** par le client ; **approbation / rejet** par l’organisateur (page Refund Requests)
+
+**Billets & entrée**
+- Billets avec **QR code** unique par place
+- **Validation des billets** par le staff (scan QR), historique des validations et statistiques par événement
+- Téléchargement du billet en **PDF**
+- Page « Mes billets » avec affichage QR et lien téléchargement
+
+**Staff**
+- **Invitations staff** par email (lien avec token) ; acceptation / refus ; expiration ; nettoyage automatique des staff des événements terminés (job planifié)
+- Pages Staff : scan QR, liste des validations, événements où l’utilisateur est staff
+
+**Événements communautaires**
+- **Demandes de participation** (message optionnel) ; l’organisateur accepte ou refuse
+- Liste des demandes en attente pour l’organisateur ; « Mes événements à venir » / « Mes événements participés » pour le client
+- **Avis sur les événements** (notes + commentaires) et **avis entre participants** (participant reviews) après un événement communautaire
+
+**Dashboards**
+- **Dashboard Organisateur** : vue d’ensemble (revenus, ventes), liste des événements, stats par événement (graphiques ventes/revenus), demandes de remboursement, invitations staff
+- **Dashboard Client** : vue d’ensemble, événements à venir / participés, **liste des participants** par événement communautaire
+- Tableau de bord unifié avec redirection selon le rôle (Organisateur / Client)
+
+**Messagerie & social**
+- **Messagerie temps réel** (Socket.io) : conversations **directes**, **groupe** et **événement** ; création de conversation, ajout de membres, modification (nom, image) ; envoi de messages ; liste des conversations avec indicateur de non-lus
+- **Suivi d’utilisateurs** (follow/unfollow), liste abonnés/abonnements, activation/désactivation des notifications pour un suivi
+- **Notifications in-app** (cloche, compteur non lus, marquer comme lu / tout marquer comme lu, suppression)
+
+**Contenu & médias**
+- **Upload d’images** (Cloudinary) : image unique ou galerie (jusqu’à 5 images), suppression par `publicId`
+- Géolocalisation : champs latitude/longitude, **carte des événements** (Leaflet), **autocomplétion d’adresse** (géocodage)
+
+**Emails & jobs planifiés**
+- Email de **confirmation de commande**
+- **Rappels par email** (J-7 et J-1) avant la date de l’événement
+- Notifications in-app associées (rappels, nouveaux événements des organisateurs suivis, etc.)
+- Job cron : nettoyage des affectations staff pour les événements terminés
+
+**Calendrier**
+- Page **Mon calendrier** (vue calendrier des événements à venir / participés)
+
+**Sécurité & qualité**
+- Rate limiting (global + plafond dédié paiement), Helmet, sanitization des entrées (XSS), CORS, CSRF (csurf)
+- Validation des données (class-validator), gestion d’erreurs centralisée, logs (Winston)
+- Accessibilité RGAA Level AA (tests axe, styles dédiés)
+- **Mode sombre** (ThemeContext) et design system cohérent
+
+## Stack technique
 
 ### Backend
-- **NestJS** - Framework Node.js + TypeScript
-- **PostgreSQL 15** - Base de données relationnelle
-- **Redis 7** - Cache et gestion des locks
-- **Prisma** - ORM TypeScript
-- **JWT** - Authentification
+- **NestJS** – Framework Node.js + TypeScript
+- **PostgreSQL 15** – Base de données (Prisma)
+- **Redis 7** – Cache, locks (réservations), codes OAuth Google
+- **JWT** – Authentification ; Passport (JWT + Google OAuth 2.0)
+- **Stripe** – Paiement (payment intents)
+- **Socket.io** – Messagerie temps réel
+- **Cloudinary** – Hébergement d’images (upload)
+- **Nodemailer** + Handlebars – Emails (confirmation commande, rappels J-7 / J-1)
+- **PDFKit** – Génération des billets PDF
+- **Winston** – Logs ; **@nestjs/schedule** – Jobs cron
+- **Swagger** – Documentation API
+- **Helmet, Throttler, class-validator, sanitize-html, csurf** – Sécurité
 
 ### Frontend
-- **React 18** + TypeScript
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **React Router** - Navigation
+- **React 19** + TypeScript
+- **Vite 7** – Build et dev
+- **Tailwind CSS** – Styles ; design system et thème sombre
+- **React Router 7** – Navigation
+- **Axios** – Appels API
+- **Socket.io-client** – Messagerie temps réel
+- **Leaflet / React-Leaflet** – Carte des événements
+- **Chart.js / react-chartjs-2** – Graphiques dashboards
+- **react-big-calendar** – Vue calendrier
+- **html5-qrcode** – Scan des billets (staff)
+- **qrcode** – Affichage QR des billets
+- **date-fns** – Dates
+- **@axe-core/react** – Tests d’accessibilité
+- **Playwright** – Tests E2E ; **Vitest** – Tests unitaires
 
 ### Infrastructure
-- **Docker** + Docker Compose
-- **GitHub Actions** - CI/CD
+- **Docker** + Docker Compose (frontend, backend, PostgreSQL, Redis)
+- **GitHub Actions** – CI/CD
 
 ## Prérequis
 
@@ -80,27 +149,48 @@ Cela crée un compte organisateur et 4 événements à venir. Compte : `organize
 - **Frontend** : http://localhost:5173
 - **Backend API** : http://localhost:3000
 
-## Structure du Projet
+## Structure du projet
 ```
 EventNow/
-├── backend/              # API NestJS
+├── backend/                    # API NestJS
 │   ├── src/
-│   │   ├── auth/        # Module authentification
-│   │   ├── events/      # Module événements
-│   │   ├── bookings/    # Module réservations
-│   │   ├── orders/      # Module commandes
-│   │   ├── dashboard/   # Module dashboards (NEW)
-│   │   └── security/    # Module sécurité OWASP
-│   └── prisma/          # Schéma base de données
-├── frontend/            # Application React
+│   │   ├── auth/               # Inscription, login, JWT, OAuth Google, profil, recherche users
+│   │   ├── events/             # CRUD événements, recherche, filtres, catégories, lieux/villes
+│   │   ├── bookings/           # Réservations (avec locks Redis)
+│   │   ├── orders/             # Commandes, paiement Stripe, remboursements
+│   │   ├── tickets/            # QR codes, validation, PDF, stats validations, staff events
+│   │   ├── payment/            # Intégration Stripe
+│   │   ├── dashboard/          # Vue organisateur (overview, events, stats) et client (overview, events, participants)
+│   │   ├── upload/             # Upload / suppression d’images (Cloudinary)
+│   │   ├── mail/               # Envoi d’emails (confirmation, rappels J-7 / J-1)
+│   │   ├── jobs/               # Cron : rappels email, nettoyage staff événements terminés
+│   │   ├── reviews/            # Avis sur les événements
+│   │   ├── participant-reviews/ # Avis entre participants (événements communautaires)
+│   │   ├── participation-requests/ # Demandes de participation (communautaire)
+│   │   ├── notifications/     # Notifications in-app (CRUD, marquer lu, compteur)
+│   │   ├── follows/            # Follow / unfollow, abonnés, abonnements, notifications
+│   │   ├── messages/           # Conversations (direct, groupe, événement), Socket.io gateway
+│   │   ├── staff-invitations/  # Invitations staff par email, acceptation, expiration
+│   │   ├── security/           # Helmet, rate limit, chiffrement
+│   │   ├── redis/              # Service Redis (locks, OAuth codes)
+│   │   ├── prisma/             # Service Prisma
+│   │   ├── logger/             # Winston
+│   │   └── common/             # Pipes, guards, interceptors, filters, decorators
+│   └── prisma/                 # Schéma, migrations, seed
+├── frontend/
 │   └── src/
-│       ├── components/  # Composants réutilisables
-│       │   ├── dashboard/  # Composants dashboard (NEW)
-│       │   └── events/     # Composants événements (NEW)
-│       ├── pages/       # Pages de l'app
-│       └── services/    # Appels API
-├── docs/                # Documentation
-└── docker-compose.yml   # Configuration Docker
+│       ├── components/         # UI, events, dashboard, messages, staff, reviews, etc.
+│       ├── pages/              # Toutes les routes (landing, auth, events, dashboards, messages, profile…)
+│       ├── services/           # API (auth, events, orders, dashboard, messages, notifications…)
+│       ├── contexts/           # ThemeContext (dark mode)
+│       ├── hooks/              # useAuth, useSocket, useEvents…
+│       ├── utils/              # AuthContext, dates, qrCode, cloudinary, accessibilité
+│       ├── types/              # Types TypeScript
+│       ├── config/             # Config carte, etc.
+│       ├── styles/             # design-system, accessibility, animations, map
+│       └── e2e/                # Tests Playwright (specs, flows)
+├── docs/                       # Documentation
+└── docker-compose.yml
 ```
 
 ## Commandes Docker (usage classique)
