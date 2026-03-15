@@ -301,6 +301,13 @@ export class EventsService {
           ? event.eventDate
           : null;
 
+    const endDate =
+      event.endDate instanceof Date
+        ? event.endDate.toISOString()
+        : typeof event.endDate === 'string'
+          ? event.endDate
+          : null;
+
     return {
       id: event.id,
       title: event.title,
@@ -315,6 +322,7 @@ export class EventsService {
       imageUrl: event.imageUrl,
       imagePublicId: event.imagePublicId,
       eventDate: eventDate ?? undefined,
+      endDate: endDate ?? undefined,
       organizerId: event.organizerId,
       type: event.type,
       category: event.category,
