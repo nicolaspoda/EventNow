@@ -32,10 +32,6 @@ export const StaffScanPage: React.FC = () => {
           navigator.vibrate([100, 50, 100]);
         }
       }
-
-      if (response.valid) {
-        setTimeout(() => setResult(null), 3000);
-      }
     } catch {
       setResult({
         valid: false,

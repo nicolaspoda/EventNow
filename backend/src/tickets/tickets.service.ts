@@ -54,7 +54,7 @@ export class TicketsService {
       });
     }
 
-    const timestamp = new Date();
+    const timestamp = new Date().toISOString();
 
     if (!ticket) {
       if (process.env.NODE_ENV !== 'production') {
@@ -97,7 +97,7 @@ export class TicketsService {
         ticket: {
           event: ticket.ticketCategory.event.title,
           category: ticket.ticketCategory.name,
-          validated_at: ticket.validatedAt,
+          validated_at: ticket.validatedAt?.toISOString?.() ?? timestamp,
         },
         timestamp,
       };
@@ -166,6 +166,7 @@ export class TicketsService {
       },
     });
 
+    const validatedAt = validatedTicket.validatedAt ?? new Date();
     return {
       valid: true,
       reason: 'SUCCESS',
@@ -176,9 +177,12 @@ export class TicketsService {
         category: validatedTicket.ticketCategory.name,
         holder_email: validatedTicket.order.user.email,
         event_date: validatedTicket.ticketCategory.event.eventDate,
-        validated_at: validatedTicket.validatedAt,
+        validated_at:
+          validatedAt instanceof Date
+            ? validatedAt.toISOString()
+            : String(validatedAt),
       },
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
   }
 

@@ -23,23 +23,42 @@ export const ValidationResult: React.FC<ValidationResultProps> = ({
 }) => {
   const isValid = result.valid;
 
+  // Date de validation : billet > timestamp réponse > maintenant (évite "Date non renseignée")
+  const validatedAtRaw =
+    (isValid && result.ticket?.validated_at) ||
+    result.timestamp ||
+    new Date().toISOString();
+  const validatedAtLabel = safeFormat(
+    validatedAtRaw,
+    "d MMM yyyy 'à' HH'h'mm"
+  );
+  const responseTimeLabel = safeFormat(
+    result.timestamp || new Date().toISOString(),
+    "d MMM yyyy 'à' HH'h'mm"
+  );
+
   return (
     <div
       className={`p-6 rounded-lg border-4 ${
         isValid
-          ? 'bg-green-50 border-green-500'
-          : 'bg-red-50 border-red-500'
+          ? 'bg-green-50 dark:bg-neutral-800 border-green-500 dark:border-green-400'
+          : 'bg-red-50 dark:bg-neutral-800 border-red-500 dark:border-red-400'
       }`}
       role="status"
       aria-live="polite"
     >
       <div className="text-center mb-4">
-        <div className="text-6xl mb-2" aria-hidden="true">
+        <div
+          className={`text-6xl mb-2 ${isValid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+          aria-hidden="true"
+        >
           {isValid ? '✓' : '✕'}
         </div>
         <h3
           className={`text-2xl font-bold ${
-            isValid ? 'text-green-800' : 'text-red-800'
+            isValid
+              ? 'text-green-800 dark:text-green-200'
+              : 'text-red-800 dark:text-red-200'
           }`}
         >
           {result.message}
@@ -47,47 +66,40 @@ export const ValidationResult: React.FC<ValidationResultProps> = ({
       </div>
 
       {isValid && result.ticket && (
-        <div className="bg-white rounded p-4 space-y-2">
+        <div className="bg-white dark:bg-neutral-900 rounded p-4 space-y-2 text-neutral-900 dark:text-neutral-100">
           <div className="flex justify-between">
-            <span className="text-gray-600">Événement :</span>
+            <span className="text-gray-600 dark:text-neutral-400">Événement :</span>
             <span className="font-semibold">{result.ticket.event}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-600">Catégorie :</span>
+            <span className="text-gray-600 dark:text-neutral-400">Catégorie :</span>
             <span className="font-semibold">{result.ticket.category}</span>
           </div>
           {result.ticket.holder_email && (
             <div className="flex justify-between">
-              <span className="text-gray-600">Titulaire :</span>
+              <span className="text-gray-600 dark:text-neutral-400">Titulaire :</span>
               <span className="font-semibold text-sm">
                 {result.ticket.holder_email}
               </span>
             </div>
           )}
-          {result.ticket.validated_at && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Validé à :</span>
-              <span className="font-semibold">
-                {safeFormat(
-                  result.ticket.validated_at,
-                  "HH'h'mm"
-                )}
-              </span>
-            </div>
-          )}
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-neutral-400">Validé le :</span>
+            <span className="font-semibold">{validatedAtLabel}</span>
+          </div>
         </div>
       )}
 
       {!isValid && (
-        <div className="mt-4 p-3 bg-white rounded">
-          <p className="text-sm text-gray-700">
+        <div className="mt-4 p-3 bg-white dark:bg-neutral-900 rounded text-neutral-900 dark:text-neutral-100">
+          <p className="text-sm text-gray-700 dark:text-neutral-300">
             <strong>Raison :</strong> {getReasonLabel(result.reason)}
           </p>
         </div>
       )}
 
-      <p className="text-xs text-center text-gray-500 mt-4">
-        {safeFormat(result.timestamp, "d MMM yyyy 'à' HH'h'mm")}
+      <p className="text-xs text-center text-gray-500 dark:text-neutral-400 mt-4">
+        {responseTimeLabel}
       </p>
     </div>
   );
