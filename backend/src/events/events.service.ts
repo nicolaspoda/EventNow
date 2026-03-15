@@ -40,11 +40,27 @@ export class EventsService {
     }
 
     const eventDate = new Date(createEventDto.event_date);
+    const endDate = createEventDto.end_date
+      ? new Date(createEventDto.end_date)
+      : null;
     const isProduction = process.env.NODE_ENV === 'production';
     if (isProduction && eventDate <= new Date()) {
       throw new BadRequestException(
         "La date de l'événement doit être dans le futur",
       );
+    }
+
+    if (requestedType === 'PROFESSIONAL') {
+      if (!endDate) {
+        throw new BadRequestException(
+          "L'heure de fin est obligatoire pour les événements professionnels",
+        );
+      }
+      if (endDate <= eventDate) {
+        throw new BadRequestException(
+          "L'heure de fin doit être postérieure à l'heure de début",
+        );
+      }
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
@@ -62,6 +78,7 @@ export class EventsService {
           imageUrl: createEventDto.image_url,
           imagePublicId: createEventDto.image_public_id,
           eventDate: eventDate,
+          endDate: endDate,
           organizerId: userId,
           type:
             createEventDto.type === 'COMMUNITY'
@@ -328,13 +345,32 @@ export class EventsService {
       );
     }
 
-    if (updateEventDto.event_date) {
-      const eventDate = new Date(updateEventDto.event_date);
+    if (updateEventDto.event_date || updateEventDto.end_date) {
+      const newStart = updateEventDto.event_date
+        ? new Date(updateEventDto.event_date)
+        : event.eventDate;
+      const newEnd = updateEventDto.end_date
+        ? new Date(updateEventDto.end_date)
+        : event.endDate ?? null;
+
       const isProduction = process.env.NODE_ENV === 'production';
-      if (isProduction && eventDate <= new Date()) {
+      if (isProduction && newStart <= new Date()) {
         throw new BadRequestException(
           "La date de l'événement doit être dans le futur",
         );
+      }
+
+      if (event.type === 'PROFESSIONAL') {
+        if (!newEnd) {
+          throw new BadRequestException(
+            "L'heure de fin est obligatoire pour les événements professionnels",
+          );
+        }
+        if (newEnd <= newStart) {
+          throw new BadRequestException(
+            "L'heure de fin doit être postérieure à l'heure de début",
+          );
+        }
       }
     }
 
@@ -353,7 +389,18 @@ export class EventsService {
     return this.prisma.$transaction(async (tx) => {
       let soldByCategoryIndex: number[] = [];
 
-      if (updateEventDto.ticket_categories) {
+      const paidTicketsCount = await tx.ticket.count({
+        where: {
+          ticketCategory: { eventId: id },
+          order: { status: OrderStatus.PAID },
+        },
+      });
+      const hasPaidTickets = paidTicketsCount > 0;
+      if (process.env.NODE_ENV !== 'production' && updateEventDto.ticket_categories) {
+        console.log('[events.update] ticket_categories envoyées, billets payants:', paidTicketsCount, '→ on ne supprime pas les catégories:', hasPaidTickets);
+      }
+
+      if (updateEventDto.ticket_categories && !hasPaidTickets) {
         const existingCategories = await tx.ticketCategory.findMany({
           where: { eventId: id },
           orderBy: { createdAt: 'asc' },
@@ -367,7 +414,6 @@ export class EventsService {
                 by: ['ticketCategoryId'],
                 where: {
                   ticketCategoryId: { in: categoryIds },
-                  order: { status: OrderStatus.PAID },
                 },
                 _count: { id: true },
               })
@@ -377,7 +423,9 @@ export class EventsService {
           soldCounts.map((s) => [s.ticketCategoryId, s._count.id]),
         );
         soldByCategoryIndex = categoryIds.map((id) => soldMap.get(id) ?? 0);
+      }
 
+      if (updateEventDto.ticket_categories && !hasPaidTickets) {
         await tx.ticketCategory.deleteMany({
           where: { eventId: id },
         });
@@ -418,8 +466,11 @@ export class EventsService {
           ...(updateEventDto.event_date && {
             eventDate: new Date(updateEventDto.event_date),
           }),
+          ...(updateEventDto.end_date && {
+            endDate: new Date(updateEventDto.end_date),
+          }),
           ...(updateEventDto.category && { category: updateEventDto.category }),
-          ...(updateEventDto.ticket_categories && {
+          ...(updateEventDto.ticket_categories && !hasPaidTickets && {
             ticketCategories: {
               create: updateEventDto.ticket_categories.map((category, index) => {
                 const initial = category.initial_stock;
@@ -502,6 +553,19 @@ export class EventsService {
       );
     }
 
+    // Supprimer les notifications d'invitation staff pour cet événement
+    const staffInvitations = await this.prisma.staffInvitation.findMany({
+      where: { eventId: id },
+      select: { token: true },
+    });
+    const tokens = staffInvitations.map((inv) => inv.token);
+    if (tokens.length > 0) {
+      await this.notificationsService.deleteByTypeAndRelatedIds(
+        'STAFF_INVITATION',
+        tokens,
+      );
+    }
+
     await this.prisma.event.delete({
       where: { id },
     });
@@ -524,12 +588,15 @@ export class EventsService {
       followedOnly,
       friendsOnly,
       sortBy = SortBy.DATE_ASC,
-      page = 1,
-      limit = 20,
+      page: pageParam = 1,
+      limit: limitParam = 20,
       latitude: userLat,
       longitude: userLon,
       radiusKm,
     } = searchDto;
+
+    const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
+    const limit = Math.min(100, Math.max(1, Math.floor(Number(limitParam)) || 20));
 
     const useDistancePath =
       userLat != null &&
@@ -595,7 +662,7 @@ export class EventsService {
       });
     }
 
-    if (availableOnly) {
+    if (availableOnly === true) {
       where.AND.push({
         ticketCategories: {
           some: { currentStock: { gt: 0 } },
@@ -603,18 +670,18 @@ export class EventsService {
       });
     }
 
-    if (myEvents && userId) {
+    if (myEvents === true && userId) {
       where.AND.push({ organizerId: userId });
     }
 
-    if (myEvents && !userId) {
+    if (myEvents === true && !userId) {
       return {
         events: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
       };
     }
 
-    if (followedOnly && userId) {
+    if (followedOnly === true && userId) {
       const followingIds = await this.followsService.getFollowingIds(userId);
       if (followingIds.length === 0) {
         return {
@@ -625,14 +692,14 @@ export class EventsService {
       where.AND.push({ organizerId: { in: followingIds } });
     }
 
-    if (followedOnly && !userId) {
+    if (followedOnly === true && !userId) {
       return {
         events: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
       };
     }
 
-    if (friendsOnly && userId) {
+    if (friendsOnly === true && userId) {
       const friendIds = await this.followsService.getFriendIds(userId);
       if (friendIds.length === 0) {
         return {
@@ -643,7 +710,7 @@ export class EventsService {
       where.AND.push({ organizerId: { in: friendIds } });
     }
 
-    if (friendsOnly && !userId) {
+    if (friendsOnly === true && !userId) {
       return {
         events: [],
         pagination: { page, limit, total: 0, totalPages: 0 },

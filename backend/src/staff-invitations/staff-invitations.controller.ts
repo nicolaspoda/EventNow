@@ -40,7 +40,7 @@ export class StaffInvitationsController {
   }
 
   @Get('pending')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   async getPendingInvitations(@CurrentUser() user: { email: string }) {
     return this.staffInvitationsService.getPendingInvitationsForEmail(
       user.email,

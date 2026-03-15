@@ -20,7 +20,7 @@ describe('TicketsService', () => {
   const mockStaff = {
     id: 'staff-1',
     email: 'staff@test.com',
-    role: 'STAFF',
+    role: 'CLIENT',
   };
 
   const mockTicket = {
@@ -140,17 +140,17 @@ describe('TicketsService', () => {
   });
 
   describe('getUserTickets', () => {
-    it('should return user tickets', async () => {
+    it('should return only non-validated tickets for events not ended', async () => {
       mockPrismaService.ticket.findMany.mockResolvedValue([mockTicket]);
 
       const result = await service.getUserTickets('user-1');
 
       expect(result).toEqual([mockTicket]);
-      expect(mockPrismaService.ticket.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { order: { userId: 'user-1' } },
-        }),
-      );
+      const call = mockPrismaService.ticket.findMany.mock.calls[0][0];
+      expect(call.where.order).toEqual({ userId: 'user-1', status: 'PAID' });
+      expect(call.where.validatedAt).toBeNull();
+      expect(call.where.OR).toBeDefined();
+      expect(Array.isArray(call.where.OR)).toBe(true);
     });
   });
 

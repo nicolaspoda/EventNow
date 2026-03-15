@@ -50,6 +50,10 @@ export const authService = {
         // Ignore errors
       }
     }
+    this.clearSession();
+  },
+
+  clearSession() {
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('refreshToken');
     sessionStorage.removeItem('user');

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { profileService } from '../services/profile.service';
@@ -31,6 +32,7 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const isOwnProfile = !userIdFromRoute || (user && userIdFromRoute === user.id);
 
@@ -133,6 +135,7 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    setShowLogoutConfirm(false);
     await logout();
     navigate('/login');
   };
@@ -461,7 +464,7 @@ export const ProfilePage: React.FC = () => {
               <Button
                 variant="danger"
                 size="sm"
-                onClick={handleLogout}
+                onClick={() => setShowLogoutConfirm(true)}
                 leftIcon={
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -472,6 +475,49 @@ export const ProfilePage: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {showLogoutConfirm &&
+            createPortal(
+              <div
+                className="fixed inset-0 flex items-center justify-center bg-black/50 z-[100]"
+                style={{ top: 0, left: 0, right: 0, bottom: 0 }}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="profile-logout-dialog-title"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                <div
+                  className="bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-neutral-200 dark:border-neutral-700"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h2 id="profile-logout-dialog-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                    Déconnexion
+                  </h2>
+                  <p className="text-neutral-600 dark:text-neutral-300 text-sm mb-5">
+                    Êtes-vous sûr de vouloir vous déconnecter ?
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => void handleLogout()}
+                      className="flex-1"
+                    >
+                      Oui
+                    </Button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
         </div>
       </div>
     </div>

@@ -25,9 +25,8 @@ html {
   background-color: var(--bg-primary);
 }
 
-/* Le contenu principal hérite du fond (évite fond blanc en dark mode) */
+/* Le contenu principal : pas de min-height pour éviter scroll inutile (navbar + 100vh dépassait l'écran) */
 #main-content {
-  min-height: 100vh;
   background-color: transparent;
 }
 
@@ -63,4 +62,13 @@ html {
 
 .skip-link:focus {
   top: 0;
+}
+
+/* Masquer la barre de défilement tout en gardant le scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

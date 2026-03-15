@@ -166,6 +166,7 @@ test.describe('Flux Client (1 fenêtre)', () => {
 
     // —— Déconnexion
     await page.getByRole('button', { name: /déconnexion/i }).click();
+    await page.getByRole('button', { name: /^oui$/i }).click();
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByRole('link', { name: /connexion|login/i })).toBeVisible();
   });
@@ -267,6 +268,7 @@ test.describe('Flux Organisateur (1 fenêtre)', () => {
 
     // —— Déconnexion
     await page.getByRole('button', { name: /déconnexion/i }).click();
+    await page.getByRole('button', { name: /^oui$/i }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 });
@@ -307,6 +309,7 @@ test.describe('Flux Staff (1 fenêtre)', () => {
 
     // —— Déconnexion
     await page.getByRole('button', { name: /déconnexion/i }).click();
+    await page.getByRole('button', { name: /^oui$/i }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 });

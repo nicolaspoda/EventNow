@@ -35,6 +35,22 @@ export class NotificationsService {
     });
   }
 
+  async delete(notificationId: string, userId: string) {
+    const notif = await this.prisma.notification.findUnique({
+      where: { id: notificationId },
+    });
+    if (!notif) {
+      throw new NotFoundException('Notification introuvable');
+    }
+    if (notif.userId !== userId) {
+      throw new ForbiddenException('Accès refusé');
+    }
+    await this.prisma.notification.delete({
+      where: { id: notificationId },
+    });
+    return { success: true };
+  }
+
   async markAllAsRead(userId: string) {
     await this.prisma.notification.updateMany({
       where: { userId },
@@ -106,6 +122,21 @@ export class NotificationsService {
   ): Promise<number> {
     const result = await this.prisma.notification.deleteMany({
       where: { userId, type, relatedId },
+    });
+    return result.count;
+  }
+
+  /**
+   * Supprime toutes les notifications d'un type donné dont relatedId est dans la liste.
+   * Utile pour supprimer les notifications d'invitation staff lors de la suppression d'un événement.
+   */
+  async deleteByTypeAndRelatedIds(
+    type: string,
+    relatedIds: string[],
+  ): Promise<number> {
+    if (relatedIds.length === 0) return 0;
+    const result = await this.prisma.notification.deleteMany({
+      where: { type, relatedId: { in: relatedIds } },
     });
     return result.count;
   }

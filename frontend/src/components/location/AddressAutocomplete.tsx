@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId } from 'react';
 import { geocodingService, type AddressSuggestion } from '../../services/geocodingService';
 import { GEOCODING_CONFIG } from '../../config/map.config';
 
@@ -10,6 +10,8 @@ interface AddressAutocompleteProps {
   placeholder?: string;
   required?: boolean;
   error?: string;
+  compact?: boolean;
+  id?: string;
 }
 
 export function AddressAutocomplete({
@@ -20,7 +22,11 @@ export function AddressAutocomplete({
   placeholder = 'Commencez à taper une adresse...',
   required = false,
   error,
+  compact = false,
+  id: idProp,
 }: AddressAutocompleteProps) {
+  const generatedId = useId();
+  const inputId = idProp ?? `address-autocomplete-${generatedId.replace(/:/g, '')}`;
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,8 +86,8 @@ export function AddressAutocomplete({
   return (
     <div ref={wrapperRef} className="relative">
       <label
-        htmlFor="address-autocomplete"
-        className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2"
+        htmlFor={inputId}
+        className={`block text-sm font-medium text-neutral-700 dark:text-neutral-300 ${compact ? 'mb-1' : 'mb-2'}`}
       >
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
@@ -90,13 +96,13 @@ export function AddressAutocomplete({
       <div className="relative">
         <input
           ref={inputRef}
-          id="address-autocomplete"
+          id={inputId}
           type="text"
           value={value}
           onChange={handleInputChange}
           placeholder={placeholder}
           required={required}
-          className={`w-full px-4 py-3 rounded-xl border ${
+          className={`w-full px-4 rounded-xl border ${compact ? 'py-2' : 'py-3'} ${
             error
               ? 'border-red-500 focus:ring-red-500'
               : 'border-neutral-300 dark:border-neutral-600 focus:ring-primary-500'

@@ -17,7 +17,6 @@ datasource db {
 enum Role {
   CLIENT
   ORGANIZER
-  STAFF
 }
 
 enum BookingStatus {
@@ -112,6 +111,7 @@ model Event {
   imagePublicId String?      @map("image_public_id")
   galleryImages Json?        @map("gallery_images")
   eventDate   DateTime      @map("event_date")
+  endDate     DateTime?     @map("end_date")
   organizerId String        @map("organizer_id")
   type        EventType     @default(PROFESSIONAL)
   category    EventCategory @default(OTHER)

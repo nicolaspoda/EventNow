@@ -5,7 +5,7 @@ export interface TicketCategory {
   price: number | string;
   initialStock: number;
   currentStock: number;
-  event?: { id: string; title: string; eventDate: string; location: string };
+  event?: { id: string; title: string; eventDate: string; endDate?: string | null; location: string };
 }
 
 export interface Organizer {
@@ -28,6 +28,7 @@ export interface Event {
   distance?: number;
   imageUrl?: string;
   eventDate: string;
+  endDate?: string | null;
   organizerId: string;
   type?: EventTypeCreate;
   ticketCategories: TicketCategory[];
@@ -66,6 +67,7 @@ export interface CreateEventPayload {
   image_url?: string;
   image_public_id?: string;
   event_date: string;
+  end_date?: string;
   type?: EventTypeCreate;
   ticket_categories: CreateTicketCategoryPayload[];
 }
@@ -83,5 +85,6 @@ export interface UpdateEventPayload {
   image_url?: string;
   image_public_id?: string;
   event_date?: string;
+  end_date?: string;
   ticket_categories?: CreateTicketCategoryPayload[];
 }

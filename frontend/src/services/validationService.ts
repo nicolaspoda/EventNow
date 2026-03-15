@@ -27,7 +27,7 @@ export interface ValidationItem {
 export const validationService = {
   validateTicket: async (qrCode: string): Promise<ValidationResponse> => {
     const response = await api.post<ValidationResponse>('/tickets/validate', {
-      qrCode,
+      qrCode: qrCode.trim(),
     });
     return response.data;
   },

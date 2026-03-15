@@ -17,8 +17,6 @@ export function DashboardRedirectPage() {
       return <Navigate to="/dashboard/organizer" replace />;
     case 'CLIENT':
       return <Navigate to="/dashboard/client" replace />;
-    case 'STAFF':
-      return <Navigate to="/staff/scan" replace />;
     default:
       return <Navigate to="/events" replace />;
   }

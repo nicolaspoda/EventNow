@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EventType } from '@prisma/client';
 import { CreateStaffInvitationDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthService } from '../auth/auth.service';
@@ -85,6 +86,12 @@ export class StaffInvitationsService {
     if (!event || event.organizerId !== invitedById) {
       throw new BadRequestException(
         'Événement introuvable ou vous n\'en êtes pas l\'organisateur',
+      );
+    }
+
+    if (event.type !== EventType.PROFESSIONAL) {
+      throw new BadRequestException(
+        'Seuls les événements professionnels peuvent avoir du staff',
       );
     }
 
@@ -245,10 +252,6 @@ export class StaffInvitationsService {
         this.prisma.eventStaff.create({
           data: { eventId: invitation.eventId, userId },
         }),
-        this.prisma.user.update({
-          where: { id: userId },
-          data: { role: 'STAFF' },
-        }),
         this.prisma.staffInvitation.update({
           where: { id: invitation.id },
           data: {
@@ -257,6 +260,12 @@ export class StaffInvitationsService {
           },
         }),
       ]);
+
+      await this.notificationsService.deleteByTypeAndRelatedId(
+        userId,
+        'STAFF_INVITATION',
+        token,
+      );
 
       const updatedUser = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -307,6 +316,12 @@ export class StaffInvitationsService {
         where: { id: invitation.id },
         data: { status: 'DECLINED' },
       });
+
+      await this.notificationsService.deleteByTypeAndRelatedId(
+        userId,
+        'STAFF_INVITATION',
+        invitation.token,
+      );
 
       return { message: 'Invitation refusée' };
     } catch (err) {

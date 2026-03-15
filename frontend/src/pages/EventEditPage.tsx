@@ -48,6 +48,7 @@ export function EventEditPage() {
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
   const [eventDate, setEventDate] = useState('');
+  const [eventEndDate, setEventEndDate] = useState('');
   const [categories, setCategories] = useState<CreateTicketCategoryPayload[]>([]);
   const [soldCountByIndex, setSoldCountByIndex] = useState<number[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -76,6 +77,7 @@ export function EventEditPage() {
         setImageUrl(ev.imageUrl || '');
         setImagePublicId('');
         setEventDate(toDateTimeLocal(ev.eventDate));
+        setEventEndDate(ev.endDate ? toDateTimeLocal(ev.endDate) : '');
         setCategories(
           ev.ticketCategories.map((c) => ({
             name: c.name,
@@ -152,6 +154,11 @@ export function EventEditPage() {
     if (!city.trim()) return;
     if (!eventDate) return;
 
+    if (event?.type === 'PROFESSIONAL') {
+      if (!eventEndDate) return;
+      if (new Date(eventEndDate) <= new Date(eventDate)) return;
+    }
+
     const validCategories = categories.filter(
       (c) => c.name.trim() && c.initial_stock >= 1 && c.price >= 0,
     );
@@ -170,6 +177,9 @@ export function EventEditPage() {
       image_url: imageUrl.trim() || undefined,
       ...(imagePublicId && { image_public_id: imagePublicId }),
       event_date: toISOString(eventDate),
+      ...(event?.type === 'PROFESSIONAL' && eventEndDate
+        ? { end_date: toISOString(eventEndDate) }
+        : {}),
       ticket_categories: validCategories.map((c) => ({
         name: c.name.trim(),
         description: c.description?.trim() || undefined,
@@ -332,12 +342,22 @@ export function EventEditPage() {
 
         <FormField
           id="event-date"
-          label="Date et heure"
+          label="Date et heure de début"
           type="datetime-local"
           value={eventDate}
           onChange={(e) => setEventDate(e.target.value)}
           required
         />
+        {event?.type === 'PROFESSIONAL' && (
+          <FormField
+            id="event-end-date"
+            label="Heure de fin"
+            type="datetime-local"
+            value={eventEndDate}
+            onChange={(e) => setEventEndDate(e.target.value)}
+            required
+          />
+        )}
 
         <fieldset className="space-y-4">
           <legend className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">

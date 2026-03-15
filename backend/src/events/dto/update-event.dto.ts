@@ -60,6 +60,10 @@ export class UpdateEventDto {
   @IsOptional()
   event_date?: string;
 
+  @IsDateString()
+  @IsOptional()
+  end_date?: string;
+
   @IsEnum(EventCategory)
   @IsOptional()
   category?: EventCategory;

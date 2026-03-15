@@ -6,6 +6,7 @@ import { staffInvitationsService } from '../services/staffInvitationsService';
 import { authService } from '../services/auth.service';
 import socketService from '../services/socketService';
 import { useAuth } from '../utils/useAuth';
+import { STAFF_STATUS_CHANGED_EVENT } from '../hooks/useIsStaff';
 import type { Notification } from '../types/notification.types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -16,6 +17,7 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [staffActionLoading, setStaffActionLoading] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { setUser } = useAuth();
@@ -187,15 +189,19 @@ export function NotificationBell() {
     return formatDistanceToNow(date, { addSuffix: true, locale: fr });
   };
 
+  const removeNotificationFromList = (notificationId: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
   const handleStaffInvitationAccept = async (notification: Notification, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!notification.relatedId) return;
     setStaffActionLoading(notification.id);
     try {
       const response = await staffInvitationsService.accept(notification.relatedId);
-      await handleMarkAsRead(notification.id);
-      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      // Le backend supprime déjà la notification à l'acceptation, pas besoin de markAsRead
+      removeNotificationFromList(notification.id);
       if (response.accessToken && response.refreshToken && response.user) {
         authService.saveAuthData({
           accessToken: response.accessToken,
@@ -203,13 +209,29 @@ export function NotificationBell() {
           user: response.user,
         });
         setUser(response.user);
+        window.dispatchEvent(new CustomEvent(STAFF_STATUS_CHANGED_EVENT));
         setIsOpen(false);
         navigate('/staff/scan');
       } else {
+        window.dispatchEvent(new CustomEvent(STAFF_STATUS_CHANGED_EVENT));
         window.location.reload();
       }
-    } catch (err) {
-      console.error('Erreur lors de l\'acceptation de l\'invitation staff:', err);
+    } catch (err: unknown) {
+      const status = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (status === 404 || status === 400) {
+        try {
+          await notificationService.delete(notification.id);
+        } catch {
+          // ignore (ex. backend pas redémarré = route DELETE absente)
+        }
+        removeNotificationFromList(notification.id);
+        setFeedbackMessage('Cette invitation n\'est plus valide.');
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      } else {
+        console.error('Erreur lors de l\'acceptation de l\'invitation staff:', err);
+      }
     } finally {
       setStaffActionLoading(null);
     }
@@ -222,11 +244,24 @@ export function NotificationBell() {
     setStaffActionLoading(notification.id);
     try {
       await staffInvitationsService.decline(notification.relatedId);
-      await handleMarkAsRead(notification.id);
-      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Erreur lors du refus de l\'invitation staff:', err);
+      // Le backend supprime déjà la notification au refus, pas besoin de markAsRead
+      removeNotificationFromList(notification.id);
+    } catch (err: unknown) {
+      const status = err && typeof err === 'object' && 'response' in err
+        ? (err as { response?: { status?: number } }).response?.status
+        : undefined;
+      if (status === 404 || status === 400) {
+        try {
+          await notificationService.delete(notification.id);
+        } catch {
+          // ignore (ex. backend pas redémarré = route DELETE absente)
+        }
+        removeNotificationFromList(notification.id);
+        setFeedbackMessage('Cette invitation n\'est plus valide.');
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      } else {
+        console.error('Erreur lors du refus de l\'invitation staff:', err);
+      }
     } finally {
       setStaffActionLoading(null);
     }
@@ -280,6 +315,12 @@ export function NotificationBell() {
               </button>
             )}
           </div>
+
+          {feedbackMessage && (
+            <div className="px-4 py-2 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border-b border-neutral-200 dark:border-neutral-700">
+              {feedbackMessage}
+            </div>
+          )}
 
           <div className="overflow-y-auto flex-1">
             {isLoading ? (

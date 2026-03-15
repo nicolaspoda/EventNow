@@ -16,20 +16,24 @@ export class TicketsService {
     this.prisma = prisma;
   }
 
+  /** Normalise le code QR pour éviter les échecs dus au copier-coller (espaces, tirets Unicode, casse). */
+  private normalizeQrCodeInput(raw: string): string {
+    return raw
+      .trim()
+      .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-') // tirets Unicode → ASCII
+      .replace(/\s+/g, '')
+      .toUpperCase();
+  }
+
   async validateTicket(qrCode: string, staffUserId: string) {
-    const staff = await this.prisma.user.findUnique({
-      where: { id: staffUserId },
-    });
-
-    if (!staff || staff.role !== 'STAFF') {
-      throw new ForbiddenException('Accès réservé au personnel');
-    }
-
-    const ticket = await this.prisma.ticket.findUnique({
-      where: { qrCode },
+    const normalizedQrCode = this.normalizeQrCodeInput(qrCode);
+    let ticket = await this.prisma.ticket.findUnique({
+      where: { qrCode: normalizedQrCode },
       include: {
         ticketCategory: {
-          include: { event: true },
+          include: {
+            event: true,
+          },
         },
         order: {
           include: {
@@ -40,10 +44,30 @@ export class TicketsService {
         },
       },
     });
+    if (!ticket && normalizedQrCode !== qrCode.trim()) {
+      ticket = await this.prisma.ticket.findUnique({
+        where: { qrCode: qrCode.trim() },
+        include: {
+          ticketCategory: { include: { event: true } },
+          order: { include: { user: { select: { id: true, email: true } } } },
+        },
+      });
+    }
 
     const timestamp = new Date();
 
     if (!ticket) {
+      if (process.env.NODE_ENV !== 'production') {
+        const firstFew = await this.prisma.ticket.findFirst({
+          select: { qrCode: true },
+        });
+        const exampleQr = firstFew?.qrCode ?? '';
+        console.warn('[validateTicket] Aucun billet trouvé.', {
+          receivedLength: qrCode?.length,
+          normalized: normalizedQrCode?.slice(0, 30) + (normalizedQrCode?.length > 30 ? '…' : ''),
+          exampleInDb: exampleQr.slice(0, 30) + (exampleQr.length > 30 ? '…' : ''),
+        });
+      }
       return {
         valid: false,
         reason: 'QR_CODE_INVALID',
@@ -91,9 +115,16 @@ export class TicketsService {
       };
     }
 
-    const eventDate = new Date(ticket.ticketCategory.event.eventDate);
-    const eventEndDate = new Date(eventDate);
-    eventEndDate.setHours(eventEndDate.getHours() + 6);
+    const event = ticket.ticketCategory.event;
+    const eventDate = new Date(event.eventDate);
+    let eventEndDate: Date;
+    if (event.endDate) {
+      eventEndDate = new Date(event.endDate);
+    } else {
+      const tmp = new Date(eventDate);
+      tmp.setHours(tmp.getHours() + 6);
+      eventEndDate = tmp;
+    }
 
     // En production : bloquer la validation après la fin de l'événement.
     // En développement : autoriser pour pouvoir valider puis tester les avis.
@@ -152,14 +183,6 @@ export class TicketsService {
   }
 
   async getStaffValidations(staffUserId: string, eventId?: string) {
-    const staff = await this.prisma.user.findUnique({
-      where: { id: staffUserId },
-    });
-
-    if (!staff || staff.role !== 'STAFF') {
-      throw new ForbiddenException('Accès réservé au personnel');
-    }
-
     const staffEventIds = await this.prisma.eventStaff.findMany({
       where: { userId: staffUserId },
       select: { eventId: true },
@@ -204,14 +227,6 @@ export class TicketsService {
   }
 
   async getValidationStats(eventId: string, staffUserId: string) {
-    const staff = await this.prisma.user.findUnique({
-      where: { id: staffUserId },
-    });
-
-    if (!staff || staff.role !== 'STAFF') {
-      throw new ForbiddenException('Accès réservé au personnel');
-    }
-
     const isStaffForEvent = await this.prisma.eventStaff.findUnique({
       where: {
         eventId_userId: { eventId, userId: staffUserId },
@@ -264,14 +279,6 @@ export class TicketsService {
   }
 
   async getStaffEvents(staffUserId: string) {
-    const staff = await this.prisma.user.findUnique({
-      where: { id: staffUserId },
-    });
-
-    if (!staff || staff.role !== 'STAFF') {
-      throw new ForbiddenException('Accès réservé au personnel');
-    }
-
     const assignments = await this.prisma.eventStaff.findMany({
       where: { userId: staffUserId },
       include: {
@@ -294,12 +301,33 @@ export class TicketsService {
   }
 
   async getUserTickets(userId: string) {
+    const now = new Date();
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+
     return this.prisma.ticket.findMany({
       where: {
         order: {
           userId: userId,
           status: 'PAID',
         },
+        validatedAt: null,
+        OR: [
+          {
+            ticketCategory: {
+              event: {
+                endDate: { not: null, gt: now },
+              },
+            },
+          },
+          {
+            ticketCategory: {
+              event: {
+                endDate: null,
+                eventDate: { gt: sixHoursAgo },
+              },
+            },
+          },
+        ],
       },
       include: {
         ticketCategory: {
@@ -312,8 +340,9 @@ export class TicketsService {
   }
 
   async getTicketByQRCode(qrCode: string) {
+    const normalizedQrCode = this.normalizeQrCodeInput(qrCode);
     const ticket = await this.prisma.ticket.findUnique({
-      where: { qrCode },
+      where: { qrCode: normalizedQrCode },
       include: {
         ticketCategory: {
           include: { event: true },

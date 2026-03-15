@@ -4,6 +4,7 @@ interface FormFieldBaseProps {
   label: string;
   id: string;
   error?: string;
+  compact?: boolean;
 }
 
 interface InputFieldProps
@@ -16,9 +17,14 @@ interface SelectFieldProps
   options: { value: string; label: string }[];
 }
 
-const inputClassName =
-  'w-full px-4 py-3 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition';
-const labelClassName = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2';
+const inputBase =
+  'w-full px-4 border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition';
+const inputSizes = {
+  default: 'py-3',
+  compact: 'py-2',
+};
+const labelBase = 'block text-sm font-medium text-neutral-700 dark:text-neutral-300';
+const labelSpacing = { default: 'mb-2', compact: 'mb-1' };
 
 function EyeIcon({ className }: { className?: string }) {
   return (
@@ -44,6 +50,7 @@ export function FormField({
   required,
   type = 'text',
   className = '',
+  compact = false,
   ...props
 }: InputFieldProps) {
   const errorId = error ? `${id}-error` : undefined;
@@ -52,10 +59,11 @@ export function FormField({
 
   const inputType = isPassword && showPassword ? 'text' : type;
   const inputPaddingClass = isPassword ? 'pr-11' : '';
+  const size = compact ? 'compact' : 'default';
 
   return (
     <div>
-      <label htmlFor={id} className={labelClassName}>
+      <label htmlFor={id} className={`${labelBase} ${labelSpacing[size]}`}>
         {label}
         {required && (
           <span aria-label="requis" className="text-red-500 ml-1">*</span>
@@ -65,7 +73,7 @@ export function FormField({
         <input
           id={id}
           type={inputType}
-          className={`${inputClassName} ${className} ${inputPaddingClass}`}
+          className={`${inputBase} ${inputSizes[size]} ${className} ${inputPaddingClass}`}
           aria-required={required}
           aria-invalid={!!error}
           aria-describedby={errorId}
@@ -103,13 +111,15 @@ export function FormSelect({
   error,
   required,
   className = '',
+  compact = false,
   ...props
 }: SelectFieldProps) {
   const errorId = error ? `${id}-error` : undefined;
-  
+  const size = compact ? 'compact' : 'default';
+
   return (
     <div>
-      <label htmlFor={id} className={labelClassName}>
+      <label htmlFor={id} className={`${labelBase} ${labelSpacing[size]}`}>
         {label}
         {required && (
           <span aria-label="requis" className="text-red-500 ml-1">*</span>
@@ -117,7 +127,7 @@ export function FormSelect({
       </label>
       <select
         id={id}
-        className={`${inputClassName} ${className}`}
+        className={`${inputBase} ${inputSizes[size]} ${className}`}
         aria-required={required}
         aria-invalid={!!error}
         aria-describedby={errorId}

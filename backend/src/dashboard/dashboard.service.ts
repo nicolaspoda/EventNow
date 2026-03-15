@@ -405,8 +405,17 @@ export class DashboardService {
     };
   }
 
+  /** Date de fin d'événement : endDate si défini, sinon eventDate + 6h. Utilisé pour afficher les billets tant que l'événement n'est pas terminé. */
+  private getEventEndDate(event: { eventDate: Date; endDate?: Date | null }): Date {
+    if (event.endDate) return new Date(event.endDate);
+    const end = new Date(event.eventDate);
+    end.setHours(end.getHours() + 6);
+    return end;
+  }
+
   async getMyUpcomingEvents(userId: string) {
     const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const ticketsWithEvents = await this.prisma.ticket.findMany({
       where: {
@@ -416,7 +425,7 @@ export class DashboardService {
         },
         ticketCategory: {
           event: {
-            eventDate: { gte: now },
+            eventDate: { gte: oneDayAgo },
           },
         },
       },
@@ -429,6 +438,7 @@ export class DashboardService {
                 title: true,
                 description: true,
                 eventDate: true,
+                endDate: true,
                 location: true,
                 imageUrl: true,
                 type: true,
@@ -459,7 +469,7 @@ export class DashboardService {
         userId,
         status: 'ACCEPTED',
         event: {
-          eventDate: { gte: now },
+          eventDate: { gte: oneDayAgo },
         },
       },
       include: {
@@ -469,6 +479,7 @@ export class DashboardService {
             title: true,
             description: true,
             eventDate: true,
+            endDate: true,
             location: true,
             imageUrl: true,
             type: true,
@@ -497,13 +508,15 @@ export class DashboardService {
     }>();
 
     for (const ticket of ticketsWithEvents) {
-      const eventId = ticket.ticketCategory.event.id;
+      const event = ticket.ticketCategory.event;
+      if (this.getEventEndDate(event) <= now) continue;
+      const eventId = event.id;
       const existing = ticketEventsMap.get(eventId);
       if (existing) {
         existing.ticketCount += 1;
       } else {
         ticketEventsMap.set(eventId, {
-          event: ticket.ticketCategory.event,
+          event,
           ticketCount: 1,
           categoryName: ticket.ticketCategory.name,
         });
@@ -527,7 +540,9 @@ export class DashboardService {
       categoryName: item.categoryName,
     }));
 
-    const communityEvents = acceptedParticipations.map((participation) => ({
+    const communityEvents = acceptedParticipations
+      .filter((p) => this.getEventEndDate(p.event) > now)
+      .map((participation) => ({
       id: participation.event.id,
       title: participation.event.title,
       description: participation.event.description,

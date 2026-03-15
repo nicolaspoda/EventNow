@@ -36,7 +36,7 @@ export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post('image')
-  @Roles('ORGANIZER', 'CLIENT', 'STAFF')
+  @Roles('ORGANIZER', 'CLIENT')
   @UseInterceptors(FileInterceptor('image', multerOpts))
   async uploadSingleImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {

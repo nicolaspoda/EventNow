@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService';
 import { StatCard } from '../components/dashboard/StatCard';
 import { EventsTable } from '../components/dashboard/EventsTable';
@@ -88,29 +87,13 @@ export const OrganizerDashboardPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-            Tableau de bord organisateur
-          </h1>
-          <p className="text-neutral-600 dark:text-neutral-300 mt-2">
-            Vue d'ensemble de vos événements et performances
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <Link
-            to="/dashboard/organizer/refund-requests"
-            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
-          >
-            Demandes de remboursement
-          </Link>
-          <Link
-            to="/dashboard/organizer/staff-invitations"
-            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
-          >
-            Inviter du staff
-          </Link>
-        </div>
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+          Tableau de bord organisateur
+        </h1>
+        <p className="text-neutral-600 dark:text-neutral-300 mt-2">
+          Vue d'ensemble de vos événements et performances
+        </p>
       </header>
 
       <section

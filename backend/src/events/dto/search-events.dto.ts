@@ -83,6 +83,7 @@ export class SearchEventsDto {
   @Transform(({ value }) => {
     if (value === 'true') return true;
     if (value === 'false') return false;
+    if (value === '' || value === undefined) return undefined;
     return value;
   })
   @IsBoolean()
@@ -92,6 +93,7 @@ export class SearchEventsDto {
   @Transform(({ value }) => {
     if (value === 'true') return true;
     if (value === 'false') return false;
+    if (value === '' || value === undefined) return undefined;
     return value;
   })
   @IsBoolean()
@@ -102,6 +104,7 @@ export class SearchEventsDto {
   @Transform(({ value }) => {
     if (value === 'true') return true;
     if (value === 'false') return false;
+    if (value === '' || value === undefined) return undefined;
     return value;
   })
   @IsBoolean()
@@ -112,6 +115,7 @@ export class SearchEventsDto {
   @Transform(({ value }) => {
     if (value === 'true') return true;
     if (value === 'false') return false;
+    if (value === '' || value === undefined) return undefined;
     return value;
   })
   @IsBoolean()
@@ -138,12 +142,20 @@ export class SearchEventsDto {
   radiusKm?: number;
 
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined;
+    const n = Number(value);
+    return Number.isNaN(n) || n < 1 ? undefined : Math.floor(n);
+  })
   @IsNumber()
   page?: number;
 
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === '' || value === undefined || value === null) return undefined;
+    const n = Number(value);
+    return Number.isNaN(n) || n < 1 ? undefined : Math.min(100, Math.floor(n));
+  })
   @IsNumber()
   limit?: number;
 }

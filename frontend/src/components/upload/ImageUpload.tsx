@@ -6,6 +6,7 @@ interface ImageUploadProps {
   onUploadSuccess: (url: string, publicId: string) => void;
   label?: string;
   maxSize?: number;
+  compact?: boolean;
 }
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -15,6 +16,7 @@ export function ImageUpload({
   onUploadSuccess,
   label = "Image de l'événement",
   maxSize = 5,
+  compact = false,
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(currentImage ?? null);
   const [uploading, setUploading] = useState(false);
@@ -100,8 +102,8 @@ export function ImageUpload({
   };
 
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{label}</label>
+    <div className={compact ? 'space-y-1' : 'space-y-2'}>
+      <label className={`block text-sm font-medium text-neutral-700 dark:text-neutral-300 ${compact ? 'mb-1' : ''}`}>{label}</label>
 
       <div
         role="button"
@@ -116,7 +118,9 @@ export function ImageUpload({
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 ${
+        className={`relative border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900 ${
+          compact ? 'p-4' : 'p-6'
+        } ${
           dragActive
             ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
             : 'border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500'
@@ -137,7 +141,7 @@ export function ImageUpload({
         />
 
         {preview ? (
-          <div className="relative w-full aspect-square max-h-64 mx-auto bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden flex items-center justify-center">
+          <div className={`relative w-full aspect-square mx-auto bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden flex items-center justify-center ${compact ? 'max-h-40' : 'max-h-64'}`}>
             <img
               src={preview}
               alt="Aperçu"
@@ -156,11 +160,11 @@ export function ImageUpload({
             )}
           </div>
         ) : (
-          <div className="py-8">
-            <span className="text-5xl block mb-4" aria-hidden>
+          <div className={compact ? 'py-4' : 'py-8'}>
+            <span className={compact ? 'text-4xl block mb-2' : 'text-5xl block mb-4'} aria-hidden>
               📷
             </span>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-2">
+            <p className={`text-neutral-600 dark:text-neutral-400 ${compact ? 'mb-1 text-sm' : 'mb-2'}`}>
               Cliquez ou glissez-déposez une image
             </p>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">

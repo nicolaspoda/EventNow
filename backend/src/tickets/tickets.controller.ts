@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { EventStaffGuard } from '../auth/guards/event-staff.guard';
 
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,14 +28,13 @@ export class TicketsController {
   }
 
   @Post('validate')
-  @Roles('STAFF')
   @HttpCode(HttpStatus.OK)
   validateTicket(@Body() dto: ValidateTicketDto, @CurrentUser() user: any) {
     return this.ticketsService.validateTicket(dto.qrCode, user.id);
   }
 
   @Get('validations/stats')
-  @Roles('STAFF')
+  @UseGuards(EventStaffGuard)
   @HttpCode(HttpStatus.OK)
   getValidationStats(
     @Query('event_id') eventId: string,
@@ -44,7 +44,6 @@ export class TicketsController {
   }
 
   @Get('validations')
-  @Roles('STAFF')
   @HttpCode(HttpStatus.OK)
   getValidations(
     @CurrentUser() user: any,
@@ -54,28 +53,27 @@ export class TicketsController {
   }
 
   @Get('staff-events')
-  @Roles('STAFF')
   @HttpCode(HttpStatus.OK)
   getStaffEvents(@CurrentUser() user: any) {
     return this.ticketsService.getStaffEvents(user.id);
   }
 
   @Get('my-tickets')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getMyTickets(@CurrentUser() user: any) {
     return this.ticketsService.getUserTickets(user.id);
   }
 
   @Get('qr/:qrCode')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getTicketByQRCode(@Param('qrCode') qrCode: string) {
     return this.ticketsService.getTicketByQRCode(qrCode);
   }
 
   @Get('download/:id')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   async downloadTicket(
     @Param('id') ticketId: string,

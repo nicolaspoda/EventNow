@@ -220,7 +220,7 @@ function AppContent() {
         <Route
           path="/staff/scan"
           element={
-            <ProtectedRoute roles={['STAFF']}>
+            <ProtectedRoute>
               <StaffScanPage />
             </ProtectedRoute>
           }
@@ -228,7 +228,7 @@ function AppContent() {
         <Route
           path="/staff/validations"
           element={
-            <ProtectedRoute roles={['STAFF']}>
+            <ProtectedRoute>
               <StaffValidationsPage />
             </ProtectedRoute>
           }

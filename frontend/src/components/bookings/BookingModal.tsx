@@ -41,14 +41,15 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-5 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="glass-card shadow-xl max-w-md w-full p-6">
-        <div className="flex justify-between items-start mb-4">
-          <h2 id="modal-title" className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
+      <div className="w-full max-w-[min(30rem,100vw-2rem)] max-h-[90vh] flex items-stretch justify-center">
+        <div className="glass-card shadow-xl w-full max-h-[90vh] overflow-hidden flex flex-col p-6 sm:p-7">
+          <div className="flex justify-between items-start mb-5 flex-shrink-0">
+          <h2 id="modal-title" className="text-xl font-bold text-neutral-900 dark:text-neutral-100">
             Réserver des billets
           </h2>
           <button
@@ -56,13 +57,13 @@ const BookingModal: React.FC<BookingModalProps> = ({
             className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
             aria-label="Fermer"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-5 flex-shrink-0">
           <p className="text-neutral-700 dark:text-neutral-300 mb-2">
             <span className="font-semibold">Événement :</span> {eventTitle}
           </p>
@@ -70,9 +71,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
             <span className="font-semibold">Catégorie :</span> {category.name}
           </p>
           {category.description && (
-            <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-2">{category.description}</p>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-2 line-clamp-2">{category.description}</p>
           )}
-          <p className="text-neutral-700 dark:text-neutral-300">
+          <p className="text-neutral-700 dark:text-neutral-300 mb-2">
             <span className="font-semibold">Prix unitaire :</span> {formatPrice(category.price)} €
           </p>
           <p className="text-neutral-700 dark:text-neutral-300">
@@ -80,8 +81,8 @@ const BookingModal: React.FC<BookingModalProps> = ({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6">
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+          <div className="mb-5 flex-shrink-0">
             <label htmlFor="quantity" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Nombre de billets
             </label>
@@ -92,7 +93,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
               max={maxQuantity}
               value={quantity}
               onChange={(e) => setQuantity(Math.max(1, Math.min(maxQuantity, parseInt(e.target.value) || 1)))}
-              className="w-full px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
+              className="w-full px-4 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100"
               disabled={loading}
             />
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
@@ -100,7 +101,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </p>
           </div>
 
-          <div className="bg-neutral-100 dark:bg-neutral-700/50 rounded-lg p-4 mb-6">
+          <div className="bg-neutral-100 dark:bg-neutral-700/50 rounded-lg p-4 mb-5 flex-shrink-0">
             <div className="flex justify-between items-center">
               <span className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Total</span>
               <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
@@ -110,18 +111,18 @@ const BookingModal: React.FC<BookingModalProps> = ({
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg" role="alert">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex-shrink-0" role="alert">
               <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
             </div>
           )}
 
-          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-3 mb-6">
+          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-5 flex-shrink-0">
             <p className="text-sm text-primary-800 dark:text-primary-300">
               Vous aurez <span className="font-semibold">10 minutes</span> pour finaliser votre paiement après la réservation.
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-shrink-0 mt-auto">
             <Button
               type="button"
               variant="outline"
@@ -141,6 +142,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             </Button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

@@ -76,6 +76,10 @@ export class CreateEventDto {
   @IsDateString()
   event_date: string;
 
+  @IsDateString()
+  @IsOptional()
+  end_date?: string;
+
   @IsEnum(EventType)
   @IsOptional()
   type?: EventType;

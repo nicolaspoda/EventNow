@@ -28,7 +28,7 @@ export class ParticipantReviewsController {
   ) {}
 
   @Post()
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: { id: string },
@@ -38,14 +38,14 @@ export class ParticipantReviewsController {
   }
 
   @Get('participant/:participantId')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   findAllByParticipant(@Param('participantId') participantId: string) {
     return this.participantReviewsService.findAllByParticipant(participantId);
   }
 
   @Get('event/:eventId')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   findAllByEvent(
     @Param('eventId') eventId: string,
@@ -55,7 +55,7 @@ export class ParticipantReviewsController {
   }
 
   @Get('event/:eventId/participants')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getParticipantsForEvent(
     @Param('eventId') eventId: string,
@@ -65,7 +65,7 @@ export class ParticipantReviewsController {
   }
 
   @Patch(':id')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
@@ -76,7 +76,7 @@ export class ParticipantReviewsController {
   }
 
   @Delete(':id')
-  @Roles('CLIENT', 'ORGANIZER', 'STAFF')
+  @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.participantReviewsService.delete(id, user.id);

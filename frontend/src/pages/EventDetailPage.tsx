@@ -272,7 +272,7 @@ const EventDetailPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30 p-6 md:p-8">
+              <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30 p-8 md:p-10 lg:p-12">
                 {activeTab === 'details' && (
                   <div id="panel-details" role="tabpanel" aria-labelledby="tab-details">
                     <EventDetail

@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         initialRefreshDoneRef.current = true;
       })
       .catch(() => {
-        authService.logout();
+        authService.clearSession();
         setUser(null);
         setIsSessionReady(true);
         initialRefreshDoneRef.current = true;
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then((res) => res.data)
         .then((data) => authService.saveAuthData({ ...data, user }))
         .catch(() => {
-          authService.logout();
+          authService.clearSession();
           setUser(null);
         });
     };

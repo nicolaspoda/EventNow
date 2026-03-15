@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RolesGuard } from './roles.guard';
 import { Reflector } from '@nestjs/core';
 import { ExecutionContext } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 
 describe('RolesGuard', () => {
   let guard: RolesGuard;
@@ -55,12 +56,12 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('should return false if user does not have required role', () => {
+    it('should throw ForbiddenException if user does not have required role', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ORGANIZER']);
 
       const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
 
-      expect(guard.canActivate(context)).toBe(false);
+      expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
 
     it('should return true if user has one of multiple required roles', () => {
@@ -73,20 +74,20 @@ describe('RolesGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('should return true for STAFF role when required', () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['STAFF']);
+    it('should return true for ORGANIZER role when required', () => {
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ORGANIZER']);
 
-      const context = createMockContext({ id: 'staff-123', role: 'STAFF' });
+      const context = createMockContext({ id: 'org-123', role: 'ORGANIZER' });
 
       expect(guard.canActivate(context)).toBe(true);
     });
 
-    it('should return false for CLIENT when STAFF required', () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['STAFF']);
+    it('should throw ForbiddenException for CLIENT when ORGANIZER required', () => {
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ORGANIZER']);
 
       const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
 
-      expect(guard.canActivate(context)).toBe(false);
+      expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
   });
 });

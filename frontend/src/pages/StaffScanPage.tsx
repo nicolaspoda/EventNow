@@ -16,9 +16,13 @@ export const StaffScanPage: React.FC = () => {
   const handleScan = async (qrCode: string) => {
     setLoading(true);
     setResult(null);
-
+    const code = qrCode.trim();
+    if (!code) {
+      setLoading(false);
+      return;
+    }
     try {
-      const response = await validationService.validateTicket(qrCode);
+      const response = await validationService.validateTicket(code);
       setResult(response);
 
       if (navigator.vibrate) {
@@ -32,7 +36,7 @@ export const StaffScanPage: React.FC = () => {
       if (response.valid) {
         setTimeout(() => setResult(null), 3000);
       }
-    } catch (err) {
+    } catch {
       setResult({
         valid: false,
         reason: 'ERROR',

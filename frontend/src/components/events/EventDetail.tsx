@@ -97,13 +97,13 @@ const EventDetail: React.FC<EventDetailProps> = ({
         </div>
       )}
 
-      <div className="p-6 md:p-8">
-        <div className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+      <div className="p-8 md:p-10 lg:p-12">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-5">
             {event.title}
           </h1>
 
-          <div className="flex flex-wrap gap-4 text-neutral-600 dark:text-neutral-300 mb-4">
+          <div className="flex flex-wrap gap-4 text-neutral-600 dark:text-neutral-300 mb-5">
             <div className="flex items-center">
               <svg className="w-6 h-6 mr-2 text-primary-500 dark:text-primary-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -131,8 +131,8 @@ const EventDetail: React.FC<EventDetailProps> = ({
         </div>
 
         {isCommunity ? (
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
-            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">
+          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-8 mb-8">
+            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-5">
               Participation
             </h2>
             <div className="flex flex-wrap items-center gap-4">
@@ -163,23 +163,23 @@ const EventDetail: React.FC<EventDetailProps> = ({
             </div>
           </div>
         ) : (
-        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Catégories de billets</h2>
+        <div className="border-t border-neutral-200 dark:border-neutral-700 pt-8 mb-8">
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100 mb-5">Catégories de billets</h2>
 
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
               <thead className="bg-neutral-100 dark:bg-neutral-800">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     Catégorie
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     Prix
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     Disponibilité
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -187,21 +187,21 @@ const EventDetail: React.FC<EventDetailProps> = ({
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
                 {event.ticketCategories.map((category) => (
                   <tr key={category.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">{category.name}</div>
                       {category.description && (
                         <div className="text-sm text-neutral-500 dark:text-neutral-400">{category.description}</div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                         {formatPrice(category.price)} €
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-5 whitespace-nowrap">
                       {getStockIndicator(category.currentStock, category.initialStock)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <td className="px-6 py-5 whitespace-nowrap text-right">
                       {isOrganizer ? (
                         <span className="text-sm text-neutral-500 dark:text-neutral-400">—</span>
                       ) : (
@@ -224,8 +224,8 @@ const EventDetail: React.FC<EventDetailProps> = ({
         )}
 
         {event.organizer && (
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-6 mb-6">
-            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Organisateur</h2>
+          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-8 mb-8">
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Organisateur</h2>
             <Link
               to={`/user/${event.organizerId}/profile`}
               className="flex items-center gap-4 rounded-lg p-2 -m-2 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-900"

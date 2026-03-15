@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import type { Ticket } from '../../types/order.types';
 import Button from '../ui/Button';
 
@@ -9,6 +10,9 @@ interface TicketCardProps {
 }
 
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownload }) => {
+  const category = ticket.ticketCategory ?? ticket.order?.ticketCategory;
+  const event = category?.event;
+
   return (
     <div className="glass-card overflow-hidden hover:shadow-lg transition-shadow">
       <div className="p-6">
@@ -27,14 +31,41 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownloa
           )}
         </div>
 
-        {ticket.order?.ticketCategory && (
+        {event && (
+          <div className="mb-3">
+            <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+              {event.id ? (
+                <Link
+                  to={`/events/${event.id}`}
+                  className="hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                >
+                  {event.title}
+                </Link>
+              ) : (
+                event.title
+              )}
+            </p>
+            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              {new Date(event.eventDate).toLocaleDateString('fr-FR', {
+                weekday: 'short',
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          </div>
+        )}
+
+        {category && (
           <div className="mb-4">
             <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              {ticket.order.ticketCategory.name}
+              {category.name}
             </p>
-            {ticket.order.ticketCategory.description && (
+            {category.description && (
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                {ticket.order.ticketCategory.description}
+                {category.description}
               </p>
             )}
           </div>

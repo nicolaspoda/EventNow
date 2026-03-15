@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { DarkModeToggle } from './DarkModeToggle';
 import { NotificationBell } from './NotificationBell';
 import { MessageBell } from './MessageBell';
 import { UserSearchAutocomplete } from './user/UserSearchAutocomplete';
+import { useIsStaff } from '../hooks/useIsStaff';
 
 const navLinkClass =
   'px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1';
@@ -13,10 +15,12 @@ export function NavbarLinks() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
+  const { isStaff } = useIsStaff(user?.id);
   const [eventsMenuOpen, setEventsMenuOpen] = useState(false);
   const [purchasesMenuOpen, setPurchasesMenuOpen] = useState(false);
   const [organizerMenuOpen, setOrganizerMenuOpen] = useState(false);
   const [staffMenuOpen, setStaffMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +44,7 @@ export function NavbarLinks() {
   }, []);
 
   const handleLogout = async () => {
+    setShowLogoutConfirm(false);
     await logout();
     navigate('/login');
   };
@@ -181,7 +186,7 @@ export function NavbarLinks() {
             </div>
           )}
 
-          {user?.role === 'STAFF' && (
+          {isStaff && (
             <div className="relative">
               <button
                 type="button"
@@ -239,12 +244,53 @@ export function NavbarLinks() {
           </Link>
           <button
             type="button"
-            onClick={() => void handleLogout()}
+            onClick={() => setShowLogoutConfirm(true)}
             className="px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-900 dark:hover:text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 dark:focus:ring-offset-neutral-800"
           >
             Déconnexion
           </button>
         </div>
+
+        {showLogoutConfirm &&
+          createPortal(
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black/50 z-[100]"
+              style={{ top: 0, left: 0, right: 0, bottom: 0 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="logout-dialog-title"
+              onClick={() => setShowLogoutConfirm(false)}
+            >
+              <div
+                className="bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 border border-neutral-200 dark:border-neutral-700"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 id="logout-dialog-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+                  Déconnexion
+                </h2>
+                <p className="text-neutral-600 dark:text-neutral-300 text-sm mb-5">
+                  Êtes-vous sûr de vouloir vous déconnecter ?
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleLogout()}
+                    className="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-neutral-800 transition-colors"
+                  >
+                    Oui
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
       </div>
     );
   }

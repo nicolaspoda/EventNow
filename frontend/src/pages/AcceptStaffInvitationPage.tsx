@@ -3,12 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { staffInvitationsService } from '../services/staffInvitationsService';
 import type { StaffInvitation } from '../services/staffInvitationsService';
 import { useAuth } from '../utils/useAuth';
+import { authService } from '../services/auth.service';
+import { STAFF_STATUS_CHANGED_EVENT } from '../hooks/useIsStaff';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 
 export const AcceptStaffInvitationPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, setUser } = useAuth();
   const [invitation, setInvitation] = useState<StaffInvitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,9 +33,17 @@ export const AcceptStaffInvitationPage: React.FC = () => {
     if (!token || !invitation) return;
     setActionLoading('accept');
     try {
-      await staffInvitationsService.accept(token);
+      const response = await staffInvitationsService.accept(token);
+      if (response.accessToken && response.refreshToken && response.user) {
+        authService.saveAuthData({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: response.user,
+        });
+        setUser(response.user);
+      }
+      window.dispatchEvent(new CustomEvent(STAFF_STATUS_CHANGED_EVENT));
       navigate('/dashboard', { replace: true });
-      window.location.reload();
     } catch (err) {
       setError(getApiErrorMessage(err, 'Impossible d\'accepter l\'invitation'));
     } finally {
