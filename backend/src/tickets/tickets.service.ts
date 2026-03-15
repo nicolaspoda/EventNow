@@ -282,7 +282,54 @@ export class TicketsService {
     };
   }
 
+  /** Date de fin d'événement : endDate si défini, sinon eventDate + 6h. */
+  private getEventEndDate(event: {
+    eventDate: Date;
+    endDate?: Date | null;
+  }): Date {
+    if (event.endDate) return new Date(event.endDate);
+    const end = new Date(event.eventDate);
+    end.setHours(end.getHours() + 6);
+    return end;
+  }
+
+  /**
+   * Supprime les affectations staff pour les événements dont la date de fin est dépassée.
+   * Appelé à chaque getStaffEvents (avec throttle) et par le job cron pour que le menu
+   * staff et l'accès disparaissent dès la fin d'un événement.
+   */
+  async removeStaffForEndedEvents(): Promise<void> {
+    const now = new Date();
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+
+    const endedEvents = await this.prisma.event.findMany({
+      where: {
+        OR: [
+          { endDate: { not: null, lt: now } },
+          { endDate: null, eventDate: { lt: sixHoursAgo } },
+        ],
+      },
+      select: { id: true },
+    });
+
+    const endedEventIds = endedEvents.map((e) => e.id);
+    if (endedEventIds.length === 0) return;
+
+    await this.prisma.eventStaff.deleteMany({
+      where: { eventId: { in: endedEventIds } },
+    });
+  }
+
+  private lastStaffCleanupAt = 0;
+  private static readonly STAFF_CLEANUP_THROTTLE_MS = 60_000;
+
   async getStaffEvents(staffUserId: string) {
+    const now = new Date();
+    if (now.getTime() - this.lastStaffCleanupAt > TicketsService.STAFF_CLEANUP_THROTTLE_MS) {
+      await this.removeStaffForEndedEvents();
+      this.lastStaffCleanupAt = now.getTime();
+    }
+
     const assignments = await this.prisma.eventStaff.findMany({
       where: { userId: staffUserId },
       include: {
@@ -291,13 +338,18 @@ export class TicketsService {
             id: true,
             title: true,
             eventDate: true,
+            endDate: true,
           },
         },
       },
       orderBy: { event: { eventDate: 'asc' } },
     });
 
-    return assignments.map((a) => ({
+    const upcoming = assignments.filter(
+      (a) => this.getEventEndDate(a.event) > now,
+    );
+
+    return upcoming.map((a) => ({
       id: a.event.id,
       title: a.event.title,
       eventDate: a.event.eventDate,

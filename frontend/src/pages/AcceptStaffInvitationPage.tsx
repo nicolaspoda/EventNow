@@ -43,7 +43,7 @@ export const AcceptStaffInvitationPage: React.FC = () => {
         setUser(response.user);
       }
       window.dispatchEvent(new CustomEvent(STAFF_STATUS_CHANGED_EVENT));
-      navigate('/dashboard', { replace: true });
+      navigate('/staff/scan', { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err, 'Impossible d\'accepter l\'invitation'));
     } finally {
