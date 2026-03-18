@@ -35,6 +35,7 @@ function toDateTimeLocal(isoDate: string): string {
 export function EventEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const minTicketPrice = 0.5;
   const [event, setEvent] = useState<Event | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -160,7 +161,8 @@ export function EventEditPage() {
     }
 
     const validCategories = categories.filter(
-      (c) => c.name.trim() && c.initial_stock >= 1 && c.price >= 0,
+      (c) =>
+        c.name.trim() && c.initial_stock >= 1 && Number(c.price) >= minTicketPrice,
     );
     if (validCategories.length === 0) return;
 
@@ -423,7 +425,7 @@ export function EventEditPage() {
                       id={`cat-price-${index}`}
                       label="Prix (€)"
                       type="number"
-                      min={0}
+                      min={minTicketPrice}
                       step={0.01}
                       value={cat.price === 0 ? '' : cat.price}
                       onChange={(e) =>
@@ -433,7 +435,7 @@ export function EventEditPage() {
                           e.target.value === '' ? 0 : Number(e.target.value),
                         )
                       }
-                      placeholder="0"
+                      placeholder={minTicketPrice.toFixed(2)}
                       compact
                     />
                     <FormField

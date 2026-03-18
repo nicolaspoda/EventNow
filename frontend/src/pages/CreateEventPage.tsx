@@ -17,7 +17,7 @@ import type {
 const initialCategory: CreateTicketCategoryPayload = {
   name: '',
   description: '',
-  price: 0,
+  price: 0.5,
   initial_stock: 10,
 };
 
@@ -31,6 +31,7 @@ export function CreateEventPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isCommunity = user?.role === 'CLIENT';
+  const minTicketPrice = 0.5;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
@@ -124,16 +125,21 @@ export function CreateEventPage() {
       ticketCategories = [
         {
           name: 'Participation',
-          price: 0,
+          price: minTicketPrice,
           initial_stock: communityPlaces,
         },
       ];
     } else {
       const validCategories = categories.filter(
-        (c) => c.name.trim() && c.initial_stock >= 1 && c.price >= 0,
+        (c) =>
+          c.name.trim() && c.initial_stock >= 1 && Number(c.price) >= minTicketPrice,
       );
       if (validCategories.length === 0) {
-        setError('Ajoutez au moins une catégorie de billets avec un nom et un stock');
+        setError(
+          `Ajoutez au moins une catégorie de billets avec un nom, un stock et un prix ≥ ${minTicketPrice.toFixed(
+            2,
+          )} €`,
+        );
         return;
       }
       ticketCategories = validCategories.map((c) => ({
@@ -379,7 +385,7 @@ export function CreateEventPage() {
                         id={`cat-price-${index}`}
                         label="Prix (€)"
                         type="number"
-                        min={0}
+                        min={minTicketPrice}
                         step={0.01}
                         value={cat.price === 0 ? '' : cat.price}
                         onChange={(e) =>
@@ -389,7 +395,7 @@ export function CreateEventPage() {
                             e.target.value === '' ? 0 : Number(e.target.value),
                           )
                         }
-                        placeholder="0"
+                        placeholder={minTicketPrice.toFixed(2)}
                         compact
                       />
                       <FormField
