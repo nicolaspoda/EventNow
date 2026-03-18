@@ -1,32 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { orderService } from '../services/orderService';
+import { stripeService } from '../services/stripeService';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
+import StripePaymentForm from '../components/payment/StripePaymentForm';
 import Button from '../components/ui/Button';
 
 const CheckoutPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [processing, setProcessing] = useState(false);
   const [initiating, setInitiating] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] = useState<any>(null);
 
   const bookingId = searchParams.get('bookingId');
 
   useEffect(() => {
-    if (!bookingId) {
-      setError('Paramètres de paiement manquants');
-      setInitiating(false);
-      return;
-    }
-
     const init = async () => {
       try {
+        if (!bookingId) {
+          setError('Paramètres de paiement manquants');
+          setInitiating(false);
+          return;
+        }
+
         setInitiating(true);
         setError(null);
+
+        const publishableKey = await stripeService.getPublishableKey();
+        const stripeInstance = await loadStripe(publishableKey);
+        setStripePromise(stripeInstance);
+
         const data = await orderService.initiatePayment(bookingId);
         setPaymentId(data.paymentId);
+        setClientSecret(data.clientSecret);
       } catch (err) {
         setError(getApiErrorMessage(err, 'Impossible d\'initialiser le paiement'));
       } finally {
@@ -37,27 +48,22 @@ const CheckoutPage: React.FC = () => {
     init();
   }, [bookingId]);
 
-  const handleConfirmPayment = async () => {
+  const handlePaymentSuccess = async () => {
     if (!bookingId || !paymentId) {
       setError('Paramètres de paiement manquants');
       return;
     }
 
-    setProcessing(true);
-    setError(null);
-
     try {
-      // Simuler un délai de traitement du paiement
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
       const { order } = await orderService.confirmPayment(bookingId, paymentId);
-
-      // Rediriger vers la page de succès avec l'ID de la commande créée
       navigate(`/orders/${order.id}/success`);
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Erreur lors du paiement'));
-      setProcessing(false);
+      setError(getApiErrorMessage(err, 'Erreur lors de la confirmation de commande'));
     }
+  };
+
+  const handlePaymentError = (errorMessage: string) => {
+    setError(errorMessage);
   };
 
   const handleCancel = () => {
@@ -102,7 +108,7 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
-  if (error && !paymentId) {
+  if (error && !clientSecret) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
@@ -129,6 +135,19 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
+  const appearance = {
+    theme: 'stripe' as const,
+    variables: {
+      colorPrimary: '#6366f1',
+      colorBackground: '#ffffff',
+      colorText: '#1f2937',
+      colorDanger: '#ef4444',
+      fontFamily: 'system-ui, sans-serif',
+      spacingUnit: '4px',
+      borderRadius: '8px',
+    },
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full glass-card p-8">
@@ -149,13 +168,7 @@ const CheckoutPage: React.FC = () => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">Paiement sécurisé</h1>
-          <p className="text-neutral-600 dark:text-neutral-400">Confirmez votre paiement pour finaliser votre commande</p>
-        </div>
-
-        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-6">
-          <p className="text-sm text-primary-800 dark:text-primary-300">
-            <strong>Note :</strong> Ceci est un environnement de test. Aucun paiement réel ne sera effectué.
-          </p>
+          <p className="text-neutral-600 dark:text-neutral-400">Entrez vos informations de paiement</p>
         </div>
 
         {error && (
@@ -164,49 +177,15 @@ const CheckoutPage: React.FC = () => {
           </div>
         )}
 
-        <div className="space-y-3">
-          <Button
-            variant="primary"
-            onClick={handleConfirmPayment}
-            disabled={processing}
-            className="w-full"
-          >
-            {processing ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Traitement du paiement...
-              </span>
-            ) : (
-              'Confirmer le paiement'
-            )}
-          </Button>
-
-          <Button variant="ghost" onClick={handleCancel} disabled={processing} className="w-full">
-            Annuler
-          </Button>
-        </div>
-
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center mt-6">
-          Vos informations de paiement sont sécurisées et cryptées
-        </p>
+        {clientSecret && stripePromise && (
+          <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+            <StripePaymentForm
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              onCancel={handleCancel}
+            />
+          </Elements>
+        )}
       </div>
     </main>
   );

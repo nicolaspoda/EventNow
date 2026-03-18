@@ -18,7 +18,7 @@ export class CreateTicketCategoryDto {
 
   @IsNumber()
   @Type(() => Number)
-  @Min(0)
+  @Min(0.5)
   price: number;
 
   @IsNumber()

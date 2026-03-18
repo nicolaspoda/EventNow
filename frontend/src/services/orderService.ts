@@ -3,6 +3,7 @@ import type { Order, OrderWithUser, ConfirmPaymentResponse } from '../types/orde
 
 export interface InitiatePaymentResponse {
   paymentId: string;
+  clientSecret: string;
   bookingId: string;
   amount: number;
   currency?: string;
