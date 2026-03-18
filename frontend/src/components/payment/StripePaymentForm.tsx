@@ -55,7 +55,14 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
         </p>
       </div>
 
-      <PaymentElement />
+      <PaymentElement
+        options={{
+          wallets: {
+            applePay: 'never',
+            googlePay: 'never',
+          },
+        }}
+      />
 
       <div className="space-y-3">
         <Button

@@ -41,7 +41,7 @@ services:
       # Désactive le rate limiting (évite "too many requests" pendant les tests E2E)
       DISABLE_THROTTLE: "true"
       # CORS : origine du frontend (navigateur) pour autoriser les requêtes
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:5173,https://localhost:5173
     volumes:
       - ./backend:/app
       - backend_node_modules:/app/node_modules

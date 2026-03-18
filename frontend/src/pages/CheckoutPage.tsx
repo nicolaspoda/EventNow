@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -70,6 +70,27 @@ const CheckoutPage: React.FC = () => {
     navigate('/events');
   };
 
+  const appearance = useMemo(
+    () => ({
+      theme: 'stripe' as const,
+      variables: {
+        colorPrimary: '#6366f1',
+        colorBackground: '#ffffff',
+        colorText: '#1f2937',
+        colorDanger: '#ef4444',
+        fontFamily: 'system-ui, sans-serif',
+        spacingUnit: '4px',
+        borderRadius: '8px',
+      },
+    }),
+    []
+  );
+
+  const elementsOptions = useMemo(
+    () => (clientSecret ? { clientSecret, appearance } : null),
+    [clientSecret, appearance]
+  );
+
   if (error && !bookingId) {
     return (
       <main className="min-h-screen flex items-center justify-center p-4">
@@ -135,19 +156,6 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
-  const appearance = {
-    theme: 'stripe' as const,
-    variables: {
-      colorPrimary: '#6366f1',
-      colorBackground: '#ffffff',
-      colorText: '#1f2937',
-      colorDanger: '#ef4444',
-      fontFamily: 'system-ui, sans-serif',
-      spacingUnit: '4px',
-      borderRadius: '8px',
-    },
-  };
-
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full glass-card p-8">
@@ -177,8 +185,8 @@ const CheckoutPage: React.FC = () => {
           </div>
         )}
 
-        {clientSecret && stripePromise && (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+        {clientSecret && stripePromise && elementsOptions && (
+          <Elements key={clientSecret} stripe={stripePromise} options={elementsOptions}>
             <StripePaymentForm
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}

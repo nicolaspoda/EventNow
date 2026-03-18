@@ -47,7 +47,9 @@ export class PaymentService {
     const amountCents = Math.round(amount * 100);
 
     if (amountCents < 50) {
-      throw new BadRequestException('Le montant minimum pour un paiement Stripe est 0,50 €');
+      throw new BadRequestException(
+        'Le montant minimum pour un paiement Stripe est 0,50 €',
+      );
     }
 
     try {
@@ -74,8 +76,7 @@ export class PaymentService {
         status: 'pending',
       };
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Erreur Stripe inconnue';
+      const message = err instanceof Error ? err.message : 'Erreur Stripe inconnue';
       throw new BadRequestException(
         `Impossible d'initialiser le paiement: ${message}`,
       );
