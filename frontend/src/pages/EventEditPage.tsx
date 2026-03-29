@@ -9,10 +9,33 @@ import { AddressAutocomplete } from '../components/location/AddressAutocomplete'
 import type { AddressSuggestion } from '../services/geocodingService';
 import type {
   Event,
+  EventTypeCreate,
   UpdateEventPayload,
   CreateTicketCategoryPayload,
 } from '../types/event.types';
 import { parsePrice } from '../utils/price';
+
+/** Réponse API éventuelle sans camelCase strict */
+type ApiEventPayload = Event & { event_type?: string };
+
+const COMMUNITY_TICKET_PRICE = 0.5;
+
+/** Type explicite ou inféré (événements créés comme communautaires sans champ `type` renvoyé). */
+function resolveEventType(ev: ApiEventPayload): EventTypeCreate {
+  const raw = ev.type ?? ev.event_type;
+  if (raw === 'COMMUNITY' || raw === 'PROFESSIONAL') return raw;
+  return looksLikeCommunityParticipation(ev) ? 'COMMUNITY' : 'PROFESSIONAL';
+}
+
+function looksLikeCommunityParticipation(ev: Event): boolean {
+  const cats = ev.ticketCategories ?? [];
+  if (cats.length !== 1) return false;
+  const c = cats[0];
+  if (c.name.trim() !== 'Participation') return false;
+  if (ev.endDate) return false;
+  const price = parsePrice(c.price);
+  return Math.abs(price - COMMUNITY_TICKET_PRICE) < 0.001;
+}
 
 function toISOString(dateStr: string): string {
   if (!dateStr) return '';
@@ -51,6 +74,7 @@ export function EventEditPage() {
   const [eventDate, setEventDate] = useState('');
   const [eventEndDate, setEventEndDate] = useState('');
   const [categories, setCategories] = useState<CreateTicketCategoryPayload[]>([]);
+  const [communityPlaces, setCommunityPlaces] = useState(0);
   const [soldCountByIndex, setSoldCountByIndex] = useState<number[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -65,7 +89,8 @@ export function EventEditPage() {
       .getEventById(id)
       .then((ev) => {
         if (cancelled) return;
-        setEvent(ev);
+        const resolvedType = resolveEventType(ev as ApiEventPayload);
+        setEvent({ ...ev, type: resolvedType });
         setTitle(ev.title);
         setDescription(ev.description || '');
         setLocation(ev.location);
@@ -93,6 +118,9 @@ export function EventEditPage() {
             Math.max(0, c.initialStock - c.currentStock),
           ),
         );
+        if (resolvedType === 'COMMUNITY') {
+          setCommunityPlaces(ev.ticketCategories[0]?.initialStock ?? 0);
+        }
       })
       .catch((err) => {
         if (!cancelled) {
@@ -160,11 +188,43 @@ export function EventEditPage() {
       if (new Date(eventEndDate) <= new Date(eventDate)) return;
     }
 
-    const validCategories = categories.filter(
-      (c) =>
-        c.name.trim() && c.initial_stock >= 1 && Number(c.price) >= minTicketPrice,
-    );
-    if (validCategories.length === 0) return;
+    const isCommunity = event?.type === 'COMMUNITY';
+    let ticketCategoriesPayload: UpdateEventPayload['ticket_categories'];
+
+    if (isCommunity) {
+      if (communityPlaces < 1) {
+        setLoadError('Indiquez le nombre de places (au moins 1)');
+        return;
+      }
+      const sold = soldCountByIndex[0] ?? 0;
+      if (communityPlaces < sold) {
+        setLoadError(
+          `Le nombre de places ne peut pas être inférieur aux places déjà réservées (${sold}).`,
+        );
+        return;
+      }
+      ticketCategoriesPayload = [
+        {
+          name: 'Participation',
+          price: minTicketPrice,
+          initial_stock: communityPlaces,
+        },
+      ];
+    } else {
+      const validCategories = categories.filter(
+        (c) =>
+          c.name.trim() && c.initial_stock >= 1 && Number(c.price) >= minTicketPrice,
+      );
+      if (validCategories.length === 0) return;
+
+      ticketCategoriesPayload = validCategories.map((c) => ({
+        name: c.name.trim(),
+        description: c.description?.trim() || undefined,
+        price: Number(c.price),
+        initial_stock: Number(c.initial_stock),
+        current_stock: c.current_stock !== undefined ? Number(c.current_stock) : undefined,
+      }));
+    }
 
     const payload: UpdateEventPayload = {
       title: title.trim(),
@@ -182,13 +242,7 @@ export function EventEditPage() {
       ...(event?.type === 'PROFESSIONAL' && eventEndDate
         ? { end_date: toISOString(eventEndDate) }
         : {}),
-      ticket_categories: validCategories.map((c) => ({
-        name: c.name.trim(),
-        description: c.description?.trim() || undefined,
-        price: Number(c.price),
-        initial_stock: Number(c.initial_stock),
-        current_stock: c.current_stock !== undefined ? Number(c.current_stock) : undefined,
-      })),
+      ticket_categories: ticketCategoriesPayload,
     };
 
     setSubmitLoading(true);
@@ -263,7 +317,9 @@ export function EventEditPage() {
           Modifier l'événement
         </h1>
         <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-          Modifiez les informations et les catégories de billets.
+          {event.type === 'COMMUNITY'
+            ? 'Modifiez les informations de votre événement et le nombre de places disponibles.'
+            : 'Modifiez les informations et les catégories de billets.'}
         </p>
       </header>
 
@@ -375,107 +431,135 @@ export function EventEditPage() {
               />
             )}
 
-            <fieldset className="space-y-3">
-              <legend className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                Catégories de billets
-              </legend>
-              {categories.map((cat, index) => (
-                <div
-                  key={index}
-                  className="glass-card p-3 space-y-2"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                      Catégorie {index + 1}
-                    </span>
-                    {categories.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeCategory(index)}
-                        className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
-                        aria-label={`Supprimer la catégorie ${index + 1}`}
-                      >
-                        Supprimer
-                      </button>
+            {event?.type === 'COMMUNITY' ? (
+              <>
+                <FormField
+                  id="event-places"
+                  label="Nombre de places"
+                  type="number"
+                  min={1}
+                  value={communityPlaces === 0 ? '' : communityPlaces}
+                  onChange={(e) =>
+                    setCommunityPlaces(
+                      e.target.value === '' ? 0 : Number(e.target.value) || 0,
+                    )
+                  }
+                  required
+                  compact
+                />
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 space-y-0.5">
+                  <p>
+                    Places déjà réservées : {soldCountByIndex[0] ?? 0}
+                  </p>
+                  <p>
+                    Places disponibles :{' '}
+                    {Math.max(0, communityPlaces - (soldCountByIndex[0] ?? 0))}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <fieldset className="space-y-3">
+                <legend className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                  Catégories de billets
+                </legend>
+                {categories.map((cat, index) => (
+                  <div
+                    key={index}
+                    className="glass-card p-3 space-y-2"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                        Catégorie {index + 1}
+                      </span>
+                      {categories.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeCategory(index)}
+                          className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500 rounded"
+                          aria-label={`Supprimer la catégorie ${index + 1}`}
+                        >
+                          Supprimer
+                        </button>
+                      )}
+                    </div>
+                    <FormField
+                      id={`cat-name-${index}`}
+                      label="Nom"
+                      type="text"
+                      value={cat.name}
+                      onChange={(e) => updateCategory(index, 'name', e.target.value)}
+                      required
+                      placeholder="Ex: Standard, VIP"
+                      compact
+                    />
+                    <FormField
+                      id={`cat-desc-${index}`}
+                      label="Description (optionnel)"
+                      type="text"
+                      value={cat.description || ''}
+                      onChange={(e) =>
+                        updateCategory(index, 'description', e.target.value)
+                      }
+                      placeholder="Ex: Place assise"
+                      compact
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        id={`cat-price-${index}`}
+                        label="Prix (€)"
+                        type="number"
+                        min={minTicketPrice}
+                        step={0.01}
+                        value={cat.price === 0 ? '' : cat.price}
+                        onChange={(e) =>
+                          updateCategory(
+                            index,
+                            'price',
+                            e.target.value === '' ? 0 : Number(e.target.value),
+                          )
+                        }
+                        placeholder={minTicketPrice.toFixed(2)}
+                        compact
+                      />
+                      <FormField
+                        id={`cat-stock-${index}`}
+                        label="Nombre de places"
+                        type="number"
+                        min={1}
+                        value={cat.initial_stock === 0 ? '' : cat.initial_stock}
+                        onChange={(e) =>
+                          updateCategory(
+                            index,
+                            'initial_stock',
+                            e.target.value === '' ? 0 : Number(e.target.value) || 0,
+                          )
+                        }
+                        required
+                        compact
+                      />
+                    </div>
+                    {(cat.initial_stock !== undefined) && (
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400 space-y-0.5">
+                        <p>
+                          Places déjà vendues : {soldCountByIndex[index] ?? 0} (conservées à l'enregistrement)
+                        </p>
+                        <p>
+                          Places disponibles : {Math.max(0, (cat.initial_stock ?? 0) - (soldCountByIndex[index] ?? 0))}
+                        </p>
+                      </div>
                     )}
                   </div>
-                  <FormField
-                    id={`cat-name-${index}`}
-                    label="Nom"
-                    type="text"
-                    value={cat.name}
-                    onChange={(e) => updateCategory(index, 'name', e.target.value)}
-                    required
-                    placeholder="Ex: Standard, VIP"
-                    compact
-                  />
-                  <FormField
-                    id={`cat-desc-${index}`}
-                    label="Description (optionnel)"
-                    type="text"
-                    value={cat.description || ''}
-                    onChange={(e) =>
-                      updateCategory(index, 'description', e.target.value)
-                    }
-                    placeholder="Ex: Place assise"
-                    compact
-                  />
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      id={`cat-price-${index}`}
-                      label="Prix (€)"
-                      type="number"
-                      min={minTicketPrice}
-                      step={0.01}
-                      value={cat.price === 0 ? '' : cat.price}
-                      onChange={(e) =>
-                        updateCategory(
-                          index,
-                          'price',
-                          e.target.value === '' ? 0 : Number(e.target.value),
-                        )
-                      }
-                      placeholder={minTicketPrice.toFixed(2)}
-                      compact
-                    />
-                    <FormField
-                      id={`cat-stock-${index}`}
-                      label="Nombre de places"
-                      type="number"
-                      min={1}
-                      value={cat.initial_stock === 0 ? '' : cat.initial_stock}
-                      onChange={(e) =>
-                        updateCategory(
-                          index,
-                          'initial_stock',
-                          e.target.value === '' ? 0 : Number(e.target.value) || 0,
-                        )
-                      }
-                      required
-                      compact
-                    />
-                  </div>
-                  {(cat.initial_stock !== undefined) && (
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400 space-y-0.5">
-                      <p>
-                        Places déjà vendues : {soldCountByIndex[index] ?? 0} (conservées à l'enregistrement)
-                      </p>
-                      <p>
-                        Places disponibles : {Math.max(0, (cat.initial_stock ?? 0) - (soldCountByIndex[index] ?? 0))}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addCategory}
-                className="w-full py-2 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                aria-label="Ajouter une catégorie de billets"
-              >
-                + Ajouter une catégorie
-              </button>
-            </fieldset>
+                ))}
+                <button
+                  type="button"
+                  onClick={addCategory}
+                  className="w-full py-2 border-2 border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg text-sm text-neutral-600 dark:text-neutral-400 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  aria-label="Ajouter une catégorie de billets"
+                >
+                  + Ajouter une catégorie
+                </button>
+              </fieldset>
+            )}
           </div>
         </div>
 

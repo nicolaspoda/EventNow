@@ -2,7 +2,8 @@ import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { Message } from './messageService';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Par défaut on utilise le proxy Vite (same-origin) en dev.
+const SOCKET_URL = import.meta.env.VITE_API_URL ?? '';
 
 interface SocketEvents {
   newMessage: (data: { conversationId: string; message: Message }) => void;

@@ -17,8 +17,8 @@ import type {
 const initialCategory: CreateTicketCategoryPayload = {
   name: '',
   description: '',
-  price: 0.5,
-  initial_stock: 10,
+  price: 0,
+  initial_stock: 0,
 };
 
 function toISOString(dateStr: string): string {
@@ -45,7 +45,7 @@ export function CreateEventPage() {
   const [imagePublicId, setImagePublicId] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventEndDate, setEventEndDate] = useState('');
-  const [communityPlaces, setCommunityPlaces] = useState(10);
+  const [communityPlaces, setCommunityPlaces] = useState(0);
   const [categories, setCategories] = useState<CreateTicketCategoryPayload[]>([
     { ...initialCategory },
   ]);
@@ -227,7 +227,6 @@ export function CreateEventPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
-              placeholder="Ex: Concert de jazz"
               compact
             />
 
@@ -237,7 +236,6 @@ export function CreateEventPage() {
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Décrivez votre événement"
               compact
             />
 
@@ -247,7 +245,7 @@ export function CreateEventPage() {
               onChange={setAddress}
               onAddressSelect={handleAddressSelect}
               label="Adresse de l'événement"
-              placeholder="Commencez à taper une adresse (ex: Tou...)"
+              placeholder=""
               required
               compact
             />
@@ -260,7 +258,6 @@ export function CreateEventPage() {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 required
-                placeholder="Ex: Toulouse"
                 compact
               />
               <FormField
@@ -270,7 +267,6 @@ export function CreateEventPage() {
                 value={postalCode}
                 onChange={(e) => setPostalCode(e.target.value)}
                 required
-                placeholder="Ex: 31000"
                 compact
               />
             </div>
@@ -281,7 +277,6 @@ export function CreateEventPage() {
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ex: Salle Pleyel, Zénith..."
               compact
             />
 
@@ -293,6 +288,7 @@ export function CreateEventPage() {
               }}
               label="Image de couverture (optionnel)"
               compact
+              hideEmptyHelperText
             />
           </div>
 
@@ -366,7 +362,6 @@ export function CreateEventPage() {
                       value={cat.name}
                       onChange={(e) => updateCategory(index, 'name', e.target.value)}
                       required
-                      placeholder="Ex: Standard, VIP"
                       compact
                     />
                     <FormField
@@ -377,7 +372,6 @@ export function CreateEventPage() {
                       onChange={(e) =>
                         updateCategory(index, 'description', e.target.value)
                       }
-                      placeholder="Ex: Place assise"
                       compact
                     />
                     <div className="grid grid-cols-2 gap-4">
@@ -395,7 +389,6 @@ export function CreateEventPage() {
                             e.target.value === '' ? 0 : Number(e.target.value),
                           )
                         }
-                        placeholder={minTicketPrice.toFixed(2)}
                         compact
                       />
                       <FormField

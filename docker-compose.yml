@@ -40,15 +40,19 @@ services:
       NODE_ENV: development
       # Désactive le rate limiting (évite "too many requests" pendant les tests E2E)
       DISABLE_THROTTLE: "true"
-      # CORS : origine du frontend (navigateur) pour autoriser les requêtes
-      FRONTEND_URL: http://localhost:5173,https://localhost:5173
+      # CORS / redirection OAuth : frontend en HTTPS (certificat auto-signé en dev)
+      FRONTEND_URL: https://localhost:5173,http://localhost:5173
+      CORS_ORIGINS: https://localhost:5173,http://localhost:5173
     volumes:
       - ./backend:/app
       - backend_node_modules:/app/node_modules
     depends_on:
       - postgres
       - redis
-    command: sh -c "npm install && npx prisma generate && npx prisma migrate deploy && npm run start:dev"
+    command: >
+      sh -c "mkdir -p certs &&
+      ([ -f certs/localhost-key.pem ] || openssl req -x509 -newkey rsa:2048 -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -days 365 -nodes -subj '/CN=localhost') &&
+      npm install && npx prisma generate && npx prisma migrate deploy && npm run start:dev"
 
   frontend:
     build:
@@ -59,10 +63,15 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: http://localhost:3000
+      # Le navigateur sur la machine hôte appelle l’API sur les ports exposés (HTTPS).
+      VITE_API_URL: https://localhost:3000
+      # Cible du proxy Vite (côté conteneur) si tu retires VITE_API_URL ou pour /api en same-origin.
+      VITE_API_PROXY_TARGET: https://backend:3000
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    depends_on:
+      - backend
     command: sh -c "npm install && npm run dev -- --host"
 
 volumes:

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:e2e": "VITE_API_URL=http://localhost:3000 vite",
+    "dev:e2e": "VITE_API_URL=https://localhost:3000 vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

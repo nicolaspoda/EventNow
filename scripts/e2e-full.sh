@@ -8,9 +8,9 @@ cd "$ROOT"
 echo "==> Démarrage des services (postgres, redis, backend)..."
 docker-compose up -d postgres redis backend
 
-echo "==> Attente du backend sur le port 3001..."
+echo "==> Attente du backend (HTTPS) sur le port 3000..."
 for i in $(seq 1 30); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 http://localhost:3001/ 2>/dev/null || echo "000")
+  code=$(curl -sk -o /dev/null -w "%{http_code}" --connect-timeout 2 https://localhost:3000/ 2>/dev/null || echo "000")
   if [[ "$code" =~ ^[0-9]{3}$ ]]; then
     echo "    Backend prêt (HTTP $code)."
     break

@@ -64,7 +64,7 @@ cd frontend && npx playwright install chromium
 npm run test:e2e:flows
 ```
 
-Le frontend Docker sur `http://localhost:5173` utilise déjà l’API sur le port 3001 ; Playwright réutilise ce serveur. Si aucun frontend n’est sur 5173, Playwright démarre `npm run dev:e2e` (avec `VITE_API_URL=http://localhost:3001`).
+Le frontend Docker sur `https://localhost:5173` pointe vers l’API `https://localhost:3000` ; Playwright réutilise ce serveur si déjà démarré. Sinon il lance `npm run dev:e2e` (avec `VITE_API_URL=https://localhost:3000`). Les erreurs de certificat sont ignorées (`ignoreHTTPSErrors` dans `playwright.config.ts`).
 
 - Une fenêtre **Client** : landing → connexion → catalogue → réservations → billets → commandes → dashboard client → création événement communautaire → réservation → checkout → paiement → succès → déconnexion.
 - Une fenêtre **Organisateur** : connexion → dashboard pro → remboursements → création/édition événement → stats → déconnexion.
@@ -81,16 +81,16 @@ Autres options :
 
 ## Variables
 
-- `PLAYWRIGHT_BASE_URL` : URL du frontend (défaut `http://localhost:5173`).
+- `PLAYWRIGHT_BASE_URL` : URL du frontend (défaut `https://localhost:5173`).
 
 ## Dépannage : la connexion reste sur /login
 
 Si les tests restent sur la page de connexion après avoir cliqué sur « Se connecter », l’API n’est probablement pas joignable par le navigateur :
 
-- **Avec Docker** : le backend est exposé sur le port **3001** (pas 3000). Le frontend doit appeler `http://localhost:3001`.
-  - Soit vous utilisez le **frontend Docker** (`docker-compose up`), déjà configuré avec `VITE_API_URL=http://localhost:3001` → ouvrez `http://localhost:5173` et lancez les tests.
-  - Soit vous lancez le front en local (`npm run dev`) : avant de lancer le dev server, définissez `VITE_API_URL=http://localhost:3001` (ou lancez avec `VITE_API_URL=http://localhost:3001 npm run dev`).
-- Vérifiez que le backend répond : `curl -s http://localhost:3001/api/v1/health` (ou le port que vous utilisez).
+- **Avec Docker** : le backend est exposé sur le port **3000** en **HTTPS**. Le frontend doit appeler `https://localhost:3000` (`VITE_API_URL` dans `docker-compose`).
+  - Soit vous utilisez le **frontend Docker** (`docker-compose up`) → ouvrez `https://localhost:5173` et lancez les tests.
+  - Soit vous lancez le front en local (`npm run dev`) : en général **sans** `VITE_API_URL` (proxy Vite vers l’API), ou `VITE_API_URL=https://localhost:3000` si vous appelez l’API directement.
+- Vérifiez que le backend répond : `curl -sk https://localhost:3000/` (certificat auto-signé : option `-k`).
 - Vérifiez que la base est seedée : `docker-compose run --rm backend npx prisma db seed`.
 
 ## Structure

@@ -39,6 +39,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
       ? 'bg-warning-500'
       : 'bg-success-500';
 
+  const isCommunity = event.type === 'COMMUNITY';
+
   return (
     <article
       className="event-card-modern group focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2"
@@ -227,18 +229,22 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
 
         {/* Footer */}
         <div className="event-card-footer">
-          <div className="flex items-center justify-between mb-3">
-            {/* Price */}
-            {minPrice === 0 ? (
-              <span className="text-lg font-bold text-success-500 dark:text-success-400">Gratuit</span>
-            ) : (
-              <div>
-                <span className="text-xs text-neutral-400 dark:text-neutral-500 block">À partir de</span>
-                <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
-                  {formatPrice(minPrice)} €
-                </span>
-              </div>
-            )}
+          <div
+            className={`flex items-center mb-3 ${
+              isCommunity ? 'justify-end' : 'justify-between'
+            }`}
+          >
+            {!isCommunity &&
+              (minPrice === 0 ? (
+                <span className="text-lg font-bold text-success-500 dark:text-success-400">Gratuit</span>
+              ) : (
+                <div>
+                  <span className="text-xs text-neutral-400 dark:text-neutral-500 block">À partir de</span>
+                  <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                    {formatPrice(minPrice)} €
+                  </span>
+                </div>
+              ))}
 
             {/* Stock indicator */}
             <div className="text-right">

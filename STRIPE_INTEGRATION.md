@@ -60,7 +60,7 @@ docker-compose up --build
 
 ### 2. Tester un paiement
 
-1. Connecte-toi sur http://localhost:5173
+1. Connecte-toi sur https://localhost:5173
 2. Choisis un événement professionnel (avec billetterie payante)
 3. Réserve des billets
 4. Sur la page de paiement, tu verras maintenant le **formulaire Stripe Elements**

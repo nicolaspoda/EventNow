@@ -6,10 +6,19 @@ import { configureHelmet } from './security/helmet.config';
 import { corsConfig } from './security/cors.config';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { CustomLoggerService } from './logger/logger.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 async function bootstrap() {
+  const certsPath = path.join(process.cwd(), 'certs');
+  const httpsOptions = {
+    key: fs.readFileSync(path.join(certsPath, 'localhost-key.pem')),
+    cert: fs.readFileSync(path.join(certsPath, 'localhost-cert.pem')),
+  };
+
   const app = await NestFactory.create(AppModule, {
     logger: new CustomLoggerService(),
+    httpsOptions,
   });
 
   app.useWebSocketAdapter(new IoAdapter(app));
@@ -36,10 +45,11 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  await app.listen(process.env.PORT || 3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
 
   logger.log(
-    `Application listening on port ${process.env.PORT || 3000}`,
+    `Application listening on https://localhost:${port}`,
     'Bootstrap',
   );
 }

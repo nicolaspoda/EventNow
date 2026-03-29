@@ -35,21 +35,6 @@ export default function LandingPage() {
               </svg>
             </Link>
           </div>
-
-          <div className="hero-stats">
-            <div className="hero-stat">
-              <div className="hero-stat-value">500+</div>
-              <div className="hero-stat-label">Événements</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-value">10K+</div>
-              <div className="hero-stat-label">Participants</div>
-            </div>
-            <div className="hero-stat">
-              <div className="hero-stat-value">4.9★</div>
-              <div className="hero-stat-label">Note moyenne</div>
-            </div>
-          </div>
         </div>
 
         {/* Wave separator */}

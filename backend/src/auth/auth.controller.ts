@@ -141,7 +141,9 @@ export class AuthController {
       user: userPayload,
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl =
+      process.env.FRONTEND_URL?.split(',')[0]?.trim() ||
+      'https://localhost:5173';
     res.redirect(`${frontendUrl}/auth/callback?code=${code}`);
   }
 

@@ -168,11 +168,13 @@ export function EventsMap({ events, userPosition, onEventClick, className = '' }
                       À {event.distance} km de vous
                     </p>
                   )}
-                  {event.ticketCategories && event.ticketCategories.length > 0 && (
-                    <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">
-                      À partir de {Math.min(...event.ticketCategories.map((c) => Number(c.price)))}€
-                    </p>
-                  )}
+                  {event.type !== 'COMMUNITY' &&
+                    event.ticketCategories &&
+                    event.ticketCategories.length > 0 && (
+                      <p className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                        À partir de {Math.min(...event.ticketCategories.map((c) => Number(c.price)))}€
+                      </p>
+                    )}
                 </div>
                 <button
                   type="button"

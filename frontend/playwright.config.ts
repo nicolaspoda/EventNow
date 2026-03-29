@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173';
+const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'https://localhost:5173';
 const slowMo = process.env.PLAYWRIGHT_HEADED_SLOW ? Number(process.env.PLAYWRIGHT_HEADED_SLOW) : 0;
 
 export default defineConfig({
@@ -12,6 +12,7 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }]],
   use: {
     baseURL,
+    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     ...(slowMo > 0 ? { launchOptions: { slowMo } } : {}),

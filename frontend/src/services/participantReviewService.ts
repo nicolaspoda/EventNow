@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Par défaut on utilise le proxy Vite (same-origin) en dev.
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 const API_BASE = `${API_URL}/api/v1`;
 
 export interface CreateParticipantReviewDto {

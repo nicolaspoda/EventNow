@@ -7,6 +7,8 @@ interface ImageUploadProps {
   label?: string;
   maxSize?: number;
   compact?: boolean;
+  /** Sans texte d’aide sous l’icône (état vide) */
+  hideEmptyHelperText?: boolean;
 }
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -17,6 +19,7 @@ export function ImageUpload({
   label = "Image de l'événement",
   maxSize = 5,
   compact = false,
+  hideEmptyHelperText = false,
 }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(currentImage ?? null);
   const [uploading, setUploading] = useState(false);
@@ -164,12 +167,16 @@ export function ImageUpload({
             <span className={compact ? 'text-4xl block mb-2' : 'text-5xl block mb-4'} aria-hidden>
               📷
             </span>
-            <p className={`text-neutral-600 dark:text-neutral-400 ${compact ? 'mb-1 text-sm' : 'mb-2'}`}>
-              Cliquez ou glissez-déposez une image
-            </p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              JPEG, PNG ou WebP — max {maxSize} Mo
-            </p>
+            {!hideEmptyHelperText && (
+              <>
+                <p className={`text-neutral-600 dark:text-neutral-400 ${compact ? 'mb-1 text-sm' : 'mb-2'}`}>
+                  Cliquez ou glissez-déposez une image
+                </p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  JPEG, PNG ou WebP — max {maxSize} Mo
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>
