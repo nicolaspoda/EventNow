@@ -2,8 +2,33 @@ import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { Message } from './messageService';
 
-// Par défaut on utilise le proxy Vite (same-origin) en dev.
-const SOCKET_URL = import.meta.env.VITE_API_URL ?? '';
+function getSocketBaseUrl(): string {
+  // Par défaut on utilise le same-origin (proxy Vite en dev, reverse proxy en prod).
+  const raw = import.meta.env.VITE_API_URL?.trim();
+  if (!raw) return '';
+
+  let base = raw.replace(/\/+$/, '');
+
+  // Evite une config locale HTTP qui casse derrière un backend HTTPS.
+  if (/^http:\/\/(localhost|127\.0\.0\.1):3000$/i.test(base)) {
+    base = base.replace(/^http:/i, 'https:');
+  }
+
+  // Si VITE_API_URL inclut /api ou /api/v1, on garde seulement l'origine pour Socket.IO.
+  try {
+    const url = new URL(base);
+    url.pathname = '';
+    url.search = '';
+    url.hash = '';
+    return url.toString().replace(/\/$/, '');
+  } catch {
+    return base
+      .replace(/\/api\/v\d+$/i, '')
+      .replace(/\/api$/i, '');
+  }
+}
+
+const SOCKET_BASE_URL = getSocketBaseUrl();
 
 interface SocketEvents {
   newMessage: (data: { conversationId: string; message: Message }) => void;
@@ -40,7 +65,8 @@ class SocketService {
 
       this.isConnecting = true;
 
-      this.socket = io(`${SOCKET_URL}/messages`, {
+      this.socket = io(`${SOCKET_BASE_URL}/messages`, {
+        path: '/socket.io',
         auth: { token },
         transports: ['websocket', 'polling'],
         reconnection: true,

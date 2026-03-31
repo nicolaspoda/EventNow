@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesService } from './messages.service';
 import { SendMessageDto } from './dto';
+import { getAllowedOrigins } from '../security/cors.config';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -20,22 +21,12 @@ interface AuthenticatedSocket extends Socket {
 
 @WebSocketGateway({
   cors: {
-    origin: [
-      'https://localhost:5173',
-      'https://localhost:3000',
-      'https://localhost:3001',
-      'https://127.0.0.1:5173',
-      'https://127.0.0.1:3000',
-      'https://127.0.0.1:3001',
-      'https://localhost:5174',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:3001',
-      'http://localhost:5174',
-    ],
+    origin: (origin, callback) => {
+      const allowed = getAllowedOrigins();
+      if (!origin) return callback(null, true);
+      if (allowed.includes(origin)) return callback(null, true);
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   },
   namespace: '/messages',

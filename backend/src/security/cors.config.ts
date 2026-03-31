@@ -12,7 +12,7 @@ const defaultOrigins = [
   'http://127.0.0.1:3000',
 ];
 
-function getAllowedOrigins(): string[] {
+export function getAllowedOrigins(): string[] {
   const fromFrontend = process.env.FRONTEND_URL?.split(',')
     .map((u) => u.trim())
     .filter(Boolean);
