@@ -88,7 +88,7 @@ const EventDetailPage: React.FC = () => {
       try {
         const result = await reviewService.canUserReview(id);
         setCanReview(result.canReview);
-      } catch (error) {
+      } catch {
         setCanReview(false);
       }
     };

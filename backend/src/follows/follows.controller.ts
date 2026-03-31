@@ -44,7 +44,11 @@ export class FollowsController {
     @Param('userId') followingId: string,
     @Body() body: { enabled: boolean },
   ) {
-    return this.followsService.setNotificationsEnabled(user.id, followingId, body.enabled === true);
+    return this.followsService.setNotificationsEnabled(
+      user.id,
+      followingId,
+      body.enabled === true,
+    );
   }
 
   @Get('user/:userId/check')
@@ -52,7 +56,10 @@ export class FollowsController {
     @CurrentUser() user: { id: string },
     @Param('userId') followingId: string,
   ) {
-    const following = await this.followsService.isFollowing(user.id, followingId);
+    const following = await this.followsService.isFollowing(
+      user.id,
+      followingId,
+    );
     return { following };
   }
 

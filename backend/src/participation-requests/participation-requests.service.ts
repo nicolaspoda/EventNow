@@ -55,10 +55,19 @@ export class ParticipationRequestsService {
     );
     const totalPlaces = participationCategory?.currentStock ?? 0;
     const acceptedCount = await this.prisma.participationRequest.count({
-      where: { eventId: dto.eventId, status: ParticipationRequestStatus.ACCEPTED },
+      where: {
+        eventId: dto.eventId,
+        status: ParticipationRequestStatus.ACCEPTED,
+      },
     });
-    if (event.ticketCategories?.length > 0 && totalPlaces > 0 && acceptedCount >= totalPlaces) {
-      throw new BadRequestException('Il n\'y a plus de places disponibles pour cet événement.');
+    if (
+      event.ticketCategories?.length > 0 &&
+      totalPlaces > 0 &&
+      acceptedCount >= totalPlaces
+    ) {
+      throw new BadRequestException(
+        "Il n'y a plus de places disponibles pour cet événement.",
+      );
     }
 
     const request = await this.prisma.participationRequest.create({
@@ -129,7 +138,10 @@ export class ParticipationRequestsService {
    * Résout un relatedId (eventId ou ancien requestId) vers l'eventId pour la redirection
    * depuis une notification PARTICIPATION_REQUEST. Gère les anciennes notifs (requestId) et les nouvelles (eventId).
    */
-  async resolveEventIdForNotification(relatedId: string, userId: string): Promise<{ eventId: string }> {
+  async resolveEventIdForNotification(
+    relatedId: string,
+    userId: string,
+  ): Promise<{ eventId: string }> {
     const event = await this.prisma.event.findUnique({
       where: { id: relatedId },
       select: { id: true, organizerId: true },
@@ -193,7 +205,9 @@ export class ParticipationRequestsService {
         status: ParticipationRequestStatus.PENDING,
       },
       include: {
-        user: { select: { id: true, email: true, username: true, avatarUrl: true } },
+        user: {
+          select: { id: true, email: true, username: true, avatarUrl: true },
+        },
         event: { select: { id: true, title: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -246,7 +260,7 @@ export class ParticipationRequestsService {
       if (dto.action === 'ACCEPT' && participationCategory) {
         if (participationCategory.currentStock < 1) {
           throw new BadRequestException(
-            'Il n\'y a plus de places disponibles pour cet événement.',
+            "Il n'y a plus de places disponibles pour cet événement.",
           );
         }
         await tx.ticketCategory.update({
@@ -275,9 +289,7 @@ export class ParticipationRequestsService {
               ? 'PARTICIPATION_ACCEPTED'
               : 'PARTICIPATION_REFUSED',
           title:
-            dto.action === 'ACCEPT'
-              ? 'Demande acceptée'
-              : 'Demande refusée',
+            dto.action === 'ACCEPT' ? 'Demande acceptée' : 'Demande refusée',
           body:
             dto.action === 'ACCEPT'
               ? `Votre demande pour participer à « ${updated.event.title} » a été acceptée.`

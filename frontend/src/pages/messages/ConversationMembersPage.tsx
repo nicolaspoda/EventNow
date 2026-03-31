@@ -6,6 +6,18 @@ import Button from '../../components/ui/Button';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (
+    err &&
+    typeof err === 'object' &&
+    'response' in err &&
+    (err as { response?: { data?: { message?: string } } }).response?.data?.message
+  ) {
+    return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+  }
+  return fallback;
+};
+
 export const ConversationMembersPage: React.FC = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
@@ -27,8 +39,8 @@ export const ConversationMembersPage: React.FC = () => {
       const data = await messageService.getConversation(conversationId);
       setConversation(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }
@@ -52,8 +64,8 @@ export const ConversationMembersPage: React.FC = () => {
       } else {
         await loadConversation();
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors du retrait');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Erreur lors du retrait'));
     } finally {
       setRemoving(null);
     }

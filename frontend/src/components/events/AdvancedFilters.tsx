@@ -11,7 +11,6 @@ interface AdvancedFiltersProps {
 export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   filters,
   onFilterChange,
-  onClear: _onClear,
   variant = 'card',
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -83,9 +82,9 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Type d'événement
-          </label>
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -183,9 +182,9 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       {expanded && (
         <div className="mt-6 space-y-6 pt-6 border-t border-neutral-200 dark:border-neutral-700">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Catégories
-            </label>
+            </p>
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => (
                 <button
@@ -205,9 +204,9 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Gamme de prix
-            </label>
+            </p>
             <div className="space-y-2">
               {priceRanges.map((range) => (
                 <label key={range.value} className="flex items-center cursor-pointer">
@@ -226,9 +225,9 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Période
-            </label>
+            </p>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label htmlFor="dateFrom" className="text-xs text-neutral-600 dark:text-neutral-400">

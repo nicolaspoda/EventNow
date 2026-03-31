@@ -13,6 +13,7 @@ import {
   UpdateConversationDto,
   ConversationType,
 } from './dto';
+import { ConversationType as PrismaConversationType } from '@prisma/client';
 
 @Injectable()
 export class MessagesService {
@@ -36,7 +37,7 @@ export class MessagesService {
 
     if (dto.type === ConversationType.EVENT && !dto.eventId) {
       throw new BadRequestException(
-        'Un eventId est requis pour les conversations d\'événement',
+        "Un eventId est requis pour les conversations d'événement",
       );
     }
 
@@ -198,11 +199,14 @@ export class MessagesService {
 
     return conversations.map((conv) => {
       const currentUserMember = conv.members.find((m) => m.userId === userId);
-      const unreadCount = conv.messages.length > 0 && currentUserMember
-        ? conv.messages.filter(
-            (msg) => msg.createdAt > currentUserMember.lastReadAt && msg.senderId !== userId,
-          ).length
-        : 0;
+      const unreadCount =
+        conv.messages.length > 0 && currentUserMember
+          ? conv.messages.filter(
+              (msg) =>
+                msg.createdAt > currentUserMember.lastReadAt &&
+                msg.senderId !== userId,
+            ).length
+          : 0;
 
       return {
         ...conv,
@@ -237,7 +241,7 @@ export class MessagesService {
     const isMember = conversation.members.some((m) => m.userId === userId);
     if (!isMember) {
       throw new ForbiddenException(
-        'Vous n\'êtes pas membre de cette conversation',
+        "Vous n'êtes pas membre de cette conversation",
       );
     }
 
@@ -291,8 +295,14 @@ export class MessagesService {
   }) {
     const serialized = {
       ...msg,
-      createdAt: msg.createdAt instanceof Date ? msg.createdAt.toISOString() : msg.createdAt,
-      updatedAt: msg.updatedAt instanceof Date ? msg.updatedAt.toISOString() : msg.updatedAt,
+      createdAt:
+        msg.createdAt instanceof Date
+          ? msg.createdAt.toISOString()
+          : msg.createdAt,
+      updatedAt:
+        msg.updatedAt instanceof Date
+          ? msg.updatedAt.toISOString()
+          : msg.updatedAt,
     };
     return serialized;
   }
@@ -332,8 +342,8 @@ export class MessagesService {
     );
     for (const member of otherMembers) {
       const conversationName =
-        conversation.type === ConversationType.DIRECT
-          ? (message.sender.username || 'Quelqu\'un')
+        conversation.type === PrismaConversationType.DIRECT
+          ? message.sender.username || "Quelqu'un"
           : conversation.name || 'Conversation';
 
       await this.notificationsService.createNotification({
@@ -348,16 +358,12 @@ export class MessagesService {
     return this.serializeMessage(message);
   }
 
-  async addMembers(
-    conversationId: string,
-    userId: string,
-    dto: AddMembersDto,
-  ) {
+  async addMembers(conversationId: string, userId: string, dto: AddMembersDto) {
     const conversation = await this.getConversation(conversationId, userId);
 
-    if (conversation.type === ConversationType.DIRECT) {
+    if (conversation.type === PrismaConversationType.DIRECT) {
       throw new BadRequestException(
-        'Impossible d\'ajouter des membres à une conversation directe',
+        "Impossible d'ajouter des membres à une conversation directe",
       );
     }
 
@@ -367,7 +373,9 @@ export class MessagesService {
     );
 
     if (newMemberIds.length === 0) {
-      throw new BadRequestException('Tous les membres sont déjà dans la conversation');
+      throw new BadRequestException(
+        'Tous les membres sont déjà dans la conversation',
+      );
     }
 
     await this.prisma.conversationMember.createMany({
@@ -397,15 +405,15 @@ export class MessagesService {
   ) {
     const conversation = await this.getConversation(conversationId, userId);
 
-    if (conversation.type === ConversationType.DIRECT) {
+    if (conversation.type === PrismaConversationType.DIRECT) {
       throw new BadRequestException(
-        'Impossible de retirer des membres d\'une conversation directe',
+        "Impossible de retirer des membres d'une conversation directe",
       );
     }
 
     if (userId !== conversation.createdBy && userId !== memberIdToRemove) {
       throw new ForbiddenException(
-        'Seul le créateur peut retirer d\'autres membres',
+        "Seul le créateur peut retirer d'autres membres",
       );
     }
 
@@ -436,7 +444,7 @@ export class MessagesService {
   ) {
     const conversation = await this.getConversation(conversationId, userId);
 
-    if (conversation.type === ConversationType.DIRECT) {
+    if (conversation.type === PrismaConversationType.DIRECT) {
       throw new BadRequestException(
         'Impossible de modifier une conversation directe',
       );
@@ -490,7 +498,7 @@ export class MessagesService {
   async deleteConversation(conversationId: string, userId: string) {
     const conversation = await this.getConversation(conversationId, userId);
 
-    if (conversation.type !== ConversationType.GROUP) {
+    if (conversation.type !== PrismaConversationType.GROUP) {
       throw new BadRequestException(
         'Seules les conversations de groupe peuvent être supprimées',
       );
@@ -570,15 +578,16 @@ export class MessagesService {
     });
 
     if (!conversation && isOrganizer) {
-      const acceptedParticipants = await this.prisma.participationRequest.findMany({
-        where: {
-          eventId,
-          status: 'ACCEPTED',
-        },
-        select: {
-          userId: true,
-        },
-      });
+      const acceptedParticipants =
+        await this.prisma.participationRequest.findMany({
+          where: {
+            eventId,
+            status: 'ACCEPTED',
+          },
+          select: {
+            userId: true,
+          },
+        });
 
       const memberIds = [
         event.organizerId,
@@ -629,7 +638,7 @@ export class MessagesService {
 
     if (!conversation) {
       throw new NotFoundException(
-        'Conversation d\'événement non trouvée. L\'organisateur doit la créer.',
+        "Conversation d'événement non trouvée. L'organisateur doit la créer.",
       );
     }
 

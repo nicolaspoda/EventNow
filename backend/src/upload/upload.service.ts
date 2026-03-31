@@ -47,7 +47,7 @@ export class UploadService {
           folder,
         },
         (error, result) => {
-          if (error) return reject(error);
+          if (error) return reject(new Error(error.message));
           resolve(result!);
         },
       );
@@ -75,9 +75,7 @@ export class UploadService {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
       console.error('Erreur suppression image:', error);
-      throw new BadRequestException(
-        "Erreur lors de la suppression de l'image",
-      );
+      throw new BadRequestException("Erreur lors de la suppression de l'image");
     }
   }
 

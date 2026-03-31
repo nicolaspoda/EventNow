@@ -24,13 +24,6 @@ export function NavbarLinks() {
   const menusRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setEventsMenuOpen(false);
-    setPurchasesMenuOpen(false);
-    setOrganizerMenuOpen(false);
-    setStaffMenuOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menusRef.current && !menusRef.current.contains(e.target as Node)) {
         setEventsMenuOpen(false);

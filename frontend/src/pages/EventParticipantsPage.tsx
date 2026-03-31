@@ -15,8 +15,6 @@ export function EventParticipantsPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     dashboardService
       .getEventParticipants(id)
       .then((res) => {

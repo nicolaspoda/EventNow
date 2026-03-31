@@ -29,7 +29,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const message =
       typeof rawMessage === 'string'
         ? rawMessage
-        : rawMessage && typeof rawMessage === 'object' && 'message' in rawMessage
+        : rawMessage &&
+            typeof rawMessage === 'object' &&
+            'message' in rawMessage
           ? (() => {
               const m = (rawMessage as { message: unknown }).message;
               if (Array.isArray(m)) return m.join(', ');

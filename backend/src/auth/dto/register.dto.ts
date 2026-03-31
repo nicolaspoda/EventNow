@@ -15,10 +15,15 @@ const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 export class RegisterDto {
   @IsString()
   @IsNotEmpty({ message: "Le nom d'utilisateur est obligatoire" })
-  @MinLength(3, { message: "Le nom d'utilisateur doit contenir au moins 3 caracteres" })
-  @MaxLength(30, { message: "Le nom d'utilisateur ne peut pas depasser 30 caracteres" })
+  @MinLength(3, {
+    message: "Le nom d'utilisateur doit contenir au moins 3 caracteres",
+  })
+  @MaxLength(30, {
+    message: "Le nom d'utilisateur ne peut pas depasser 30 caracteres",
+  })
   @Matches(USERNAME_REGEX, {
-    message: "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
+    message:
+      "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
   })
   username: string;
 
@@ -35,10 +40,15 @@ export class RegisterDto {
 export class RegisterOrganizerDto {
   @IsString()
   @IsNotEmpty({ message: "Le nom d'utilisateur est obligatoire" })
-  @MinLength(3, { message: "Le nom d'utilisateur doit contenir au moins 3 caracteres" })
-  @MaxLength(30, { message: "Le nom d'utilisateur ne peut pas depasser 30 caracteres" })
+  @MinLength(3, {
+    message: "Le nom d'utilisateur doit contenir au moins 3 caracteres",
+  })
+  @MaxLength(30, {
+    message: "Le nom d'utilisateur ne peut pas depasser 30 caracteres",
+  })
   @Matches(USERNAME_REGEX, {
-    message: "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
+    message:
+      "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et underscores",
   })
   username: string;
 
@@ -57,6 +67,8 @@ export class RegisterOrganizerDto {
 
   @Transform(({ value }) => value === true || value === 'true')
   @IsBoolean()
-  @IsNotEmpty({ message: "Vous devez confirmer etre un organisateur d'evenement" })
+  @IsNotEmpty({
+    message: "Vous devez confirmer etre un organisateur d'evenement",
+  })
   confirmOrganizer: boolean;
 }

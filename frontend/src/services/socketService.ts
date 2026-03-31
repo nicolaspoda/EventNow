@@ -32,16 +32,19 @@ const SOCKET_BASE_URL = getSocketBaseUrl();
 
 interface SocketEvents {
   newMessage: (data: { conversationId: string; message: Message }) => void;
-  conversationUpdated: (data: { conversationId: string; conversation: any }) => void;
+  conversationUpdated: (data: { conversationId: string; conversation: unknown }) => void;
   memberAdded: (data: { conversationId: string; userId: string }) => void;
   memberRemoved: (data: { conversationId: string; userId: string }) => void;
   userTyping: (data: { conversationId: string; userId: string; isTyping: boolean }) => void;
   newNotification: () => void;
 }
 
+type EventHandler = (data: unknown) => void;
+type SocketAck = { error?: string; message?: Message };
+
 class SocketService {
   private socket: Socket | null = null;
-  private eventHandlers: Map<string, Set<Function>> = new Map();
+  private eventHandlers: Map<string, Set<EventHandler>> = new Map();
   private isConnecting = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -91,7 +94,7 @@ class SocketService {
         }
       });
 
-      this.socket.on('disconnect', (_reason) => {
+      this.socket.on('disconnect', () => {
         this.isConnecting = false;
       });
 
@@ -99,7 +102,7 @@ class SocketService {
         this.emit('newMessage', data);
       });
 
-      this.socket.on('conversationUpdated', (data: { conversationId: string; conversation: any }) => {
+      this.socket.on('conversationUpdated', (data: { conversationId: string; conversation: unknown }) => {
         this.emit('conversationUpdated', data);
       });
 
@@ -144,7 +147,7 @@ class SocketService {
         return;
       }
 
-      this.socket.emit('joinConversation', { conversationId }, (response: any) => {
+      this.socket.emit('joinConversation', { conversationId }, (response: SocketAck) => {
         if (response?.error) {
           console.error('[Socket] Error joining conversation:', response.error);
           reject(new Error(response.error));
@@ -171,12 +174,12 @@ class SocketService {
       this.socket.emit(
         'sendMessage',
         { conversationId, content },
-        (response: any) => {
+        (response: SocketAck) => {
           if (response?.error) {
             console.error('[Socket] Error sending message:', response.error);
             reject(new Error(response.error));
           } else {
-            resolve(response.message);
+            resolve(response.message as Message);
           }
         }
       );
@@ -203,7 +206,7 @@ class SocketService {
     }
   }
 
-  private emit(event: string, data: any) {
+  private emit(event: string, data: unknown) {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       handlers.forEach((handler) => {

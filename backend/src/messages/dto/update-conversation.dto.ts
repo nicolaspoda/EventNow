@@ -10,7 +10,7 @@ export class UpdateConversationDto {
   name?: string;
 
   @ApiPropertyOptional({
-    description: 'URL de l\'image de la conversation',
+    description: "URL de l'image de la conversation",
   })
   @IsOptional()
   @IsString()

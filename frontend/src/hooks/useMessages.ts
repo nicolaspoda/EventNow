@@ -7,6 +7,17 @@ export const useMessages = (conversationId?: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const getErrorMessage = (err: unknown, fallback: string): string => {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+    }
+    return fallback;
+  };
 
   const loadConversations = async () => {
     try {
@@ -14,8 +25,8 @@ export const useMessages = (conversationId?: string) => {
       const data = await messageService.getUserConversations();
       setConversations(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }
@@ -27,8 +38,8 @@ export const useMessages = (conversationId?: string) => {
       const data = await messageService.getConversation(id);
       setCurrentConversation(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }
@@ -44,8 +55,8 @@ export const useMessages = (conversationId?: string) => {
         setMessages(data);
       }
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }

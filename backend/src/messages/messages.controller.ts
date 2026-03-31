@@ -37,14 +37,19 @@ export class MessagesController {
   }
 
   @Get('conversations')
-  @ApiOperation({ summary: 'Obtenir toutes les conversations de l\'utilisateur' })
+  @ApiOperation({
+    summary: "Obtenir toutes les conversations de l'utilisateur",
+  })
   async getUserConversations(@CurrentUser('id') userId: string) {
     try {
       return await this.messagesService.getUserConversations(userId);
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
       const message = (err as { message?: string })?.message ?? '';
-      if (code === 'P2021' || /does not exist|relation.*does not exist/i.test(message)) {
+      if (
+        code === 'P2021' ||
+        /does not exist|relation.*does not exist/i.test(message)
+      ) {
         console.warn(
           '[Messages] Tables messagerie absentes ? Exécutez: npx prisma migrate deploy',
           message,
@@ -84,7 +89,7 @@ export class MessagesController {
   }
 
   @Get('conversations/:id/messages')
-  @ApiOperation({ summary: 'Obtenir les messages d\'une conversation' })
+  @ApiOperation({ summary: "Obtenir les messages d'une conversation" })
   async getMessages(
     @Param('id') conversationId: string,
     @CurrentUser('id') userId: string,
@@ -120,7 +125,7 @@ export class MessagesController {
   }
 
   @Delete('conversations/:id/members/:memberId')
-  @ApiOperation({ summary: 'Retirer un membre d\'une conversation' })
+  @ApiOperation({ summary: "Retirer un membre d'une conversation" })
   async removeMember(
     @Param('id') conversationId: string,
     @Param('memberId') memberId: string,
@@ -139,7 +144,7 @@ export class MessagesController {
   }
 
   @Get('events/:eventId/conversation')
-  @ApiOperation({ summary: 'Obtenir ou créer la conversation d\'un événement' })
+  @ApiOperation({ summary: "Obtenir ou créer la conversation d'un événement" })
   async getEventConversation(
     @Param('eventId') eventId: string,
     @CurrentUser('id') userId: string,

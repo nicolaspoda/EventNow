@@ -17,7 +17,13 @@ import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RedisService } from '../redis/redis.service';
-import { RegisterDto, RegisterOrganizerDto, LoginDto, ExchangeCodeDto, UpdateProfileDto } from './dto';
+import {
+  RegisterDto,
+  RegisterOrganizerDto,
+  LoginDto,
+  ExchangeCodeDto,
+  UpdateProfileDto,
+} from './dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -91,10 +97,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async searchUsers(@Req() req: Request) {
     const q = typeof req.query?.q === 'string' ? req.query.q : '';
-    const limit = Math.min(
-      20,
-      Math.max(1, Number(req.query?.limit) || 15),
-    );
+    const limit = Math.min(20, Math.max(1, Number(req.query?.limit) || 15));
     return this.authService.searchUsersByUsername(q, limit);
   }
 
@@ -107,10 +110,7 @@ export class AuthController {
   @Put('profile')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async updateProfile(
-    @CurrentUser() user: any,
-    @Body() dto: UpdateProfileDto,
-  ) {
+  async updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(user.id, dto);
   }
 
@@ -158,7 +158,12 @@ export class AuthController {
     return data as {
       accessToken: string;
       refreshToken: string;
-      user: { id: string; email: string; role: string; username: string | null };
+      user: {
+        id: string;
+        email: string;
+        role: string;
+        username: string | null;
+      };
     };
   }
 }

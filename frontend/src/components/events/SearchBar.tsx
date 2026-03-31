@@ -17,14 +17,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (value.length >= 2) {
-      void fetchSuggestions(value);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
+  const fetchSuggestions = async (query: string) => {
+    try {
+      const data = await eventService.getSuggestions(query);
+      setSuggestions(data);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error('Erreur suggestions:', error);
     }
-  }, [value]);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -41,23 +42,22 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
     setTimeout(() => setShowSuggestions(false), 150);
   };
 
-  const fetchSuggestions = async (query: string) => {
-    try {
-      const data = await eventService.getSuggestions(query);
-      setSuggestions(data);
-      setShowSuggestions(true);
-    } catch (error) {
-      console.error('Erreur suggestions:', error);
-    }
-  };
-
   return (
     <div className="relative" ref={containerRef}>
       <div className="relative">
         <input
           type="search"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const nextValue = e.target.value;
+            onChange(nextValue);
+            if (nextValue.length >= 2) {
+              void fetchSuggestions(nextValue);
+            } else {
+              setSuggestions([]);
+              setShowSuggestions(false);
+            }
+          }}
           onFocus={() => {
             if (suggestions.length > 0) setShowSuggestions(true);
           }}

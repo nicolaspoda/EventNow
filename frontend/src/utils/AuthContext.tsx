@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const refreshToken = sessionStorage.getItem('refreshToken');
     
     if (!initialUser || !refreshToken) {
-      setIsSessionReady(true);
+      queueMicrotask(() => setIsSessionReady(true));
       initialRefreshDoneRef.current = true;
       return;
     }

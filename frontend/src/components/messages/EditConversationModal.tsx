@@ -78,10 +78,11 @@ export const EditConversationModal: React.FC<EditConversationModalProps> = ({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <label htmlFor="conversation-name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Nom du groupe
             </label>
             <Input
+              id="conversation-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}

@@ -9,7 +9,12 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { FollowsService } from '../follows/follows.service';
-import { RegisterDto, RegisterOrganizerDto, LoginDto, UpdateProfileDto } from './dto';
+import {
+  RegisterDto,
+  RegisterOrganizerDto,
+  LoginDto,
+  UpdateProfileDto,
+} from './dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
@@ -90,11 +95,13 @@ export class AuthService {
     });
 
     if (existingByUsername) {
-      throw new ConflictException('Ce nom d\'utilisateur est deja pris');
+      throw new ConflictException("Ce nom d'utilisateur est deja pris");
     }
 
     if (!dto.confirmOrganizer) {
-      throw new BadRequestException('Vous devez confirmer etre un organisateur d\'evenement');
+      throw new BadRequestException(
+        "Vous devez confirmer etre un organisateur d'evenement",
+      );
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
@@ -243,11 +250,12 @@ export class AuthService {
       throw new UnauthorizedException('Utilisateur non trouvé');
     }
 
-    const participantReviewStats = await this.prisma.participantReview.aggregate({
-      where: { participantId: userId },
-      _avg: { rating: true },
-      _count: { rating: true },
-    });
+    const participantReviewStats =
+      await this.prisma.participantReview.aggregate({
+        where: { participantId: userId },
+        _avg: { rating: true },
+        _count: { rating: true },
+      });
 
     const organizerReviewStats = await this.prisma.review.aggregate({
       where: {
@@ -277,13 +285,15 @@ export class AuthService {
         ordersCount: user._count.orders,
         reviewsCount: user._count.reviews,
         eventsOrganized: user._count.organizedEvents,
-        averageRatingAsParticipant: participantReviewStats._avg.rating != null
-          ? Math.round(participantReviewStats._avg.rating * 10) / 10
-          : null,
+        averageRatingAsParticipant:
+          participantReviewStats._avg.rating != null
+            ? Math.round(participantReviewStats._avg.rating * 10) / 10
+            : null,
         totalReviewsAsParticipant: participantReviewStats._count.rating,
-        averageRatingOnMyEvents: organizerReviewStats._avg.rating != null
-          ? Math.round(organizerReviewStats._avg.rating * 10) / 10
-          : null,
+        averageRatingOnMyEvents:
+          organizerReviewStats._avg.rating != null
+            ? Math.round(organizerReviewStats._avg.rating * 10) / 10
+            : null,
         totalReviewsOnMyEvents: organizerReviewStats._count.rating,
       },
     };
@@ -306,27 +316,28 @@ export class AuthService {
       throw new UnauthorizedException('Utilisateur non trouvé');
     }
 
-    const acceptedParticipations = await this.prisma.participationRequest.findMany({
-      where: {
-        userId,
-        status: 'ACCEPTED',
-      },
-      include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            eventDate: true,
-            location: true,
-            imageUrl: true,
-            type: true,
-            category: true,
+    const acceptedParticipations =
+      await this.prisma.participationRequest.findMany({
+        where: {
+          userId,
+          status: 'ACCEPTED',
+        },
+        include: {
+          event: {
+            select: {
+              id: true,
+              title: true,
+              eventDate: true,
+              location: true,
+              imageUrl: true,
+              type: true,
+              category: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-    });
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      });
 
     const participantReviews = await this.prisma.participantReview.findMany({
       where: { participantId: userId },
@@ -355,18 +366,23 @@ export class AuthService {
       _count: { rating: true },
     });
 
-    const [followRecord, followersCount, followingCount, friendsCount, isFriend] =
-      await Promise.all([
-        currentUserId
-          ? this.followsService.getFollowRecord(currentUserId, userId)
-          : Promise.resolve(null),
-        this.followsService.getFollowersCount(userId),
-        this.followsService.getFollowingCount(userId),
-        this.followsService.getFriendsCount(userId),
-        currentUserId
-          ? this.followsService.isFriend(currentUserId, userId)
-          : Promise.resolve(false),
-      ]);
+    const [
+      followRecord,
+      followersCount,
+      followingCount,
+      friendsCount,
+      isFriend,
+    ] = await Promise.all([
+      currentUserId
+        ? this.followsService.getFollowRecord(currentUserId, userId)
+        : Promise.resolve(null),
+      this.followsService.getFollowersCount(userId),
+      this.followsService.getFollowingCount(userId),
+      this.followsService.getFriendsCount(userId),
+      currentUserId
+        ? this.followsService.isFriend(currentUserId, userId)
+        : Promise.resolve(false),
+    ]);
 
     return {
       id: user.id,
@@ -378,7 +394,9 @@ export class AuthService {
       ...(currentUserId && {
         isFollowing: !!followRecord,
         isFriend: !!isFriend,
-        ...(followRecord && { notificationsEnabled: followRecord.notificationsEnabled }),
+        ...(followRecord && {
+          notificationsEnabled: followRecord.notificationsEnabled,
+        }),
       }),
       followersCount,
       followingCount,
@@ -395,14 +413,16 @@ export class AuthService {
         reviewerName: r.reviewer.username ?? 'Anonyme',
       })),
       stats: {
-        averageRating: avgRating._avg.rating != null
-          ? Math.round(avgRating._avg.rating * 10) / 10
-          : null,
+        averageRating:
+          avgRating._avg.rating != null
+            ? Math.round(avgRating._avg.rating * 10) / 10
+            : null,
         totalReviews: avgRating._count.rating,
         participatedEventsCount: acceptedParticipations.length,
-        averageRatingOnMyEvents: organizerReviewStats._avg.rating != null
-          ? Math.round(organizerReviewStats._avg.rating * 10) / 10
-          : null,
+        averageRatingOnMyEvents:
+          organizerReviewStats._avg.rating != null
+            ? Math.round(organizerReviewStats._avg.rating * 10) / 10
+            : null,
         totalReviewsOnMyEvents: organizerReviewStats._count.rating,
       },
     };
@@ -430,10 +450,7 @@ export class AuthService {
     };
   }
 
-  async validateGoogleUser(googleUser: {
-    googleId: string;
-    email: string;
-  }) {
+  async validateGoogleUser(googleUser: { googleId: string; email: string }) {
     let user = await this.prisma.user.findUnique({
       where: { googleId: googleUser.googleId },
     });
@@ -456,7 +473,9 @@ export class AuthService {
       return user;
     }
 
-    const username = await this.generateUniqueUsernameFromEmail(googleUser.email);
+    const username = await this.generateUniqueUsernameFromEmail(
+      googleUser.email,
+    );
 
     user = await this.prisma.user.create({
       data: {
@@ -470,12 +489,15 @@ export class AuthService {
     return user;
   }
 
-  private async generateUniqueUsernameFromEmail(email: string): Promise<string> {
-    const base = email
-      .split('@')[0]
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '')
-      .slice(0, 20) || 'user';
+  private async generateUniqueUsernameFromEmail(
+    email: string,
+  ): Promise<string> {
+    const base =
+      email
+        .split('@')[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .slice(0, 20) || 'user';
     let username = base;
     let suffix = 0;
     while (true) {

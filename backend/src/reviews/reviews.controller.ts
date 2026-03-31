@@ -52,7 +52,10 @@ export class ReviewsController {
     @CurrentUser() user: any,
   ) {
     if (user.role !== 'CLIENT') {
-      return { canReview: false, reason: 'Seuls les clients peuvent laisser un avis' };
+      return {
+        canReview: false,
+        reason: 'Seuls les clients peuvent laisser un avis',
+      };
     }
     return this.reviewsService.canUserReview(eventId, user.id);
   }

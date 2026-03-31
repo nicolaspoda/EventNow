@@ -20,6 +20,17 @@ export default function EventParticipantReviewsPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const getErrorMessage = (err: unknown, fallback: string): string => {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+    }
+    return fallback;
+  };
 
   useEffect(() => {
     fetchParticipants();
@@ -33,8 +44,8 @@ export default function EventParticipantReviewsPage() {
       setLoading(true);
       const data = await participantReviewService.getParticipantsForEvent(token, eventId);
       setParticipants(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement des participants');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement des participants'));
     } finally {
       setLoading(false);
     }
@@ -56,8 +67,8 @@ export default function EventParticipantReviewsPage() {
       setRating(5);
       setComment('');
       await fetchParticipants();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Erreur lors de la soumission de l\'avis');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, "Erreur lors de la soumission de l'avis"));
     } finally {
       setSubmitting(false);
     }
@@ -133,9 +144,9 @@ export default function EventParticipantReviewsPage() {
                     ) : reviewingParticipant === participant.id ? (
                       <div className="mt-4">
                         <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Note
-                          </label>
+                          </p>
                           <div className="flex items-center gap-4">
                             <StarRating
                               value={rating}
@@ -149,9 +160,9 @@ export default function EventParticipantReviewsPage() {
                         </div>
 
                         <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Commentaire (optionnel)
-                          </label>
+                          </p>
                           <textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}

@@ -41,7 +41,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
       } else {
         onSuccess();
       }
-    } catch (err) {
+    } catch {
       onError('Une erreur est survenue lors du paiement');
       setProcessing(false);
     }

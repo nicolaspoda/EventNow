@@ -23,7 +23,7 @@ export class EventStaffGuard implements CanActivate {
 
     if (!eventId) {
       throw new BadRequestException(
-        'Impossible de déterminer l\'événement concerné',
+        "Impossible de déterminer l'événement concerné",
       );
     }
 

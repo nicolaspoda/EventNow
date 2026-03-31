@@ -21,6 +21,17 @@ export function ParticipationRequestModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const getErrorMessage = (err: unknown): string => {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+    }
+    return "Erreur lors de l'envoi de la demande";
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +50,8 @@ export function ParticipationRequestModal({
         setMessage('');
         setSuccess(false);
       }, 2000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'envoi de la demande');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

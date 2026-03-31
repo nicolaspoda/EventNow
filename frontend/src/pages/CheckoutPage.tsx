@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { orderService } from '../services/orderService';
 import { stripeService } from '../services/stripeService';
@@ -15,7 +16,7 @@ const CheckoutPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [stripePromise, setStripePromise] = useState<any>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
 
   const bookingId = searchParams.get('bookingId');
 
@@ -32,7 +33,7 @@ const CheckoutPage: React.FC = () => {
         setError(null);
 
         const publishableKey = await stripeService.getPublishableKey();
-        const stripeInstance = await loadStripe(publishableKey);
+        const stripeInstance = loadStripe(publishableKey);
         setStripePromise(stripeInstance);
 
         const data = await orderService.initiatePayment(bookingId);

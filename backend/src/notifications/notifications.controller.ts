@@ -28,10 +28,7 @@ export class NotificationsController {
     @CurrentUser() user: { id: string },
     @Query('unreadOnly') unreadOnly?: string,
   ) {
-    return this.notificationsService.getForUser(
-      user.id,
-      unreadOnly === 'true',
-    );
+    return this.notificationsService.getForUser(user.id, unreadOnly === 'true');
   }
 
   @Get('unread-count')
@@ -44,10 +41,7 @@ export class NotificationsController {
   @Patch(':id/read')
   @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
-  markAsRead(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  markAsRead(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.notificationsService.markAsRead(id, user.id);
   }
 
@@ -61,10 +55,7 @@ export class NotificationsController {
   @Delete(':id')
   @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
-  delete(
-    @Param('id') id: string,
-    @CurrentUser() user: { id: string },
-  ) {
+  delete(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.notificationsService.delete(id, user.id);
   }
 

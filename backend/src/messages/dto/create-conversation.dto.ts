@@ -23,7 +23,7 @@ export class CreateConversationDto {
   name?: string;
 
   @ApiPropertyOptional({
-    description: 'URL de l\'image de la conversation',
+    description: "URL de l'image de la conversation",
   })
   @IsOptional()
   @IsString()
@@ -38,7 +38,7 @@ export class CreateConversationDto {
   memberIds: string[];
 
   @ApiPropertyOptional({
-    description: 'ID de l\'événement (pour les conversations d\'événement)',
+    description: "ID de l'événement (pour les conversations d'événement)",
   })
   @IsOptional()
   @IsUUID('4')

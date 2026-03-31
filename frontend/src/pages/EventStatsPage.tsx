@@ -14,8 +14,6 @@ export function EventStatsPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     dashboardService
       .getEventStats(id)
       .then((res) => {

@@ -27,7 +27,12 @@ declare module 'pdfkit' {
     lineWidth(w: number): this;
     roundedRect(x: number, y: number, w: number, h: number, r: number): this;
     stroke(): this;
-    image(src: Buffer, x: number, y: number, options?: { width?: number; height?: number }): this;
+    image(
+      src: Buffer,
+      x: number,
+      y: number,
+      options?: { width?: number; height?: number },
+    ): this;
     moveTo(x: number, y: number): this;
     lineTo(x: number, y: number): this;
     y: number;

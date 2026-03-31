@@ -11,11 +11,7 @@ import { FollowsService } from '../follows/follows.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { EventType } from './dto/create-event.dto';
-import {
-  SearchEventsDto,
-  SortBy,
-  PriceRange,
-} from './dto/search-events.dto';
+import { SearchEventsDto, SortBy, PriceRange } from './dto/search-events.dto';
 
 @Injectable()
 export class EventsService {
@@ -32,8 +28,10 @@ export class EventsService {
     userRole?: string,
   ) {
     const requestedType =
-      createEventDto.type === 'COMMUNITY' ? 'COMMUNITY' : 'PROFESSIONAL';
-    if (userRole === 'CLIENT' && requestedType === 'PROFESSIONAL') {
+      createEventDto.type === EventType.COMMUNITY
+        ? EventType.COMMUNITY
+        : EventType.PROFESSIONAL;
+    if (userRole === 'CLIENT' && requestedType === EventType.PROFESSIONAL) {
       throw new ForbiddenException(
         'Seuls les organisateurs peuvent créer des événements professionnels.',
       );
@@ -50,7 +48,7 @@ export class EventsService {
       );
     }
 
-    if (requestedType === 'PROFESSIONAL') {
+    if (requestedType === EventType.PROFESSIONAL) {
       if (!endDate) {
         throw new BadRequestException(
           "L'heure de fin est obligatoire pour les événements professionnels",
@@ -81,8 +79,8 @@ export class EventsService {
           endDate: endDate,
           organizerId: userId,
           type:
-            createEventDto.type === 'COMMUNITY'
-              ? 'COMMUNITY'
+            createEventDto.type === EventType.COMMUNITY
+              ? EventType.COMMUNITY
               : requestedType,
           category: createEventDto.category || 'OTHER',
           ticketCategories: {
@@ -131,10 +129,10 @@ export class EventsService {
       this.followsService.getFriendIds(userId),
     ]);
     const friendIdSet = new Set(friendIds);
-    const followersNotFriends = followerIds.filter((id) => !friendIdSet.has(id));
-    const friendsWithNotif = friendIds.filter((id) =>
-      followerIds.includes(id),
+    const followersNotFriends = followerIds.filter(
+      (id) => !friendIdSet.has(id),
     );
+    const friendsWithNotif = friendIds.filter((id) => followerIds.includes(id));
     if (followersNotFriends.length > 0) {
       await this.notificationsService.createForManyUsers(followersNotFriends, {
         type: 'NEW_EVENT_FROM_FOLLOWED',
@@ -211,11 +209,11 @@ export class EventsService {
           },
         },
         organizer: {
-              select: {
-                id: true,
-                email: true,
-                username: true,
-              },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+          },
         },
         reviews: {
           select: {
@@ -267,11 +265,11 @@ export class EventsService {
           },
         },
         organizer: {
-              select: {
-                id: true,
-                email: true,
-                username: true,
-              },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+          },
         },
         reviews: {
           select: {
@@ -326,8 +324,14 @@ export class EventsService {
       organizerId: event.organizerId,
       type: event.type,
       category: event.category,
-      createdAt: event.createdAt instanceof Date ? event.createdAt.toISOString() : event.createdAt,
-      updatedAt: event.updatedAt instanceof Date ? event.updatedAt.toISOString() : event.updatedAt,
+      createdAt:
+        event.createdAt instanceof Date
+          ? event.createdAt.toISOString()
+          : event.createdAt,
+      updatedAt:
+        event.updatedAt instanceof Date
+          ? event.updatedAt.toISOString()
+          : event.updatedAt,
       organizer: event.organizer,
       averageRating,
       totalReviews: event.reviews.length,
@@ -359,7 +363,7 @@ export class EventsService {
         : event.eventDate;
       const newEnd = updateEventDto.end_date
         ? new Date(updateEventDto.end_date)
-        : event.endDate ?? null;
+        : (event.endDate ?? null);
 
       const isProduction = process.env.NODE_ENV === 'production';
       if (isProduction && newStart <= new Date()) {
@@ -404,8 +408,16 @@ export class EventsService {
         },
       });
       const hasPaidTickets = paidTicketsCount > 0;
-      if (process.env.NODE_ENV !== 'production' && updateEventDto.ticket_categories) {
-        console.log('[events.update] ticket_categories envoyées, billets payants:', paidTicketsCount, '→ on ne supprime pas les catégories:', hasPaidTickets);
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        updateEventDto.ticket_categories
+      ) {
+        console.log(
+          '[events.update] ticket_categories envoyées, billets payants:',
+          paidTicketsCount,
+          '→ on ne supprime pas les catégories:',
+          hasPaidTickets,
+        );
       }
 
       if (updateEventDto.ticket_categories && !hasPaidTickets) {
@@ -478,22 +490,25 @@ export class EventsService {
             endDate: new Date(updateEventDto.end_date),
           }),
           ...(updateEventDto.category && { category: updateEventDto.category }),
-          ...(updateEventDto.ticket_categories && !hasPaidTickets && {
-            ticketCategories: {
-              create: updateEventDto.ticket_categories.map((category, index) => {
-                const initial = category.initial_stock;
-                const soldCount = soldByCategoryIndex[index] ?? 0;
-                const currentStock = Math.max(0, initial - soldCount);
-                return {
-                  name: category.name,
-                  description: category.description,
-                  price: category.price,
-                  initialStock: initial,
-                  currentStock,
-                };
-              }),
-            },
-          }),
+          ...(updateEventDto.ticket_categories &&
+            !hasPaidTickets && {
+              ticketCategories: {
+                create: updateEventDto.ticket_categories.map(
+                  (category, index) => {
+                    const initial = category.initial_stock;
+                    const soldCount = soldByCategoryIndex[index] ?? 0;
+                    const currentStock = Math.max(0, initial - soldCount);
+                    return {
+                      name: category.name,
+                      description: category.description,
+                      price: category.price,
+                      initialStock: initial,
+                      currentStock,
+                    };
+                  },
+                ),
+              },
+            }),
         },
         include: {
           ticketCategories: true,
@@ -604,7 +619,10 @@ export class EventsService {
     } = searchDto;
 
     const page = Math.max(1, Math.floor(Number(pageParam)) || 1);
-    const limit = Math.min(100, Math.max(1, Math.floor(Number(limitParam)) || 20));
+    const limit = Math.min(
+      100,
+      Math.max(1, Math.floor(Number(limitParam)) || 20),
+    );
 
     const useDistancePath =
       userLat != null &&
@@ -779,8 +797,8 @@ export class EventsService {
         )
         .map((event) => {
           const dist = this.haversineDistance(
-            userLat!,
-            userLon!,
+            userLat,
+            userLon,
             event.latitude!,
             event.longitude!,
           );
@@ -789,7 +807,9 @@ export class EventsService {
         .sort((a, b) => a.distance - b.distance);
 
       if (radiusKm != null && radiusKm > 0) {
-        withDistance = withDistance.filter(({ distance }) => distance <= radiusKm);
+        withDistance = withDistance.filter(
+          ({ distance }) => distance <= radiusKm,
+        );
       }
 
       const total = withDistance.length;
@@ -961,8 +981,14 @@ export class EventsService {
         organizerId: ev.organizerId,
         type: ev.type,
         category: ev.category,
-        createdAt: ev.createdAt instanceof Date ? ev.createdAt.toISOString() : ev.createdAt,
-        updatedAt: ev.updatedAt instanceof Date ? ev.updatedAt.toISOString() : ev.updatedAt,
+        createdAt:
+          ev.createdAt instanceof Date
+            ? ev.createdAt.toISOString()
+            : ev.createdAt,
+        updatedAt:
+          ev.updatedAt instanceof Date
+            ? ev.updatedAt.toISOString()
+            : ev.updatedAt,
         organizer: ev.organizer,
         averageRating,
         totalReviews: ev.reviews.length,
@@ -1012,7 +1038,10 @@ export class EventsService {
     return conditions;
   }
 
-  private buildOrderBy(sortBy: SortBy): { eventDate?: 'asc' | 'desc'; createdAt?: 'asc' | 'desc' } {
+  private buildOrderBy(sortBy: SortBy): {
+    eventDate?: 'asc' | 'desc';
+    createdAt?: 'asc' | 'desc';
+  } {
     switch (sortBy) {
       case SortBy.DATE_ASC:
         return { eventDate: 'asc' };

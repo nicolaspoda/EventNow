@@ -17,7 +17,7 @@ export class MailController {
       const message =
         error instanceof Error
           ? error.message
-          : 'Erreur inconnue lors de l\'envoi';
+          : "Erreur inconnue lors de l'envoi";
       throw new BadRequestException(
         `Impossible d'envoyer l'email. Vérifiez MAIL_USER et MAIL_PASSWORD dans .env. Détail : ${message}`,
       );

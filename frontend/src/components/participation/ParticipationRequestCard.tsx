@@ -25,6 +25,17 @@ interface ParticipationRequestCardProps {
 export function ParticipationRequestCard({ request, onRespond }: ParticipationRequestCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const getErrorMessage = (err: unknown): string => {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+    }
+    return 'Erreur lors de la réponse';
+  };
 
   const handleRespond = async (action: 'ACCEPT' | 'REFUSE') => {
     try {
@@ -32,8 +43,8 @@ export function ParticipationRequestCard({ request, onRespond }: ParticipationRe
       setError(null);
       await participationService.respond(request.id, action);
       onRespond?.();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de la réponse');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

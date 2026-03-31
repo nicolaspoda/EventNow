@@ -14,6 +14,11 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
+  const eventWithMeta = event as Event & {
+    averageRating?: number;
+    totalReviews?: number;
+    distance?: number;
+  };
   const totalStock = event.ticketCategories.reduce((sum, cat) => sum + cat.currentStock, 0);
   const prices = event.ticketCategories.map((cat) => parsePrice(cat.price));
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -122,11 +127,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
         </h3>
 
         {/* Reviews */}
-        {(event as any).averageRating !== undefined && (event as any).totalReviews > 0 && (
+        {eventWithMeta.averageRating !== undefined && (eventWithMeta.totalReviews ?? 0) > 0 && (
           <div className="mb-3">
             <AverageRating
-              average={(event as any).averageRating}
-              totalReviews={(event as any).totalReviews}
+              average={eventWithMeta.averageRating}
+              totalReviews={eventWithMeta.totalReviews ?? 0}
               size="sm"
             />
           </div>
@@ -137,7 +142,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
           className="space-y-1.5 mb-4 text-neutral-600 dark:text-neutral-300"
           aria-describedby={`event-title-${event.id}`}
         >
-          {(event as Event & { distance?: number }).distance != null && (
+          {eventWithMeta.distance != null && (
             <div className="flex items-center gap-2">
               <svg
                 className="w-4 h-4 flex-shrink-0 text-primary-400"
@@ -149,7 +154,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="text-sm font-medium">
-                À {(event as Event & { distance?: number }).distance} km
+                À {eventWithMeta.distance} km
               </span>
             </div>
           )}

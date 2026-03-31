@@ -9,8 +9,6 @@ describe('Dashboard (e2e)', () => {
   let prisma: PrismaService;
   let organizerToken: string;
   let clientToken: string;
-  let organizerId: string;
-  let clientId: string;
   let eventId: string;
 
   beforeAll(async () => {
@@ -45,7 +43,6 @@ describe('Dashboard (e2e)', () => {
       });
 
     organizerToken = organizerRes.body.accessToken;
-    organizerId = organizerRes.body.user.id;
 
     const clientRes = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
@@ -56,7 +53,6 @@ describe('Dashboard (e2e)', () => {
       });
 
     clientToken = clientRes.body.accessToken;
-    clientId = clientRes.body.user.id;
 
     const eventRes = await request(app.getHttpServer())
       .post('/api/v1/events')

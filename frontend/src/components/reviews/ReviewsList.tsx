@@ -28,6 +28,8 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, refreshTrigge
   }>({ averageRating: null, totalReviews: 0 });
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'recent' | 'highest' | 'lowest'>('recent');
+  const toSortBy = (value: string): 'recent' | 'highest' | 'lowest' =>
+    value === 'highest' || value === 'lowest' ? value : 'recent';
 
   useEffect(() => {
     fetchReviews();
@@ -74,7 +76,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, refreshTrigge
           <p className="text-neutral-600 dark:text-neutral-300">{stats.totalReviews} avis</p>
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(toSortBy(e.target.value))}
             className="px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:ring-2 focus:ring-primary-500 focus:outline-none"
           >
             <option value="recent">Plus récents</option>

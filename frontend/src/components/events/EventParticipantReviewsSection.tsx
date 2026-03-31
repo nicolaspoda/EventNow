@@ -143,9 +143,9 @@ export function EventParticipantReviewsSection({ eventId, hideTitle = false }: E
                     ) : reviewingParticipant === participant.id ? (
                       <div className="mt-4 space-y-3">
                         <div>
-                          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                          <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                             Note
-                          </label>
+                          </p>
                           <div className="flex items-center gap-2">
                             <StarRating value={rating} onChange={setRating} size="lg" />
                             <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
@@ -154,9 +154,9 @@ export function EventParticipantReviewsSection({ eventId, hideTitle = false }: E
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                          <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                             Avis (optionnel)
-                          </label>
+                          </p>
                           <textarea
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}

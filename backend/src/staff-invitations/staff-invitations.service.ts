@@ -42,13 +42,19 @@ export class StaffInvitationsService {
     }
     if (prismaError?.code === 'P2021' || prismaError?.code === 'P2018') {
       throw new BadRequestException(
-        'La base de données n\'est pas à jour. Exécutez : npx prisma migrate deploy',
+        "La base de données n'est pas à jour. Exécutez : npx prisma migrate deploy",
       );
     }
-    const msg = typeof prismaError?.message === 'string' ? prismaError.message : '';
-    if (msg.includes('Unknown arg') || msg.includes('column') || msg.includes('relation') || msg.includes('does not exist')) {
+    const msg =
+      typeof prismaError?.message === 'string' ? prismaError.message : '';
+    if (
+      msg.includes('Unknown arg') ||
+      msg.includes('column') ||
+      msg.includes('relation') ||
+      msg.includes('does not exist')
+    ) {
       throw new BadRequestException(
-        'La base de données n\'est pas à jour. Exécutez : npx prisma migrate deploy',
+        "La base de données n'est pas à jour. Exécutez : npx prisma migrate deploy",
       );
     }
     console.error(`[StaffInvitations] ${context} error:`, err);
@@ -85,7 +91,7 @@ export class StaffInvitationsService {
 
     if (!event || event.organizerId !== invitedById) {
       throw new BadRequestException(
-        'Événement introuvable ou vous n\'en êtes pas l\'organisateur',
+        "Événement introuvable ou vous n'en êtes pas l'organisateur",
       );
     }
 
@@ -101,7 +107,7 @@ export class StaffInvitationsService {
 
     if (!existingUser) {
       throw new BadRequestException(
-        'Aucun compte n\'existe avec cette adresse email. La personne doit d\'abord s\'inscrire sur la plateforme.',
+        "Aucun compte n'existe avec cette adresse email. La personne doit d'abord s'inscrire sur la plateforme.",
       );
     }
 

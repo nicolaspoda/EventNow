@@ -34,7 +34,7 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
       onSuccess();
       setRating(0);
       setComment('');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(getApiErrorMessage(err, "Erreur lors de la création de l'avis"));
     } finally {
       setLoading(false);
@@ -46,9 +46,9 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
       <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-4">Laisser un avis</h3>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+        <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Note globale
-        </label>
+        </p>
         <StarRating value={rating} onChange={setRating} size="lg" />
       </div>
 

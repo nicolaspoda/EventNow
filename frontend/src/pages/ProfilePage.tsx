@@ -386,15 +386,15 @@ export const ProfilePage: React.FC = () => {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</label>
+                <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</p>
                 <p className="text-neutral-900 dark:text-neutral-100">{profile.username || '—'}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</label>
+                <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</p>
                 <p className="text-neutral-900 dark:text-neutral-100 text-sm truncate">{profile.email}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Rôle</label>
+                <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Rôle</p>
                 <p className="text-neutral-900 dark:text-neutral-100">{roleLabels[profile.role]}</p>
               </div>
             </div>

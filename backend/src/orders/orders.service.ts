@@ -251,7 +251,7 @@ export class OrdersService {
 
     if (order.status !== OrderStatus.PAID) {
       throw new BadRequestException(
-        'Seules les commandes payées peuvent faire l\'objet d\'une demande de remboursement.',
+        "Seules les commandes payées peuvent faire l'objet d'une demande de remboursement.",
       );
     }
 
@@ -338,7 +338,9 @@ export class OrdersService {
 
       if (!order) throw new NotFoundException('Commande introuvable');
       if (order.status !== OrderStatus.REFUND_REQUESTED) {
-        throw new BadRequestException('Cette commande n\'est pas en attente de remboursement.');
+        throw new BadRequestException(
+          "Cette commande n'est pas en attente de remboursement.",
+        );
       }
 
       const event = order.tickets[0]?.ticketCategory?.event;
@@ -399,7 +401,9 @@ export class OrdersService {
 
     if (!order) throw new NotFoundException('Commande introuvable');
     if (order.status !== OrderStatus.REFUND_REQUESTED) {
-      throw new BadRequestException('Cette commande n\'est pas en attente de remboursement.');
+      throw new BadRequestException(
+        "Cette commande n'est pas en attente de remboursement.",
+      );
     }
 
     const event = order.tickets[0]?.ticketCategory?.event;

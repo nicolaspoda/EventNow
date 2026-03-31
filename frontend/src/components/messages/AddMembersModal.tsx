@@ -87,9 +87,9 @@ export const AddMembersModal: React.FC<AddMembersModalProps> = ({
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mb-4">
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Rechercher par nom d&apos;utilisateur
-            </label>
+            </p>
             <UserSearchAutocomplete
               placeholder="Tapez un nom d'utilisateur..."
               navigateOnSelect={false}

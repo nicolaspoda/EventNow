@@ -15,6 +15,18 @@ import { ConversationMembersModal } from '../../components/messages/Conversation
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
 
+const getErrorMessage = (err: unknown, fallback: string): string => {
+  if (
+    err &&
+    typeof err === 'object' &&
+    'response' in err &&
+    (err as { response?: { data?: { message?: string } } }).response?.data?.message
+  ) {
+    return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+  }
+  return fallback;
+};
+
 export const ConversationPage: React.FC = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { user } = useAuth();
@@ -83,7 +95,7 @@ export const ConversationPage: React.FC = () => {
       }
     };
 
-    const handleConversationUpdated = (data: { conversationId: string; conversation: any }) => {
+    const handleConversationUpdated = (data: { conversationId: string; conversation: Conversation }) => {
       if (data.conversationId === conversationId) {
         setConversation(data.conversation);
       }
@@ -127,8 +139,8 @@ export const ConversationPage: React.FC = () => {
       const data = await messageService.getConversation(conversationId);
       setConversation(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement'));
     }
   };
 
@@ -149,8 +161,8 @@ export const ConversationPage: React.FC = () => {
       }
       setHasMore(data.length === 50);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
       setLoadingMore(false);

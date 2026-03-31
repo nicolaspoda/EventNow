@@ -54,16 +54,20 @@ export class ParticipantReviewsService {
       );
     }
 
-    const participationRequest = await this.prisma.participationRequest.findUnique({
-      where: {
-        eventId_userId: {
-          eventId: dto.eventId,
-          userId: dto.participantId,
+    const participationRequest =
+      await this.prisma.participationRequest.findUnique({
+        where: {
+          eventId_userId: {
+            eventId: dto.eventId,
+            userId: dto.participantId,
+          },
         },
-      },
-    });
+      });
 
-    if (!participationRequest || participationRequest.status !== ParticipationRequestStatus.ACCEPTED) {
+    if (
+      !participationRequest ||
+      participationRequest.status !== ParticipationRequestStatus.ACCEPTED
+    ) {
       throw new BadRequestException(
         "Ce participant n'a pas été accepté pour cet événement",
       );
@@ -174,7 +178,11 @@ export class ParticipantReviewsService {
     });
   }
 
-  async update(reviewId: string, reviewerId: string, dto: UpdateParticipantReviewDto) {
+  async update(
+    reviewId: string,
+    reviewerId: string,
+    dto: UpdateParticipantReviewDto,
+  ) {
     const review = await this.prisma.participantReview.findUnique({
       where: { id: reviewId },
     });
@@ -236,22 +244,23 @@ export class ParticipantReviewsService {
       );
     }
 
-    const acceptedParticipants = await this.prisma.participationRequest.findMany({
-      where: {
-        eventId,
-        status: ParticipationRequestStatus.ACCEPTED,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            avatarUrl: true,
+    const acceptedParticipants =
+      await this.prisma.participationRequest.findMany({
+        where: {
+          eventId,
+          status: ParticipationRequestStatus.ACCEPTED,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              username: true,
+              avatarUrl: true,
+            },
           },
         },
-      },
-    });
+      });
 
     const participantsWithReviews = await Promise.all(
       acceptedParticipants.map(async (pr) => {

@@ -406,7 +406,10 @@ export class DashboardService {
   }
 
   /** Date de fin d'événement : endDate si défini, sinon eventDate + 6h. Utilisé pour afficher les billets tant que l'événement n'est pas terminé. */
-  private getEventEndDate(event: { eventDate: Date; endDate?: Date | null }): Date {
+  private getEventEndDate(event: {
+    eventDate: Date;
+    endDate?: Date | null;
+  }): Date {
     if (event.endDate) return new Date(event.endDate);
     const end = new Date(event.eventDate);
     end.setHours(end.getHours() + 6);
@@ -464,48 +467,52 @@ export class DashboardService {
       },
     });
 
-    const acceptedParticipations = await this.prisma.participationRequest.findMany({
-      where: {
-        userId,
-        status: 'ACCEPTED',
-        event: {
-          eventDate: { gte: oneDayAgo },
+    const acceptedParticipations =
+      await this.prisma.participationRequest.findMany({
+        where: {
+          userId,
+          status: 'ACCEPTED',
+          event: {
+            eventDate: { gte: oneDayAgo },
+          },
         },
-      },
-      include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            eventDate: true,
-            endDate: true,
-            location: true,
-            imageUrl: true,
-            type: true,
-            category: true,
-            organizer: {
-              select: {
-                id: true,
-                email: true,
-                username: true,
+        include: {
+          event: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              eventDate: true,
+              endDate: true,
+              location: true,
+              imageUrl: true,
+              type: true,
+              category: true,
+              organizer: {
+                select: {
+                  id: true,
+                  email: true,
+                  username: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: {
-        event: {
-          eventDate: 'asc',
+        orderBy: {
+          event: {
+            eventDate: 'asc',
+          },
         },
-      },
-    });
+      });
 
-    const ticketEventsMap = new Map<string, {
-      event: typeof ticketsWithEvents[0]['ticketCategory']['event'];
-      ticketCount: number;
-      categoryName: string;
-    }>();
+    const ticketEventsMap = new Map<
+      string,
+      {
+        event: (typeof ticketsWithEvents)[0]['ticketCategory']['event'];
+        ticketCount: number;
+        categoryName: string;
+      }
+    >();
 
     for (const ticket of ticketsWithEvents) {
       const event = ticket.ticketCategory.event;
@@ -523,46 +530,52 @@ export class DashboardService {
       }
     }
 
-    const professionalEvents = Array.from(ticketEventsMap.values()).map((item) => ({
-      id: item.event.id,
-      title: item.event.title,
-      description: item.event.description,
-      eventDate: item.event.eventDate instanceof Date 
-        ? item.event.eventDate.toISOString() 
-        : item.event.eventDate,
-      location: item.event.location,
-      imageUrl: item.event.imageUrl,
-      type: item.event.type,
-      category: item.event.category,
-      organizer: (item.event as any).organizer,
-      participationType: 'TICKET' as const,
-      ticketCount: item.ticketCount,
-      categoryName: item.categoryName,
-    }));
+    const professionalEvents = Array.from(ticketEventsMap.values()).map(
+      (item) => ({
+        id: item.event.id,
+        title: item.event.title,
+        description: item.event.description,
+        eventDate:
+          item.event.eventDate instanceof Date
+            ? item.event.eventDate.toISOString()
+            : item.event.eventDate,
+        location: item.event.location,
+        imageUrl: item.event.imageUrl,
+        type: item.event.type,
+        category: item.event.category,
+        organizer: (item.event as any).organizer,
+        participationType: 'TICKET' as const,
+        ticketCount: item.ticketCount,
+        categoryName: item.categoryName,
+      }),
+    );
 
     const communityEvents = acceptedParticipations
       .filter((p) => this.getEventEndDate(p.event) > now)
       .map((participation) => ({
-      id: participation.event.id,
-      title: participation.event.title,
-      description: participation.event.description,
-      eventDate: participation.event.eventDate instanceof Date 
-        ? participation.event.eventDate.toISOString() 
-        : participation.event.eventDate,
-      location: participation.event.location,
-      imageUrl: participation.event.imageUrl,
-      type: participation.event.type,
-      category: participation.event.category,
-      organizer: (participation.event as any).organizer,
-      participationType: 'PARTICIPATION' as const,
-      acceptedAt: participation.respondedAt,
-    }));
+        id: participation.event.id,
+        title: participation.event.title,
+        description: participation.event.description,
+        eventDate:
+          participation.event.eventDate instanceof Date
+            ? participation.event.eventDate.toISOString()
+            : participation.event.eventDate,
+        location: participation.event.location,
+        imageUrl: participation.event.imageUrl,
+        type: participation.event.type,
+        category: participation.event.category,
+        organizer: (participation.event as any).organizer,
+        participationType: 'PARTICIPATION' as const,
+        acceptedAt: participation.respondedAt,
+      }));
 
-    const allEvents = [...professionalEvents, ...communityEvents].sort((a, b) => {
-      const dateA = new Date(a.eventDate);
-      const dateB = new Date(b.eventDate);
-      return dateA.getTime() - dateB.getTime();
-    });
+    const allEvents = [...professionalEvents, ...communityEvents].sort(
+      (a, b) => {
+        const dateA = new Date(a.eventDate);
+        const dateB = new Date(b.eventDate);
+        return dateA.getTime() - dateB.getTime();
+      },
+    );
 
     return allEvents;
   }
@@ -614,44 +627,48 @@ export class DashboardService {
       },
     });
 
-    const acceptedParticipations = await this.prisma.participationRequest.findMany({
-      where: {
-        userId,
-        status: 'ACCEPTED',
-      },
-      include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            eventDate: true,
-            location: true,
-            imageUrl: true,
-            type: true,
-            category: true,
-            organizer: {
-              select: {
-                id: true,
-                email: true,
-                username: true,
+    const acceptedParticipations =
+      await this.prisma.participationRequest.findMany({
+        where: {
+          userId,
+          status: 'ACCEPTED',
+        },
+        include: {
+          event: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              eventDate: true,
+              location: true,
+              imageUrl: true,
+              type: true,
+              category: true,
+              organizer: {
+                select: {
+                  id: true,
+                  email: true,
+                  username: true,
+                },
               },
             },
           },
         },
-      },
-      orderBy: {
-        event: {
-          eventDate: 'desc',
+        orderBy: {
+          event: {
+            eventDate: 'desc',
+          },
         },
-      },
-    });
+      });
 
-    const ticketEventsMap = new Map<string, {
-      event: typeof ticketsWithEvents[0]['ticketCategory']['event'];
-      ticketCount: number;
-      categoryName: string;
-    }>();
+    const ticketEventsMap = new Map<
+      string,
+      {
+        event: (typeof ticketsWithEvents)[0]['ticketCategory']['event'];
+        ticketCount: number;
+        categoryName: string;
+      }
+    >();
 
     for (const ticket of ticketsWithEvents) {
       const eventId = ticket.ticketCategory.event.id;
@@ -667,31 +684,35 @@ export class DashboardService {
       }
     }
 
-    const professionalEvents = Array.from(ticketEventsMap.values()).map((item) => {
-      const eventDate = item.event.eventDate instanceof Date
-        ? item.event.eventDate.toISOString()
-        : item.event.eventDate;
-      return {
-        id: item.event.id,
-        title: item.event.title,
-        description: item.event.description,
-        eventDate,
-        location: item.event.location,
-        imageUrl: item.event.imageUrl,
-        type: item.event.type,
-        category: item.event.category,
-        organizer: (item.event as any).organizer,
-        participationType: 'TICKET' as const,
-        ticketCount: item.ticketCount,
-        categoryName: item.categoryName,
-        isPast: new Date(eventDate) < now,
-      };
-    });
+    const professionalEvents = Array.from(ticketEventsMap.values()).map(
+      (item) => {
+        const eventDate =
+          item.event.eventDate instanceof Date
+            ? item.event.eventDate.toISOString()
+            : item.event.eventDate;
+        return {
+          id: item.event.id,
+          title: item.event.title,
+          description: item.event.description,
+          eventDate,
+          location: item.event.location,
+          imageUrl: item.event.imageUrl,
+          type: item.event.type,
+          category: item.event.category,
+          organizer: (item.event as any).organizer,
+          participationType: 'TICKET' as const,
+          ticketCount: item.ticketCount,
+          categoryName: item.categoryName,
+          isPast: new Date(eventDate) < now,
+        };
+      },
+    );
 
     const communityEvents = acceptedParticipations.map((participation) => {
-      const eventDate = participation.event.eventDate instanceof Date
-        ? participation.event.eventDate.toISOString()
-        : participation.event.eventDate;
+      const eventDate =
+        participation.event.eventDate instanceof Date
+          ? participation.event.eventDate.toISOString()
+          : participation.event.eventDate;
       return {
         id: participation.event.id,
         title: participation.event.title,
@@ -708,11 +729,13 @@ export class DashboardService {
       };
     });
 
-    const allEvents = [...professionalEvents, ...communityEvents].sort((a, b) => {
-      const dateA = new Date(a.eventDate);
-      const dateB = new Date(b.eventDate);
-      return dateB.getTime() - dateA.getTime();
-    });
+    const allEvents = [...professionalEvents, ...communityEvents].sort(
+      (a, b) => {
+        const dateA = new Date(a.eventDate);
+        const dateB = new Date(b.eventDate);
+        return dateB.getTime() - dateA.getTime();
+      },
+    );
 
     return allEvents;
   }

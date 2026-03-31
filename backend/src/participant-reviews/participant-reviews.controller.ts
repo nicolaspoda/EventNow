@@ -11,10 +11,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ParticipantReviewsService } from './participant-reviews.service';
-import {
-  CreateParticipantReviewDto,
-  UpdateParticipantReviewDto,
-} from './dto';
+import { CreateParticipantReviewDto, UpdateParticipantReviewDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -61,7 +58,10 @@ export class ParticipantReviewsController {
     @Param('eventId') eventId: string,
     @CurrentUser() user: { id: string },
   ) {
-    return this.participantReviewsService.getParticipantsForEvent(eventId, user.id);
+    return this.participantReviewsService.getParticipantsForEvent(
+      eventId,
+      user.id,
+    );
   }
 
   @Patch(':id')

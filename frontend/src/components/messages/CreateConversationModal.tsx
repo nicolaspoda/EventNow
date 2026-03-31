@@ -133,10 +133,11 @@ export const CreateConversationModal: React.FC<
         <div className="flex-1 overflow-y-auto p-6">
           {conversationType === 'group' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              <label htmlFor="group-name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Nom du groupe
               </label>
               <Input
+                id="group-name"
                 type="text"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
@@ -147,11 +148,11 @@ export const CreateConversationModal: React.FC<
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               {conversationType === 'direct'
                 ? 'Rechercher un utilisateur par nom d\'utilisateur'
                 : 'Rechercher et ajouter des membres'}
-            </label>
+            </p>
             <UserSearchAutocomplete
               placeholder="Tapez un nom d'utilisateur..."
               navigateOnSelect={false}

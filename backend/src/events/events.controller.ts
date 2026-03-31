@@ -13,11 +13,7 @@ import {
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { EventsService } from './events.service';
-import {
-  CreateEventDto,
-  UpdateEventDto,
-  GetEventsQueryDto,
-} from './dto';
+import { CreateEventDto, UpdateEventDto, GetEventsQueryDto } from './dto';
 import { SearchEventsDto } from './dto/search-events.dto';
 import { EventCategory } from './dto/create-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

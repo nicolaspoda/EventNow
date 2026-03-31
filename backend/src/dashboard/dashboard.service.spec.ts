@@ -5,7 +5,6 @@ import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('DashboardService', () => {
   let service: DashboardService;
-  let prisma: PrismaService;
 
   const mockPrismaService = {
     event: {
@@ -29,7 +28,6 @@ describe('DashboardService', () => {
     }).compile();
 
     service = module.get<DashboardService>(DashboardService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   afterEach(() => {

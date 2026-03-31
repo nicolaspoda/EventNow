@@ -246,16 +246,16 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
             <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Informations</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</label>
+                <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</p>
                 <p className="text-neutral-900 dark:text-neutral-100">{localProfile.username || '—'}</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</label>
+                <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Email</p>
                 <p className="text-neutral-900 dark:text-neutral-100 text-sm truncate">{localProfile.email}</p>
               </div>
               {localProfile.role && (
                 <div>
-                  <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Rôle</label>
+                  <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Rôle</p>
                   <p className="text-neutral-900 dark:text-neutral-100">{roleLabels[localProfile.role] || localProfile.role}</p>
                 </div>
               )}

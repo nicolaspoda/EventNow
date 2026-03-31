@@ -76,7 +76,8 @@ export class PaymentService {
         status: 'pending',
       };
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erreur Stripe inconnue';
+      const message =
+        err instanceof Error ? err.message : 'Erreur Stripe inconnue';
       throw new BadRequestException(
         `Impossible d'initialiser le paiement: ${message}`,
       );

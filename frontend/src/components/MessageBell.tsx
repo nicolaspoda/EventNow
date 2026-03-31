@@ -23,7 +23,7 @@ export function MessageBell() {
       setApiError(false);
       const count = data.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
       setUnreadCount(count);
-    } catch (error) {
+    } catch {
       setApiError(true);
       setUnreadCount(0);
       setConversations([]);
@@ -38,7 +38,7 @@ export function MessageBell() {
       setConversations(data.filter((conv) => (conv.unreadCount || 0) > 0).slice(0, 5));
       const count = data.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
       setUnreadCount(count);
-    } catch (error) {
+    } catch {
       setApiError(true);
       setConversations([]);
       setUnreadCount(0);

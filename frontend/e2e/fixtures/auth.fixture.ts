@@ -8,18 +8,18 @@ type AuthFixtures = {
 };
 
 export const test = base.extend<AuthFixtures>({
-  loginAsOrganizer: async ({ page }, use) => {
-    await use(async () => {
+  loginAsOrganizer: async ({ page }, fixture) => {
+    await fixture(async () => {
       await loginWith(page, testUsers.organizer.email, testUsers.organizer.password);
     });
   },
-  loginAsClient: async ({ page }, use) => {
-    await use(async () => {
+  loginAsClient: async ({ page }, fixture) => {
+    await fixture(async () => {
       await loginWith(page, testUsers.client.email, testUsers.client.password);
     });
   },
-  loginAsStaff: async ({ page }, use) => {
-    await use(async () => {
+  loginAsStaff: async ({ page }, fixture) => {
+    await fixture(async () => {
       await loginWith(page, testUsers.staff.email, testUsers.staff.password);
     });
   },

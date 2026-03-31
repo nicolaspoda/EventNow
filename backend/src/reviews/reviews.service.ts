@@ -16,7 +16,11 @@ export class ReviewsService {
   /**
    * Retourne true si l'utilisateur a assisté à l'événement (billet validé ou participation acceptée pour événement communautaire).
    */
-  private async hasAttended(eventId: string, userId: string, eventType: EventType): Promise<boolean> {
+  private async hasAttended(
+    eventId: string,
+    userId: string,
+    eventType: EventType,
+  ): Promise<boolean> {
     if (eventType === EventType.COMMUNITY) {
       const participation = await this.prisma.participationRequest.findUnique({
         where: {
@@ -64,7 +68,7 @@ export class ReviewsService {
     const attended = await this.hasAttended(eventId, userId, event.type);
     if (!attended) {
       throw new ForbiddenException(
-        "Vous ne pouvez laisser un avis que sur un événement auquel vous avez assisté",
+        'Vous ne pouvez laisser un avis que sur un événement auquel vous avez assisté',
       );
     }
 

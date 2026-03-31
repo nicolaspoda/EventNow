@@ -42,7 +42,8 @@ export class FollowsService {
       where: { id: followerId },
       select: { username: true, email: true },
     });
-    const followerName = follower?.username ?? follower?.email?.split('@')[0] ?? 'Quelqu\'un';
+    const followerName =
+      follower?.username ?? follower?.email?.split('@')[0] ?? "Quelqu'un";
     await this.notificationsService.create({
       userId: followingId,
       type: 'NEW_FOLLOWER',
@@ -91,11 +92,7 @@ export class FollowsService {
   }
 
   /** Liste des utilisateurs qui suivent `userId` (followers). */
-  async getFollowers(
-    userId: string,
-    limit = 50,
-    currentUserId?: string,
-  ) {
+  async getFollowers(userId: string, limit = 50, currentUserId?: string) {
     const follows = await this.prisma.follow.findMany({
       where: { followingId: userId },
       take: limit,
@@ -116,18 +113,11 @@ export class FollowsService {
       followedAt: f.createdAt,
     }));
     if (!currentUserId) return items;
-    return this.addFollowFlagsToUsers(
-      items,
-      currentUserId,
-    );
+    return this.addFollowFlagsToUsers(items, currentUserId);
   }
 
   /** Liste des utilisateurs que `userId` suit (following). */
-  async getFollowing(
-    userId: string,
-    limit = 50,
-    currentUserId?: string,
-  ) {
+  async getFollowing(userId: string, limit = 50, currentUserId?: string) {
     const follows = await this.prisma.follow.findMany({
       where: { followerId: userId },
       take: limit,
@@ -148,10 +138,7 @@ export class FollowsService {
       followedAt: f.createdAt,
     }));
     if (!currentUserId) return items;
-    return this.addFollowFlagsToUsers(
-      items,
-      currentUserId,
-    );
+    return this.addFollowFlagsToUsers(items, currentUserId);
   }
 
   /** IDs des utilisateurs que `followerId` suit (pour filtre catalogue). */
@@ -191,11 +178,7 @@ export class FollowsService {
   }
 
   /** Liste des amis (follow mutuel) avec infos utilisateur, même format que getFollowers. */
-  async getFriends(
-    userId: string,
-    limit = 50,
-    currentUserId?: string,
-  ) {
+  async getFriends(userId: string, limit = 50, currentUserId?: string) {
     const friendIds = await this.getFriendIds(userId);
     if (friendIds.length === 0) return [];
     const follows = await this.prisma.follow.findMany({
@@ -218,10 +201,7 @@ export class FollowsService {
       followedAt: f.createdAt,
     }));
     if (!currentUserId) return items;
-    return this.addFollowFlagsToUsers(
-      items,
-      currentUserId,
-    );
+    return this.addFollowFlagsToUsers(items, currentUserId);
   }
 
   /** Pour chaque utilisateur, ajoute isFollowingByCurrentUser et isFriendWithCurrentUser. */
@@ -230,7 +210,12 @@ export class FollowsService {
   >(
     items: T[],
     currentUserId: string,
-  ): Promise<(T & { isFollowingByCurrentUser: boolean; isFriendWithCurrentUser: boolean })[]> {
+  ): Promise<
+    (T & {
+      isFollowingByCurrentUser: boolean;
+      isFriendWithCurrentUser: boolean;
+    })[]
+  > {
     if (items.length === 0) return [];
     const ids = items.map((u) => u.id);
     const [followingByMe, friendIds] = await Promise.all([

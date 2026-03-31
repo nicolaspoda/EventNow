@@ -40,7 +40,9 @@ function formatGoogleOAuthError(err: unknown): string {
     } catch {
       // corps non JSON
     }
-    return [prefix, statusCode && `HTTP ${statusCode}`, data].filter(Boolean).join(' | ');
+    return [prefix, statusCode && `HTTP ${statusCode}`, data]
+      .filter(Boolean)
+      .join(' | ');
   };
 
   if (err instanceof Error) {

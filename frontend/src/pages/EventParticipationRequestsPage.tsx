@@ -14,6 +14,17 @@ export default function EventParticipationRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'refused'>('all');
+  const getErrorMessage = (err: unknown): string => {
+    if (
+      err &&
+      typeof err === 'object' &&
+      'response' in err &&
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message
+    ) {
+      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
+    }
+    return 'Erreur lors du chargement des demandes';
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -26,8 +37,8 @@ export default function EventParticipationRequestsPage() {
       setLoading(true);
       const data = await participationService.getByEvent(eventId);
       setRequests(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors du chargement des demandes');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

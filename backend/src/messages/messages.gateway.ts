@@ -8,7 +8,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesService } from './messages.service';
@@ -48,10 +48,14 @@ export class MessagesGateway
 
   async handleConnection(client: AuthenticatedSocket) {
     try {
-      const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.replace('Bearer ', '');
-      
+      const token =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.replace('Bearer ', '');
+
       if (!token) {
-        this.logger.warn(`Client ${client.id} attempted connection without token`);
+        this.logger.warn(
+          `Client ${client.id} attempted connection without token`,
+        );
         client.disconnect();
         return;
       }
@@ -92,9 +96,14 @@ export class MessagesGateway
       });
 
       this.logger.log(`Client ${client.id} connected as user ${userId}`);
-      this.logger.log(`User ${userId} joined ${conversations.length} conversation rooms`);
+      this.logger.log(
+        `User ${userId} joined ${conversations.length} conversation rooms`,
+      );
     } catch (error) {
-      this.logger.error(`Connection error for client ${client.id}:`, error.message);
+      this.logger.error(
+        `Connection error for client ${client.id}:`,
+        error.message,
+      );
       client.disconnect();
     }
   }
@@ -108,7 +117,9 @@ export class MessagesGateway
           this.userSockets.delete(client.userId);
         }
       }
-      this.logger.log(`Client ${client.id} (user ${client.userId}) disconnected`);
+      this.logger.log(
+        `Client ${client.id} (user ${client.userId}) disconnected`,
+      );
     } else {
       this.logger.log(`Client ${client.id} disconnected`);
     }
@@ -134,8 +145,10 @@ export class MessagesGateway
       }
 
       client.join(`conversation:${data.conversationId}`);
-      this.logger.log(`User ${client.userId} joined conversation ${data.conversationId}`);
-      
+      this.logger.log(
+        `User ${client.userId} joined conversation ${data.conversationId}`,
+      );
+
       return { success: true };
     } catch (error) {
       this.logger.error(`Error joining conversation:`, error.message);
@@ -149,7 +162,9 @@ export class MessagesGateway
     @MessageBody() data: { conversationId: string },
   ) {
     client.leave(`conversation:${data.conversationId}`);
-    this.logger.log(`User ${client.userId} left conversation ${data.conversationId}`);
+    this.logger.log(
+      `User ${client.userId} left conversation ${data.conversationId}`,
+    );
     return { success: true };
   }
 
@@ -170,15 +185,15 @@ export class MessagesGateway
         dto,
       );
 
-      this.server
-        .to(`conversation:${data.conversationId}`)
-        .emit('newMessage', {
-          conversationId: data.conversationId,
-          message,
-        });
+      this.server.to(`conversation:${data.conversationId}`).emit('newMessage', {
+        conversationId: data.conversationId,
+        message,
+      });
 
-      this.logger.log(`Message sent in conversation ${data.conversationId} by user ${client.userId}`);
-      
+      this.logger.log(
+        `Message sent in conversation ${data.conversationId} by user ${client.userId}`,
+      );
+
       return { success: true, message };
     } catch (error) {
       this.logger.error(`Error sending message:`, error.message);
@@ -212,10 +227,12 @@ export class MessagesGateway
   }
 
   async notifyConversationUpdate(conversationId: string, conversation: any) {
-    this.server.to(`conversation:${conversationId}`).emit('conversationUpdated', {
-      conversationId,
-      conversation,
-    });
+    this.server
+      .to(`conversation:${conversationId}`)
+      .emit('conversationUpdated', {
+        conversationId,
+        conversation,
+      });
   }
 
   async notifyMemberAdded(conversationId: string, userId: string) {

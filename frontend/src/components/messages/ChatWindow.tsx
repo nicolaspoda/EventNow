@@ -49,10 +49,23 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
+  const triggerSendFromKeyboard = async () => {
+    if (!newMessage.trim() || sending) return;
+    setSending(true);
+    try {
+      await onSendMessage(newMessage.trim());
+      setNewMessage('');
+    } catch (error) {
+      console.error("Erreur lors de l'envoi du message:", error);
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend(e as any);
+      void triggerSendFromKeyboard();
     }
   };
 

@@ -104,7 +104,9 @@ describe('AuthService', () => {
         where: { email: registerDto.email },
       });
       expect(prisma.user.findFirst).toHaveBeenCalledWith({
-        where: { username: { equals: registerDto.username, mode: 'insensitive' } },
+        where: {
+          username: { equals: registerDto.username, mode: 'insensitive' },
+        },
       });
       expect(prisma.user.create).toHaveBeenCalled();
       expect(bcrypt.hash).toHaveBeenCalledWith(registerDto.password, 10);

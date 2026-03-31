@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
@@ -64,8 +63,11 @@ export class TicketsService {
         const exampleQr = firstFew?.qrCode ?? '';
         console.warn('[validateTicket] Aucun billet trouvé.', {
           receivedLength: qrCode?.length,
-          normalized: normalizedQrCode?.slice(0, 30) + (normalizedQrCode?.length > 30 ? '…' : ''),
-          exampleInDb: exampleQr.slice(0, 30) + (exampleQr.length > 30 ? '…' : ''),
+          normalized:
+            normalizedQrCode?.slice(0, 30) +
+            (normalizedQrCode?.length > 30 ? '…' : ''),
+          exampleInDb:
+            exampleQr.slice(0, 30) + (exampleQr.length > 30 ? '…' : ''),
         });
       }
       return {
@@ -85,7 +87,7 @@ export class TicketsService {
 
     if (!isStaffForEvent) {
       throw new ForbiddenException(
-        'Vous n\'êtes pas autorisé à valider des billets pour cet événement',
+        "Vous n'êtes pas autorisé à valider des billets pour cet événement",
       );
     }
 
@@ -199,7 +201,7 @@ export class TicketsService {
 
     if (eventId && !allowedEventIds.includes(eventId)) {
       throw new ForbiddenException(
-        'Vous n\'êtes pas autorisé à consulter les validations de cet événement',
+        "Vous n'êtes pas autorisé à consulter les validations de cet événement",
       );
     }
 
@@ -207,9 +209,7 @@ export class TicketsService {
       where: {
         validatedAt: { not: null },
         ticketCategory: {
-          eventId: eventId
-            ? eventId
-            : { in: allowedEventIds },
+          eventId: eventId ? eventId : { in: allowedEventIds },
         },
       },
       include: {
@@ -239,7 +239,7 @@ export class TicketsService {
 
     if (!isStaffForEvent) {
       throw new ForbiddenException(
-        'Vous n\'êtes pas autorisé à consulter les stats de cet événement',
+        "Vous n'êtes pas autorisé à consulter les stats de cet événement",
       );
     }
 
@@ -254,7 +254,7 @@ export class TicketsService {
 
     const totalTickets = event.ticketCategories.reduce(
       (sum, cat) => sum + (cat.initialStock - cat.currentStock),
-      0
+      0,
     );
 
     const validatedTickets = await this.prisma.ticket.count({
@@ -325,7 +325,10 @@ export class TicketsService {
 
   async getStaffEvents(staffUserId: string) {
     const now = new Date();
-    if (now.getTime() - this.lastStaffCleanupAt > TicketsService.STAFF_CLEANUP_THROTTLE_MS) {
+    if (
+      now.getTime() - this.lastStaffCleanupAt >
+      TicketsService.STAFF_CLEANUP_THROTTLE_MS
+    ) {
       await this.removeStaffForEndedEvents();
       this.lastStaffCleanupAt = now.getTime();
     }
@@ -517,7 +520,7 @@ export class TicketsService {
 
       const qrImageBuffer = Buffer.from(
         qrCodeDataURL.replace(/^data:image\/png;base64,/, ''),
-        'base64'
+        'base64',
       );
 
       doc.image(qrImageBuffer, qrX, qrY + 8, {
@@ -544,7 +547,7 @@ export class TicketsService {
         .fontSize(10)
         .font('Helvetica')
         .fillColor('#374151')
-        .text('Présentez ce QR code à l\'entrée de l\'événement', {
+        .text("Présentez ce QR code à l'entrée de l'événement", {
           align: 'center',
         })
         .text('Ce billet est personnel et non transférable', {
@@ -572,7 +575,7 @@ export class TicketsService {
             month: 'long',
             year: 'numeric',
           })}`,
-          { align: 'center' }
+          { align: 'center' },
         );
 
       doc.end();

@@ -38,7 +38,7 @@ export class TicketsController {
   @HttpCode(HttpStatus.OK)
   getValidationStats(
     @Query('event_id') eventId: string,
-    @CurrentUser() user: any
+    @CurrentUser() user: any,
   ) {
     return this.ticketsService.getValidationStats(eventId, user.id);
   }
@@ -47,7 +47,7 @@ export class TicketsController {
   @HttpCode(HttpStatus.OK)
   getValidations(
     @CurrentUser() user: any,
-    @Query('event_id') eventId?: string
+    @Query('event_id') eventId?: string,
   ) {
     return this.ticketsService.getStaffValidations(user.id, eventId);
   }
@@ -78,11 +78,11 @@ export class TicketsController {
   async downloadTicket(
     @Param('id') ticketId: string,
     @CurrentUser() user: any,
-    @Res() res: any
+    @Res() res: any,
   ) {
     const pdfBuffer = await this.ticketsService.generateTicketPDF(
       ticketId,
-      user.id
+      user.id,
     );
 
     res.set({
