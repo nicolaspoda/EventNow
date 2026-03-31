@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-import type { Message } from './messageService';
+import type { Conversation, Message } from './messageService';
 
 function getSocketBaseUrl(): string {
   // Par défaut on utilise le same-origin (proxy Vite en dev, reverse proxy en prod).
@@ -32,19 +32,21 @@ const SOCKET_BASE_URL = getSocketBaseUrl();
 
 interface SocketEvents {
   newMessage: (data: { conversationId: string; message: Message }) => void;
-  conversationUpdated: (data: { conversationId: string; conversation: unknown }) => void;
+  conversationUpdated: (data: { conversationId: string; conversation: Conversation }) => void;
   memberAdded: (data: { conversationId: string; userId: string }) => void;
   memberRemoved: (data: { conversationId: string; userId: string }) => void;
   userTyping: (data: { conversationId: string; userId: string; isTyping: boolean }) => void;
   newNotification: () => void;
 }
 
-type EventHandler = (data: unknown) => void;
+type EventName = keyof SocketEvents;
+type EventArgs<K extends EventName> = Parameters<SocketEvents[K]>;
+type SocketEventHandler = SocketEvents[EventName];
 type SocketAck = { error?: string; message?: Message };
 
 class SocketService {
   private socket: Socket | null = null;
-  private eventHandlers: Map<string, Set<EventHandler>> = new Map();
+  private eventHandlers: Map<EventName, Set<SocketEventHandler>> = new Map();
   private isConnecting = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -102,7 +104,7 @@ class SocketService {
         this.emit('newMessage', data);
       });
 
-      this.socket.on('conversationUpdated', (data: { conversationId: string; conversation: unknown }) => {
+      this.socket.on('conversationUpdated', (data: { conversationId: string; conversation: Conversation }) => {
         this.emit('conversationUpdated', data);
       });
 
@@ -119,7 +121,7 @@ class SocketService {
       });
 
       this.socket.on('newNotification', () => {
-        this.emit('newNotification', undefined);
+        this.emit('newNotification');
       });
 
       setTimeout(() => {
@@ -196,22 +198,22 @@ class SocketService {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
-    this.eventHandlers.get(event)!.add(handler);
+    this.eventHandlers.get(event)!.add(handler as SocketEventHandler);
   }
 
   off<K extends keyof SocketEvents>(event: K, handler: SocketEvents[K]) {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
-      handlers.delete(handler);
+      handlers.delete(handler as SocketEventHandler);
     }
   }
 
-  private emit(event: string, data: unknown) {
+  private emit<K extends EventName>(event: K, ...args: EventArgs<K>) {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       handlers.forEach((handler) => {
         try {
-          handler(data);
+          (handler as (...eventArgs: EventArgs<K>) => void)(...args);
         } catch (error) {
           console.error(`[Socket] Error in event handler for ${event}:`, error);
         }
