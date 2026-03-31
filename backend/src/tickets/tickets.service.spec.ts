@@ -25,12 +25,6 @@ describe('TicketsService', () => {
     },
   };
 
-  const mockStaff = {
-    id: 'staff-1',
-    email: 'staff@test.com',
-    role: 'CLIENT',
-  };
-
   const mockTicket = {
     id: 'ticket-1',
     orderId: 'order-1',
