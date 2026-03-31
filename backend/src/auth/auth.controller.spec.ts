@@ -191,7 +191,7 @@ describe('AuthController', () => {
 
       expect(mockRes.redirect).toHaveBeenCalledWith(
         expect.stringMatching(
-          /^http:\/\/localhost:5173\/auth\/callback\?code=/,
+          /^https:\/\/localhost:5173\/auth\/callback\?code=/,
         ),
       );
       if (origFrontend !== undefined) process.env.FRONTEND_URL = origFrontend;

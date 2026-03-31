@@ -1,8 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentService } from './payment.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
 import { BadRequestException } from '@nestjs/common';
 import { BookingStatus } from '@prisma/client';
+
+const stripeCreateMock = jest.fn();
+jest.mock('stripe', () =>
+  jest.fn().mockImplementation(() => ({
+    paymentIntents: {
+      create: stripeCreateMock,
+    },
+  })),
+);
 
 describe('PaymentService', () => {
   let service: PaymentService;
@@ -13,11 +23,20 @@ describe('PaymentService', () => {
     },
   };
 
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === 'STRIPE_SECRET_KEY') return 'sk_test_mock_123';
+      if (key === 'STRIPE_PUBLISHABLE_KEY') return 'pk_test_mock_123';
+      return undefined;
+    }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -39,10 +58,18 @@ describe('PaymentService', () => {
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
         ticketCategory: {
           price: 50.0,
+          event: {
+            id: 'event-123',
+            title: 'Concert test',
+          },
         },
       };
 
       mockPrisma.booking.findUnique.mockResolvedValue(mockBooking);
+      stripeCreateMock.mockResolvedValue({
+        id: 'pi_test_123',
+        client_secret: 'cs_test_123',
+      });
 
       const result = await service.createPaymentIntent(
         'booking-123',
@@ -50,7 +77,8 @@ describe('PaymentService', () => {
       );
 
       expect(result).toEqual({
-        paymentId: expect.stringMatching(/^sim_\d+_[a-z0-9]+$/),
+        paymentId: 'pi_test_123',
+        clientSecret: 'cs_test_123',
         bookingId: 'booking-123',
         amount: 100.0,
         currency: 'EUR',

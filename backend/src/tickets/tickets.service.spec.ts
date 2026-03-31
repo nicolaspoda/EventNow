@@ -1,19 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from './tickets.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 describe('TicketsService', () => {
   let service: TicketsService;
 
   const mockPrismaService = {
-    user: {
+    eventStaff: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    event: {
+      findMany: jest.fn(),
       findUnique: jest.fn(),
     },
     ticket: {
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
   };
 
@@ -61,11 +69,17 @@ describe('TicketsService', () => {
 
   describe('validateTicket', () => {
     it('should validate a valid ticket', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockStaff);
       mockPrismaService.ticket.findUnique.mockResolvedValue(mockTicket);
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue({
+        eventId: 'event-1',
+        userId: 'staff-1',
+      });
       mockPrismaService.ticket.update.mockResolvedValue({
         ...mockTicket,
         validatedAt: new Date(),
+        order: {
+          user: { email: 'holder@test.com' },
+        },
       });
 
       const result = await service.validateTicket(
@@ -77,56 +91,33 @@ describe('TicketsService', () => {
       expect(mockPrismaService.ticket.update).toHaveBeenCalled();
     });
 
-    it('should reject if user not found', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.validateTicket('TICKET-ABC123-123456', 'unknown-user'),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should reject if user is not STAFF', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({
-        id: 'user-1',
-        role: 'CLIENT',
-      });
+    it('should reject if user is not staff for event', async () => {
+      mockPrismaService.ticket.findUnique.mockResolvedValue(mockTicket);
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue(null);
 
       await expect(
         service.validateTicket('TICKET-ABC123-123456', 'user-1'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow('pas autorisé');
     });
 
     it('should reject invalid QR code', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockStaff);
       mockPrismaService.ticket.findUnique.mockResolvedValue(null);
+      mockPrismaService.ticket.findFirst.mockResolvedValue(null);
 
       const result = await service.validateTicket('INVALID-QR', 'staff-1');
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toBe('QR code invalide');
+      expect(result.reason).toBe('QR_CODE_INVALID');
     });
 
     it('should reject already validated ticket', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockStaff);
       mockPrismaService.ticket.findUnique.mockResolvedValue({
         ...mockTicket,
         validatedAt: new Date(),
       });
-
-      const result = await service.validateTicket(
-        'TICKET-ABC123-123456',
-        'staff-1',
-      );
-
-      expect(result.valid).toBe(false);
-      expect(result.reason).toBe('Billet déjà utilisé');
-    });
-
-    it('should reject ticket with refunded order', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(mockStaff);
-      mockPrismaService.ticket.findUnique.mockResolvedValue({
-        ...mockTicket,
-        order: { status: 'REFUNDED' },
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue({
+        eventId: 'event-1',
+        userId: 'staff-1',
       });
 
       const result = await service.validateTicket(
@@ -135,7 +126,26 @@ describe('TicketsService', () => {
       );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toBe('Commande annulée ou remboursée');
+      expect(result.reason).toBe('ALREADY_VALIDATED');
+    });
+
+    it('should reject ticket with refunded order', async () => {
+      mockPrismaService.ticket.findUnique.mockResolvedValue({
+        ...mockTicket,
+        order: { status: 'REFUNDED' },
+      });
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue({
+        eventId: 'event-1',
+        userId: 'staff-1',
+      });
+
+      const result = await service.validateTicket(
+        'TICKET-ABC123-123456',
+        'staff-1',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.reason).toBe('ORDER_CANCELLED');
     });
   });
 

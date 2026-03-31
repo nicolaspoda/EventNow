@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EventsService } from './events.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { UploadService } from '../upload/upload.service';
+import { FollowsService } from '../follows/follows.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   NotFoundException,
   ForbiddenException,
@@ -24,6 +27,11 @@ describe('EventsService', () => {
     },
     ticket: {
       groupBy: jest.fn(),
+      count: jest.fn(),
+      findMany: jest.fn(),
+    },
+    staffInvitation: {
+      findMany: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -38,6 +46,7 @@ describe('EventsService', () => {
     organizerId: 'user-1',
     createdAt: new Date(),
     updatedAt: new Date(),
+    endDate: new Date('2026-12-31T23:00:00Z'),
     ticketCategories: [
       {
         id: 'cat-1',
@@ -53,6 +62,22 @@ describe('EventsService', () => {
       email: 'organizer@test.com',
       username: 'johndoe',
     },
+    reviews: [],
+  };
+
+  const mockUploadService = {
+    deleteImage: jest.fn(),
+  };
+
+  const mockFollowsService = {
+    getFollowerIds: jest.fn().mockResolvedValue([]),
+    getFriendIds: jest.fn().mockResolvedValue([]),
+    getFollowingIds: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockNotificationsService = {
+    createForManyUsers: jest.fn(),
+    deleteByTypeAndRelatedIds: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -63,10 +88,25 @@ describe('EventsService', () => {
           provide: PrismaService,
           useValue: mockPrismaService,
         },
+        {
+          provide: UploadService,
+          useValue: mockUploadService,
+        },
+        {
+          provide: FollowsService,
+          useValue: mockFollowsService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
+        },
       ],
     }).compile();
 
     service = module.get<EventsService>(EventsService);
+    mockPrismaService.ticket.count.mockResolvedValue(0);
+    mockPrismaService.ticket.findMany.mockResolvedValue([]);
+    mockPrismaService.staffInvitation.findMany.mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -87,6 +127,7 @@ describe('EventsService', () => {
           initial_stock: 50,
         },
       ],
+      end_date: '2026-12-31T23:00:00Z',
     };
 
     it('should create an event with ticket categories', async () => {
@@ -102,6 +143,8 @@ describe('EventsService', () => {
     });
 
     it('should throw BadRequestException if event date is in the past', async () => {
+      const previousNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
       const pastEventDto = {
         ...createEventDto,
         event_date: '2020-01-01T20:00:00Z',
@@ -110,6 +153,7 @@ describe('EventsService', () => {
       await expect(service.create('user-1', pastEventDto)).rejects.toThrow(
         BadRequestException,
       );
+      process.env.NODE_ENV = previousNodeEnv;
     });
 
     it('should throw ForbiddenException when CLIENT tries to create PROFESSIONAL event', async () => {
@@ -130,7 +174,12 @@ describe('EventsService', () => {
 
       const result = await service.findAll();
 
-      expect(result).toEqual([mockEvent]);
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          id: mockEvent.id,
+          title: mockEvent.title,
+        }),
+      );
       expect(mockPrismaService.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
@@ -221,7 +270,13 @@ describe('EventsService', () => {
 
       const result = await service.findOne('event-1');
 
-      expect(result).toEqual(mockEvent);
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: mockEvent.id,
+          title: mockEvent.title,
+          organizerId: mockEvent.organizerId,
+        }),
+      );
       expect(mockPrismaService.event.findUnique).toHaveBeenCalledWith({
         where: { id: 'event-1' },
         include: expect.any(Object),
@@ -248,6 +303,7 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.event.update.mockResolvedValue({
         ...mockEvent,
         ...updateEventDto,
@@ -269,6 +325,7 @@ describe('EventsService', () => {
 
     it('should throw ForbiddenException if user is not the organizer', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrismaService.ticket.count.mockResolvedValue(0);
 
       await expect(
         service.update('event-1', 'other-user', updateEventDto),
@@ -277,12 +334,15 @@ describe('EventsService', () => {
 
     it('should throw BadRequestException if new date is in the past', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      const previousNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
 
       await expect(
         service.update('event-1', 'user-1', {
           event_date: '2020-01-01T20:00:00Z',
         }),
       ).rejects.toThrow(BadRequestException);
+      process.env.NODE_ENV = previousNodeEnv;
     });
 
     it('should update event with ticket categories', async () => {
@@ -290,6 +350,7 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.ticketCategory.findMany.mockResolvedValue([]);
       mockPrismaService.ticket.groupBy.mockResolvedValue([]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({
@@ -313,6 +374,7 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.event.update.mockResolvedValue({
         ...mockEvent,
         description: 'New desc',
@@ -341,6 +403,7 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.event.update.mockResolvedValue(mockEvent);
 
       await service.update('event-1', 'user-1', {
@@ -358,6 +421,7 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.event.update.mockResolvedValue(mockEvent);
 
       await service.update('event-1', 'user-1', {
@@ -375,6 +439,7 @@ describe('EventsService', () => {
       mockPrismaService.$transaction.mockImplementation((callback) =>
         callback(mockPrismaService),
       );
+      mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.event.update.mockResolvedValue(mockEvent);
 
       await service.update('event-1', 'user-1', {
@@ -408,6 +473,7 @@ describe('EventsService', () => {
   describe('remove', () => {
     it('should delete an event', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrismaService.staffInvitation.findMany.mockResolvedValue([]);
       mockPrismaService.event.delete.mockResolvedValue(mockEvent);
 
       const result = await service.remove('event-1', 'user-1');

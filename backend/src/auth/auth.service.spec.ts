@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { FollowsService } from '../follows/follows.service';
 import { Role } from '@prisma/client';
 
 jest.mock('bcrypt');
@@ -33,6 +34,14 @@ describe('AuthService', () => {
     isTokenBlacklisted: jest.fn(),
   };
 
+  const mockFollowsService = {
+    getFollowersCount: jest.fn().mockResolvedValue(0),
+    getFollowingCount: jest.fn().mockResolvedValue(0),
+    getFriendsCount: jest.fn().mockResolvedValue(0),
+    getFollowRecord: jest.fn().mockResolvedValue(null),
+    isFriend: jest.fn().mockResolvedValue(false),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,6 +57,10 @@ describe('AuthService', () => {
         {
           provide: RedisService,
           useValue: mockRedisService,
+        },
+        {
+          provide: FollowsService,
+          useValue: mockFollowsService,
         },
       ],
     }).compile();

@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from './orders.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
+import { MailService } from '../mail/mail.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 
@@ -12,6 +14,8 @@ describe('OrdersService', () => {
     booking: {
       findUnique: jest.fn(),
       update: jest.fn(),
+      updateMany: jest.fn(),
+      findFirst: jest.fn(),
     },
     order: {
       create: jest.fn(),
@@ -35,6 +39,14 @@ describe('OrdersService', () => {
   const mockPaymentService = {
     createPaymentIntent: jest.fn(),
     simulatePayment: jest.fn(),
+  };
+
+  const mockMailService = {
+    sendOrderConfirmation: jest.fn(),
+  };
+
+  const mockNotificationsService = {
+    create: jest.fn(),
   };
 
   const mockBooking = {
@@ -78,6 +90,14 @@ describe('OrdersService', () => {
         {
           provide: PaymentService,
           useValue: mockPaymentService,
+        },
+        {
+          provide: MailService,
+          useValue: mockMailService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
         },
       ],
     }).compile();
@@ -216,43 +236,16 @@ describe('OrdersService', () => {
         callback(mockPrismaService),
       );
       mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+      mockPrismaService.booking.updateMany.mockResolvedValue({ count: 1 });
       mockPrismaService.ticketCategory.update.mockResolvedValue({});
       mockPrismaService.order.update.mockResolvedValue({
         ...mockOrder,
-        status: OrderStatus.REFUNDED,
+        status: OrderStatus.REFUND_REQUESTED,
       });
 
       const result = await service.refundOrder('order-1', 'user-1');
 
-      expect(result.status).toBe(OrderStatus.REFUNDED);
-      expect(mockPrismaService.ticketCategory.update).toHaveBeenCalled();
-    });
-
-    it('should throw if event is < 7 days away', async () => {
-      const nearEvent = new Date();
-      nearEvent.setDate(nearEvent.getDate() + 5);
-
-      const orderWithTickets = {
-        ...mockOrder,
-        tickets: [
-          {
-            id: 'ticket-1',
-            ticketCategoryId: 'category-1',
-            ticketCategory: {
-              event: { eventDate: nearEvent },
-            },
-          },
-        ],
-      };
-
-      mockPrismaService.$transaction.mockImplementation((callback) =>
-        callback(mockPrismaService),
-      );
-      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
-
-      await expect(service.refundOrder('order-1', 'user-1')).rejects.toThrow(
-        'événement dans moins de 7 jours',
-      );
+      expect(result.status).toBe(OrderStatus.REFUND_REQUESTED);
     });
 
     it('should throw if order not found', async () => {

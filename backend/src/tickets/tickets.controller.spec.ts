@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsController } from './tickets.controller';
 import { TicketsService } from './tickets.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { EventStaffGuard } from '../auth/guards/event-staff.guard';
 
 describe('TicketsController', () => {
   let controller: TicketsController;
@@ -10,6 +13,10 @@ describe('TicketsController', () => {
     validateTicket: jest.fn(),
     getUserTickets: jest.fn(),
     getTicketByQRCode: jest.fn(),
+    getValidationStats: jest.fn(),
+    getStaffValidations: jest.fn(),
+    getStaffEvents: jest.fn(),
+    generateTicketPDF: jest.fn(),
   };
 
   const mockUser = {
@@ -25,7 +32,7 @@ describe('TicketsController', () => {
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleBuilder = Test.createTestingModule({
       controllers: [TicketsController],
       providers: [
         {
@@ -33,7 +40,15 @@ describe('TicketsController', () => {
           useValue: mockTicketsService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) })
+      .overrideGuard(EventStaffGuard)
+      .useValue({ canActivate: jest.fn().mockReturnValue(true) });
+
+    const module: TestingModule = await moduleBuilder.compile();
 
     controller = module.get<TicketsController>(TicketsController);
     service = module.get<TicketsService>(TicketsService);

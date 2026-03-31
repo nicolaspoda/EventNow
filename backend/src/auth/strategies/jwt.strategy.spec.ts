@@ -54,6 +54,8 @@ describe('JwtStrategy', () => {
         id: 'user-123',
         email: 'test@test.com',
         role: 'CLIENT',
+        username: undefined,
+        createdAt: mockUser.createdAt,
       });
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-123' },
