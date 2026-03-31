@@ -1,4 +1,5 @@
-import React, { useState, useEffect, FormEvent } from 'react';
+import type { FormEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { staffInvitationsService } from '../services/staffInvitationsService';
 import type { StaffInvitation, StaffInvitationStatus } from '../services/staffInvitationsService';

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
+import { authService } from '../services/auth.service';
 import participantReviewService from '../services/participantReviewService';
 import type { ParticipantForReview } from '../services/participantReviewService';
 import { Card } from '../components/ui/Card';
@@ -11,7 +12,7 @@ import { StarRating } from '../components/reviews/StarRating';
 
 export default function EventParticipantReviewsPage() {
   const { eventId } = useParams<{ eventId: string }>();
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [participants, setParticipants] = useState<ParticipantForReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +23,10 @@ export default function EventParticipantReviewsPage() {
 
   useEffect(() => {
     fetchParticipants();
-  }, [eventId, token]);
+  }, [eventId, user]);
 
   const fetchParticipants = async () => {
+    const token = authService.getAccessToken();
     if (!eventId || !token) return;
 
     try {
@@ -39,6 +41,7 @@ export default function EventParticipantReviewsPage() {
   };
 
   const handleSubmitReview = async (participantId: string) => {
+    const token = authService.getAccessToken();
     if (!token || !eventId) return;
 
     try {

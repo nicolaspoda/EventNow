@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../utils/useAuth';
+import { authService } from '../../services/auth.service';
 import participantReviewService from '../../services/participantReviewService';
 import { StarRating } from '../reviews/StarRating';
 
@@ -8,7 +9,7 @@ interface UserRatingBadgeProps {
 }
 
 export function UserRatingBadge({ userId }: UserRatingBadgeProps) {
-  const { token } = useAuth();
+  const { user } = useAuth();
   const [stats, setStats] = useState<{
     averageRating: number | null;
     totalReviews: number;
@@ -17,7 +18,8 @@ export function UserRatingBadge({ userId }: UserRatingBadgeProps) {
 
   useEffect(() => {
     const fetchRating = async () => {
-      if (!token) {
+      const token = authService.getAccessToken();
+      if (!token || !user) {
         setLoading(false);
         return;
       }
@@ -33,7 +35,7 @@ export function UserRatingBadge({ userId }: UserRatingBadgeProps) {
     };
 
     fetchRating();
-  }, [userId, token]);
+  }, [userId, user]);
 
   if (loading) {
     return (

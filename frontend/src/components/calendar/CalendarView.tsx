@@ -130,7 +130,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
         date={date}
         onNavigate={setDate}
         eventPropGetter={eventStyleGetter}
-        onSelectEvent={(event) => {
+        onSelectEvent={(event: CalendarEvent) => {
           if (onSelectEvent) {
             onSelectEvent(event.resource);
           }

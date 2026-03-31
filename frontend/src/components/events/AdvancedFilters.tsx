@@ -11,7 +11,7 @@ interface AdvancedFiltersProps {
 export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   filters,
   onFilterChange,
-  onClear,
+  onClear: _onClear,
   variant = 'card',
 }) => {
   const [expanded, setExpanded] = useState(false);

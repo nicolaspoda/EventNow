@@ -70,6 +70,10 @@ export const authService = {
     return userStr ? JSON.parse(userStr) : null;
   },
 
+  getAccessToken(): string | null {
+    return sessionStorage.getItem('accessToken');
+  },
+
   isAuthenticated(): boolean {
     return !!sessionStorage.getItem('accessToken');
   },

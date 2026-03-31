@@ -39,13 +39,15 @@ const EventDetailPage: React.FC = () => {
         setLoading(true);
         setError(null);
         const data = await eventService.getEventById(id);
-        const rawDate = data.eventDate ?? (data as { event_date?: string }).event_date;
-        const eventDateStr =
-          typeof rawDate === 'object' && rawDate !== null && rawDate instanceof Date
-            ? (Number.isNaN(rawDate.getTime()) ? undefined : rawDate.toISOString())
-            : typeof rawDate === 'string' && rawDate.trim()
-              ? (Number.isNaN(new Date(rawDate).getTime()) ? undefined : rawDate.trim())
-              : undefined;
+        const rawDate: unknown =
+          data.eventDate ?? (data as { event_date?: unknown }).event_date;
+        let eventDateStr: string | undefined;
+        if (rawDate instanceof Date) {
+          eventDateStr = Number.isNaN(rawDate.getTime()) ? undefined : rawDate.toISOString();
+        } else if (typeof rawDate === 'string' && rawDate.trim()) {
+          const d = new Date(rawDate);
+          eventDateStr = Number.isNaN(d.getTime()) ? undefined : rawDate.trim();
+        }
         setEvent({
           ...data,
           eventDate: eventDateStr ?? (data.eventDate as string) ?? (data as { event_date?: string }).event_date,

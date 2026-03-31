@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ticketService } from '../services/ticketService';
 import type { Ticket } from '../types/order.types';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
-import { generateQRCodeDataUrl } from '../utils/qrCode';
 import Button from '../components/ui/Button';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';

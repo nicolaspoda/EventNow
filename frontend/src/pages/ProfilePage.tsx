@@ -34,8 +34,6 @@ export const ProfilePage: React.FC = () => {
   const [success, setSuccess] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const isOwnProfile = !userIdFromRoute || (user && userIdFromRoute === user.id);
-
   useEffect(() => {
     if (userIdFromRoute && user && userIdFromRoute !== user.id) {
       const fetchPublic = async () => {
@@ -213,6 +211,10 @@ export const ProfilePage: React.FC = () => {
         }}
       />
     );
+  }
+
+  if (!profile) {
+    return null;
   }
 
   return (

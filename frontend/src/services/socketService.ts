@@ -65,7 +65,7 @@ class SocketService {
         }
       });
 
-      this.socket.on('disconnect', (reason) => {
+      this.socket.on('disconnect', (_reason) => {
         this.isConnecting = false;
       });
 

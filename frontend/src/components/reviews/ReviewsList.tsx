@@ -22,7 +22,10 @@ interface ReviewsListProps {
 
 export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, refreshTrigger, onReviewsLoaded }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0 });
+  const [stats, setStats] = useState<{
+    averageRating: number | null;
+    totalReviews: number;
+  }>({ averageRating: null, totalReviews: 0 });
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'recent' | 'highest' | 'lowest'>('recent');
 
@@ -40,7 +43,7 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, refreshTrigge
         onReviewsLoaded(data.stats);
       }
     } catch (error) {
-      console.error('Erreur chargement avis:', getApiErrorMessage(error));
+      console.error('Erreur chargement avis:', getApiErrorMessage(error, 'Impossible de charger les avis'));
     } finally {
       setLoading(false);
     }

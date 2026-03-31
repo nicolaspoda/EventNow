@@ -24,7 +24,6 @@ const EventsPage: React.FC = () => {
     positionLoading,
     positionError,
     requestUserPosition,
-    clearUserPosition,
     clearNearMeFilter,
   } = useEventSearch();
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
