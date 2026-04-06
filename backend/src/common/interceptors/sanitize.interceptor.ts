@@ -29,6 +29,12 @@ export class SanitizeInterceptor implements NestInterceptor {
       return obj.map((item) => this.sanitize(item));
     }
 
+    // Les Date ne sont pas des records énumérables : sans ce garde-fou elles
+    // deviennent {} et disparaissent à la sérialisation JSON.
+    if (obj instanceof Date) {
+      return obj;
+    }
+
     if (obj !== null && typeof obj === 'object') {
       return Object.keys(obj).reduce((acc, key) => {
         acc[key] = this.sanitize(obj[key]);
