@@ -54,6 +54,10 @@ server {
     # Si le preview Vite est encore en HTTPS (ancienne image) :
     #   proxy_pass https://127.0.0.1:5173;
     #   proxy_ssl_verify off;
+    # Vite 7 (preview) : sans `preview.allowedHosts` pour le domaine public, un Host
+    # type eventnow.fr peut renvoyer 403. Soit tu listes le domaine dans vite.config,
+    # soit tu forces Host vers l’amont local :
+    #   proxy_set_header Host 127.0.0.1;
     location / {
         proxy_pass http://127.0.0.1:5173;
         proxy_http_version 1.1;

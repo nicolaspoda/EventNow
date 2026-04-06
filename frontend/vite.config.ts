@@ -53,5 +53,7 @@ export default defineConfig({
     host: true,
     port: 5173,
     strictPort: true,
+    // Derrière Nginx avec Host public, Vite 7 refuse sinon (403).
+    allowedHosts: ['eventnow.fr', 'www.eventnow.fr'],
   },
 });
