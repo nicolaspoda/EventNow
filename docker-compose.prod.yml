@@ -1,12 +1,15 @@
+# Production : secrets + DATABASE_URL via env_file (défaut `.env.production`).
+# Autre fichier : export EVENTNOW_ENV_FILE=/chemin/vers/.env puis docker compose ...
+#
+# Déploiement : docker compose -f docker-compose.prod.yml up -d --build
+
 services:
   postgres:
     image: postgres:15-alpine
     container_name: eventnow-postgres
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file:
+      - ${EVENTNOW_ENV_FILE:-.env.production}
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -25,31 +28,16 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - ${EVENTNOW_ENV_FILE:-.env.production}
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL}
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       FRONTEND_URL: https://eventnow.fr
-      # Inclure www si des utilisateurs ouvrent https://www.eventnow.fr (sinon CORS / Socket.IO refusent).
       CORS_ORIGINS: https://eventnow.fr,https://www.eventnow.fr
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CALLBACK_URL: https://eventnow.fr/api/v1/auth/google/callback
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_PORT: ${MAIL_PORT}
-      MAIL_USER: ${MAIL_USER}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      MAIL_FROM: ${MAIL_FROM}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
     depends_on:
       postgres:
         condition: service_started
@@ -58,15 +46,15 @@ services:
     healthcheck:
       test:
         [
-          'CMD',
-          'curl',
-          '-fsS',
-          'http://127.0.0.1:3000/api/v1/health',
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/api/v1/health',(r)=>{r.resume();process.exit(r.statusCode===200?0:1)}).on('error',()=>process.exit(1))",
         ]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 90s
 
   frontend:
     build:

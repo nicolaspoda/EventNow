@@ -201,4 +201,5 @@ jobs:
               ls -la
               exit 1
             fi
+            export EVENTNOW_ENV_FILE="${ENV_FILE}"
             docker compose -f docker-compose.prod.yml --env-file "${ENV_FILE}" up -d --build --remove-orphans
