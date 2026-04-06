@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Ticket } from '../../types/order.types';
+import { safeFormat } from '../../utils/date';
 import Button from '../ui/Button';
 
 interface TicketCardProps {
@@ -12,6 +13,9 @@ interface TicketCardProps {
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownload }) => {
   const category = ticket.ticketCategory ?? ticket.order?.ticketCategory;
   const event = category?.event;
+  const eventDateRaw =
+    event?.eventDate ??
+    (event as { event_date?: string } | undefined)?.event_date;
 
   return (
     <div className="glass-card overflow-hidden hover:shadow-lg transition-shadow">
@@ -46,14 +50,7 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownloa
               )}
             </p>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              {new Date(event.eventDate).toLocaleDateString('fr-FR', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {safeFormat(eventDateRaw, "EEE d MMM yyyy 'à' HH:mm")}
             </p>
           </div>
         )}
