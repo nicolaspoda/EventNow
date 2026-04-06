@@ -89,7 +89,7 @@ const MyCalendarPage: React.FC = () => {
               </svg>
             }
             title="Aucun événement"
-            message="Vous n'avez pas encore d'événements dans votre calendrier. Les événements avec billets achetés ou demandes de participation acceptées apparaîtront ici."
+            message="Vous n'avez pas encore d'événements dans votre calendrier. Y figurent les événements que vous organisez, ceux pour lesquels vous avez des billets et les participations communautaires acceptées."
             actionLabel="Découvrir les événements"
             onAction={() => navigate('/events')}
           />

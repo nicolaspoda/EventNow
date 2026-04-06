@@ -740,6 +740,73 @@ export class DashboardService {
     return allEvents;
   }
 
+  /**
+   * Calendrier personnel : participations (billets + inscriptions) et événements organisés.
+   * Si un événement est à la fois participé et organisé, la entrée « participation » est conservée.
+   */
+  async getMyCalendarEvents(userId: string) {
+    const participated = await this.getMyParticipatedEvents(userId);
+    const now = new Date();
+
+    const organizedEvents = await this.prisma.event.findMany({
+      where: { organizerId: userId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        eventDate: true,
+        location: true,
+        imageUrl: true,
+        type: true,
+        category: true,
+        organizer: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
+      orderBy: { eventDate: 'desc' },
+    });
+
+    const organizedMapped = organizedEvents.map((event) => {
+      const eventDate =
+        event.eventDate instanceof Date
+          ? event.eventDate.toISOString()
+          : event.eventDate;
+      return {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        eventDate,
+        location: event.location,
+        imageUrl: event.imageUrl,
+        type: event.type,
+        category: event.category,
+        organizer: (event as any).organizer,
+        participationType: 'ORGANIZER' as const,
+        isPast: new Date(eventDate) < now,
+      };
+    });
+
+    const byId = new Map<string, (typeof participated)[number]>();
+    for (const p of participated) {
+      byId.set(p.id, p);
+    }
+    for (const o of organizedMapped) {
+      if (!byId.has(o.id)) {
+        byId.set(o.id, o as unknown as (typeof participated)[number]);
+      }
+    }
+
+    return Array.from(byId.values()).sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }
+
   private getEventStatus(eventDate: Date, fillRate: number): string {
     const now = new Date();
     const eventDateObj = new Date(eventDate);

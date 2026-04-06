@@ -52,7 +52,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
 
   const eventStyleGetter = (event: CalendarEvent) => {
     const isPast = event.resource.isPast;
-    const isTicket = event.resource.participationType === 'TICKET';
+    const { participationType } = event.resource;
+    const isTicket = participationType === 'TICKET';
+    const isOrganizer = participationType === 'ORGANIZER';
 
     let backgroundColor = '#6366f1';
     let borderColor = '#4f46e5';
@@ -63,6 +65,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
     } else if (isTicket) {
       backgroundColor = '#10b981';
       borderColor = '#059669';
+    } else if (isOrganizer) {
+      backgroundColor = '#6366f1';
+      borderColor = '#4f46e5';
     } else {
       backgroundColor = '#f59e0b';
       borderColor = '#d97706';
@@ -110,6 +115,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, onSelectEvent }) =>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-[#f59e0b] border-2 border-[#d97706]"></div>
             <span className="text-neutral-700 dark:text-neutral-300">Communautaires</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-[#6366f1] border-2 border-[#4f46e5]"></div>
+            <span className="text-neutral-700 dark:text-neutral-300">Organisés</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-[#9ca3af] border-2 border-[#6b7280]"></div>

@@ -125,6 +125,13 @@ export interface UpcomingParticipationEvent extends UpcomingEventBase {
   acceptedAt?: string;
 }
 
-export type UpcomingEvent = UpcomingTicketEvent | UpcomingParticipationEvent;
+export interface UpcomingOrganizedEvent extends UpcomingEventBase {
+  participationType: 'ORGANIZER';
+}
 
-export type ParticipatedEvent = (UpcomingTicketEvent | UpcomingParticipationEvent) & { isPast: boolean };
+export type UpcomingEvent =
+  | UpcomingTicketEvent
+  | UpcomingParticipationEvent
+  | UpcomingOrganizedEvent;
+
+export type ParticipatedEvent = UpcomingEvent & { isPast: boolean };
