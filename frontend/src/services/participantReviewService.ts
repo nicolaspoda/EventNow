@@ -54,6 +54,16 @@ export interface ParticipantForReview {
   review?: ParticipantReview;
 }
 
+/** Aligné sur le backend : participants consultables une fois la date d'événement passée. */
+export function isEventDatePastForParticipantReviews(
+  eventDate: string | null | undefined,
+): boolean {
+  if (eventDate == null || String(eventDate).trim() === '') return true;
+  const d = new Date(eventDate);
+  if (Number.isNaN(d.getTime())) return true;
+  return d <= new Date();
+}
+
 const participantReviewService = {
   async createReview(token: string, data: CreateParticipantReviewDto): Promise<ParticipantReview> {
     const response = await axios.post(`${API_BASE}/participant-reviews`, data, {

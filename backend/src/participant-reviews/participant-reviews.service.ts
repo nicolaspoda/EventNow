@@ -238,10 +238,9 @@ export class ParticipantReviewsService {
       );
     }
 
+    // Avant la date de l'événement : liste vide (le front affiche un message dédié, pas une erreur 400).
     if (!this.isEventPast(event.eventDate)) {
-      throw new BadRequestException(
-        "Vous ne pouvez consulter les participants qu'après la date de l'événement",
-      );
+      return [];
     }
 
     const acceptedParticipants =

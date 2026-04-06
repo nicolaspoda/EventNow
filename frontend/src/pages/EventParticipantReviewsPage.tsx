@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { authService } from '../services/auth.service';
-import participantReviewService from '../services/participantReviewService';
+import { eventService } from '../services/eventService';
+import participantReviewService, {
+  isEventDatePastForParticipantReviews,
+} from '../services/participantReviewService';
 import type { ParticipantForReview } from '../services/participantReviewService';
 import { Card } from '../components/ui/Card';
 import LoadingState from '../components/ui/LoadingState';
@@ -20,6 +23,7 @@ export default function EventParticipantReviewsPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [eventDate, setEventDate] = useState<string | null>(null);
   const getErrorMessage = (err: unknown, fallback: string): string => {
     if (
       err &&
@@ -33,13 +37,39 @@ export default function EventParticipantReviewsPage() {
   };
 
   useEffect(() => {
-    fetchParticipants();
+    const load = async () => {
+      const token = authService.getAccessToken();
+      if (!eventId || !token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setError(null);
+        const ev = await eventService.getEventById(eventId);
+        setEventDate(ev.eventDate);
+        if (!isEventDatePastForParticipantReviews(ev.eventDate)) {
+          setParticipants([]);
+          return;
+        }
+        const data = await participantReviewService.getParticipantsForEvent(token, eventId);
+        setParticipants(data);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, 'Erreur lors du chargement des participants'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [eventId, user]);
 
   const fetchParticipants = async () => {
     const token = authService.getAccessToken();
     if (!eventId || !token) return;
-
+    if (!isEventDatePastForParticipantReviews(eventDate)) {
+      setParticipants([]);
+      return;
+    }
     try {
       setLoading(true);
       const data = await participantReviewService.getParticipantsForEvent(token, eventId);
@@ -89,7 +119,15 @@ export default function EventParticipantReviewsPage() {
           </p>
         </div>
 
-        {participants.length === 0 ? (
+        {!isEventDatePastForParticipantReviews(eventDate) ? (
+          <Card className="p-6">
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400">
+                La liste des participants et les avis seront disponibles après la date de l&apos;événement.
+              </p>
+            </div>
+          </Card>
+        ) : participants.length === 0 ? (
           <Card className="p-6">
             <div className="text-center py-12">
               <p className="text-gray-600 dark:text-gray-400">

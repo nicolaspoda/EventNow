@@ -294,7 +294,11 @@ const EventDetailPage: React.FC = () => {
                     <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
                       Participants
                     </h2>
-                    <EventParticipantReviewsSection eventId={event.id} hideTitle={true} />
+                    <EventParticipantReviewsSection
+                      eventId={event.id}
+                      hideTitle={true}
+                      eventDate={event.eventDate}
+                    />
                   </div>
                 )}
 

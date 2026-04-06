@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import participantReviewService from '../../services/participantReviewService';
+import participantReviewService, {
+  isEventDatePastForParticipantReviews,
+} from '../../services/participantReviewService';
 import type { ParticipantForReview } from '../../services/participantReviewService';
 import { Card } from '../ui/Card';
 import Button from '../ui/Button';
@@ -9,9 +11,15 @@ import { StarRating } from '../reviews/StarRating';
 interface EventParticipantReviewsSectionProps {
   eventId: string;
   hideTitle?: boolean;
+  /** Permet d’éviter un appel inutile et d’afficher le bon message avant la date de l’événement. */
+  eventDate?: string | null;
 }
 
-export function EventParticipantReviewsSection({ eventId, hideTitle = false }: EventParticipantReviewsSectionProps) {
+export function EventParticipantReviewsSection({
+  eventId,
+  hideTitle = false,
+  eventDate,
+}: EventParticipantReviewsSectionProps) {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
   const [participants, setParticipants] = useState<ParticipantForReview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,10 +30,15 @@ export function EventParticipantReviewsSection({ eventId, hideTitle = false }: E
 
   useEffect(() => {
     fetchParticipants();
-  }, [eventId, token]);
+  }, [eventId, token, eventDate]);
 
   const fetchParticipants = async () => {
     if (!eventId || !token) return;
+    if (!isEventDatePastForParticipantReviews(eventDate)) {
+      setParticipants([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const data = await participantReviewService.getParticipantsForEvent(token, eventId);
@@ -77,6 +90,10 @@ export function EventParticipantReviewsSection({ eventId, hideTitle = false }: E
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent mx-auto" />
           <p className="text-neutral-500 dark:text-neutral-400 mt-2 text-sm">Chargement des participants...</p>
         </div>
+      ) : !isEventDatePastForParticipantReviews(eventDate) ? (
+        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
+          La liste des participants et les avis entre participants seront disponibles après la date de l&apos;événement.
+        </p>
       ) : participants.length === 0 ? (
         <p className="text-neutral-600 dark:text-neutral-400 text-sm">
           Aucun participant accepté pour le moment. Les avis pourront être laissés une fois des participants inscrits.
