@@ -363,7 +363,7 @@ export class TicketsService {
     const now = new Date();
     const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
 
-    return this.prisma.ticket.findMany({
+    const tickets = await this.prisma.ticket.findMany({
       where: {
         order: {
           userId: userId,
@@ -395,6 +395,28 @@ export class TicketsService {
         order: true,
       },
       orderBy: { createdAt: 'desc' },
+    });
+
+    /** Sérialisation explicite des dates pour le JSON (évite ambiguïtés côté client). */
+    return tickets.map((t) => {
+      const cat = t.ticketCategory;
+      const ev = cat?.event;
+      if (!cat || !ev) return t;
+      return {
+        ...t,
+        ticketCategory: {
+          ...cat,
+          event: {
+            ...ev,
+            ...(ev.eventDate instanceof Date
+              ? { eventDate: ev.eventDate.toISOString() }
+              : {}),
+            ...(ev.endDate instanceof Date
+              ? { endDate: ev.endDate.toISOString() }
+              : {}),
+          },
+        },
+      };
     });
   }
 
