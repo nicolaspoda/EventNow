@@ -136,13 +136,51 @@ jobs:
       cancel-in-progress: false
     environment: production
     steps:
+      - name: Resolve SSH port
+        id: ssh_port
+        run: |
+          if [ -n "${{ secrets.DEPLOY_PORT }}" ]; then
+            echo "port=${{ secrets.DEPLOY_PORT }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "port=22" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_APP_PATH: ${{ secrets.DEPLOY_APP_PATH }}
+        run: |
+          set -euo pipefail
+          [ -n "$DEPLOY_HOST" ] || (echo "Missing secret: DEPLOY_HOST" && exit 1)
+          [ -n "$DEPLOY_USER" ] || (echo "Missing secret: DEPLOY_USER" && exit 1)
+          [ -n "$DEPLOY_SSH_KEY" ] || (echo "Missing secret: DEPLOY_SSH_KEY" && exit 1)
+          [ -n "$DEPLOY_APP_PATH" ] || (echo "Missing secret: DEPLOY_APP_PATH" && exit 1)
+
+      - name: Preflight SSH connectivity
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ steps.ssh_port.outputs.port }}
+        run: |
+          set -euo pipefail
+          echo "Checking TCP connectivity to ${DEPLOY_HOST}:${DEPLOY_PORT}..."
+          timeout 8 bash -c "cat < /dev/null > /dev/tcp/${DEPLOY_HOST}/${DEPLOY_PORT}" || {
+            echo "Unable to reach ${DEPLOY_HOST}:${DEPLOY_PORT} from GitHub runner."
+            echo "Check host/IP, SSH port, firewall, and provider security rules."
+            exit 1
+          }
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ steps.ssh_port.outputs.port }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          timeout: 60s
           command_timeout: 30m
+          script_stop: true
           script: |
             set -euo pipefail
             cd "${{ secrets.DEPLOY_APP_PATH }}"
