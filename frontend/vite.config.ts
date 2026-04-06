@@ -14,31 +14,44 @@ const hmrBehindProxy =
       }
     : undefined;
 
+// basicSsl uniquement pour `npm run dev` : en Docker (`npm run preview`) on reste en HTTP
+// pour que Nginx puisse faire `proxy_pass http://127.0.0.1:5173` sans TLS amont.
+const useDevHttps = process.env.npm_lifecycle_event === 'dev';
+
 export default defineConfig({
-  plugins: [react(), basicSsl()],
+  plugins: [react(), ...(useDevHttps ? [basicSsl()] : [])],
   optimizeDeps: {
     include: ['react-big-calendar', 'date-fns', 'socket.io-client'],
   },
   server: {
-    // HTTPS : @vitejs/plugin-basic-ssl injecte cert/key (Vite 7 : plus de `https: true` booléen).
+    // HTTPS en local : @vitejs/plugin-basic-ssl (Vite 7 : plus de `https: true` booléen).
     host: true, // pour Docker : écoute sur 0.0.0.0
     ...(hmrBehindProxy ? { hmr: hmrBehindProxy } : {}),
     /**
-     * En dev HTTPS, proxy l’API en same-origin (évite les soucis HTTP↔HTTPS côté navigateur).
-     * Peut être surchargé via: VITE_API_PROXY_TARGET=https://localhost:3000
+     * Proxy API uniquement en `npm run dev` : en `vite preview` (Docker) l’API passe par Nginx,
+     * sinon le proxy vers localhost:3000 dans le conteneur provoque ECONNREFUSED.
      */
-    proxy: {
-      '/api': {
-        target: process.env.VITE_API_PROXY_TARGET || 'https://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/socket.io': {
-        target: process.env.VITE_API_PROXY_TARGET || 'https://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
-    },
+    ...(useDevHttps
+      ? {
+          proxy: {
+            '/api': {
+              target: process.env.VITE_API_PROXY_TARGET || 'https://localhost:3000',
+              changeOrigin: true,
+              secure: false,
+            },
+            '/socket.io': {
+              target: process.env.VITE_API_PROXY_TARGET || 'https://localhost:3000',
+              changeOrigin: true,
+              secure: false,
+              ws: true,
+            },
+          },
+        }
+      : {}),
+  },
+  preview: {
+    host: true,
+    port: 5173,
+    strictPort: true,
   },
 });

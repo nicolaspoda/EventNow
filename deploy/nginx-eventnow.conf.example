@@ -1,0 +1,62 @@
+# Exemple pour le VPS : reverse-proxy HTTPS (Certbot) → frontend (5173) + API (3000).
+# À fusionner avec les blocs déjà générés par Certbot (chemins ssl_certificate, etc.).
+#
+# Erreurs fréquentes vues en prod :
+# - Oublier un `}` : le 2e bloc server ne doit PAS être imbriqué dans le 1er.
+# - Typo server_name (ex. eventnow.frventnow.fr).
+# - Amont 5173 : si `docker compose logs frontend` affiche « Local: https://… »,
+#   Nginx doit utiliser `proxy_pass https://127.0.0.1:5173` + `proxy_ssl_verify off`.
+#   Après rebuild du front avec le vite.config actuel (preview en HTTP), utiliser
+#   `proxy_pass http://127.0.0.1:5173` à la place.
+
+server {
+    listen 443 ssl;
+    server_name eventnow.fr www.eventnow.fr;
+
+    ssl_certificate /etc/letsencrypt/live/eventnow.fr/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/eventnow.fr/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Si le preview Vite est encore en HTTPS (ancienne image) :
+    #   proxy_pass https://127.0.0.1:5173;
+    #   proxy_ssl_verify off;
+    location / {
+        proxy_pass http://127.0.0.1:5173;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name api.eventnow.fr;
+
+    ssl_certificate /etc/letsencrypt/live/eventnow.fr/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/eventnow.fr/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
