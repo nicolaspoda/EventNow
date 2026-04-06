@@ -46,11 +46,23 @@ describe('getGoogleStrategyOptions', () => {
     process.env.GOOGLE_CLIENT_ID = 'id';
     process.env.GOOGLE_CLIENT_SECRET = 'secret';
     delete process.env.GOOGLE_CALLBACK_URL;
+    process.env.NODE_ENV = 'test';
 
     const options = getGoogleStrategyOptions();
 
     expect(options.callbackURL).toBe(
       'https://localhost:3000/api/v1/auth/google/callback',
+    );
+  });
+
+  it('should throw in production when GOOGLE_CALLBACK_URL unset', () => {
+    process.env.GOOGLE_CLIENT_ID = 'id';
+    process.env.GOOGLE_CLIENT_SECRET = 'secret';
+    delete process.env.GOOGLE_CALLBACK_URL;
+    process.env.NODE_ENV = 'production';
+
+    expect(() => getGoogleStrategyOptions()).toThrow(
+      'GOOGLE_CALLBACK_URL must be configured in production',
     );
   });
 });

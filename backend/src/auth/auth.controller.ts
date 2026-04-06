@@ -11,6 +11,7 @@ import {
   Req,
   Res,
   UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Throttle } from '@nestjs/throttler';
@@ -36,6 +37,19 @@ export class AuthController {
   constructor(authService: AuthService, redis: RedisService) {
     this.authService = authService;
     this.redis = redis;
+  }
+
+  private resolveFrontendUrl(): string {
+    const frontendUrl = process.env.FRONTEND_URL?.split(',')[0]?.trim();
+    if (frontendUrl) return frontendUrl;
+
+    if (process.env.NODE_ENV === 'production') {
+      throw new InternalServerErrorException(
+        'FRONTEND_URL must be configured in production',
+      );
+    }
+
+    return 'https://localhost:5173';
   }
 
   @Post('register')
@@ -141,9 +155,7 @@ export class AuthController {
       user: userPayload,
     });
 
-    const frontendUrl =
-      process.env.FRONTEND_URL?.split(',')[0]?.trim() ||
-      'https://localhost:5173';
+    const frontendUrl = this.resolveFrontendUrl();
     res.redirect(`${frontendUrl}/auth/callback?code=${code}`);
   }
 

@@ -12,6 +12,10 @@ const defaultOrigins = [
   'http://127.0.0.1:3000',
 ];
 
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
 export function getAllowedOrigins(): string[] {
   const fromFrontend = process.env.FRONTEND_URL?.split(',')
     .map((u) => u.trim())
@@ -20,6 +24,10 @@ export function getAllowedOrigins(): string[] {
     .map((u) => u.trim())
     .filter(Boolean);
   const extra = [...(fromFrontend ?? []), ...(fromCors ?? [])];
+  if (isProduction()) {
+    // En production, seules les origines explicitement configurées sont autorisées.
+    return [...new Set(extra)];
+  }
   return [...new Set([...defaultOrigins, ...extra])];
 }
 

@@ -169,7 +169,7 @@ describe('AuthController', () => {
   });
 
   describe('googleAuthCallback', () => {
-    it('should generate tokens, store code in Redis and redirect', async () => {
+    it('should fallback to localhost in non-production when FRONTEND_URL is unset', async () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
@@ -185,7 +185,9 @@ describe('AuthController', () => {
       });
       mockRedisService.setOAuthCode.mockResolvedValue(undefined);
       const origFrontend = process.env.FRONTEND_URL;
+      const origNodeEnv = process.env.NODE_ENV;
       delete process.env.FRONTEND_URL;
+      process.env.NODE_ENV = 'test';
 
       await controller.googleAuthCallback(mockReq, mockRes);
 
@@ -195,6 +197,7 @@ describe('AuthController', () => {
         ),
       );
       if (origFrontend !== undefined) process.env.FRONTEND_URL = origFrontend;
+      if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv;
     });
 
     it('should use FRONTEND_URL when set', async () => {
@@ -220,6 +223,34 @@ describe('AuthController', () => {
         ),
       );
       delete process.env.FRONTEND_URL;
+    });
+
+    it('should throw in production when FRONTEND_URL is unset', async () => {
+      const mockUser = {
+        id: 'user-1',
+        email: 'user@example.com',
+        role: Role.CLIENT,
+      };
+      const mockReq = { user: mockUser } as any;
+      const mockRes = { redirect: jest.fn() } as any;
+      const origFrontend = process.env.FRONTEND_URL;
+      const origNodeEnv = process.env.NODE_ENV;
+      delete process.env.FRONTEND_URL;
+      process.env.NODE_ENV = 'production';
+
+      mockAuthService.generateTokens.mockResolvedValue({
+        accessToken: 'at',
+        refreshToken: 'rt',
+      });
+      mockRedisService.setOAuthCode.mockResolvedValue(undefined);
+
+      await expect(
+        controller.googleAuthCallback(mockReq, mockRes),
+      ).rejects.toThrow('FRONTEND_URL must be configured in production');
+
+      expect(mockRes.redirect).not.toHaveBeenCalled();
+      if (origFrontend !== undefined) process.env.FRONTEND_URL = origFrontend;
+      if (origNodeEnv !== undefined) process.env.NODE_ENV = origNodeEnv;
     });
   });
 
