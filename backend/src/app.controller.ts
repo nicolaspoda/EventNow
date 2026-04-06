@@ -18,6 +18,12 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  /** Utilisé par Docker / Nginx pour vérifier que l’API répond (évite 502 si l’amont n’est pas prêt). */
+  @Get('health')
+  health(): { status: string } {
+    return { status: 'ok' };
+  }
+
   @Get('config/stripe')
   getStripeConfig() {
     return {

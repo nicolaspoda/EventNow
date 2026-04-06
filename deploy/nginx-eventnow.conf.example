@@ -11,6 +11,11 @@
 #   }
 # Puis remplacer `Connection "upgrade"` par `Connection $connection_upgrade`.
 #
+# Vérifier l’API depuis le VPS : curl -fsS http://127.0.0.1:3000/api/v1/health
+# Si 502 sur /api/ ou WebSocket : docker compose ps ; docker compose logs backend --tail=80
+# CORS / Socket.IO : si les utilisateurs utilisent www, le backend doit autoriser
+# https://www.eventnow.fr (voir CORS_ORIGINS dans docker-compose.prod.yml).
+#
 # Erreurs fréquentes vues en prod :
 # - Oublier un `}` : le 2e bloc server ne doit PAS être imbriqué dans le 1er.
 # - Typo server_name (ex. eventnow.frventnow.fr).
