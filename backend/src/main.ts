@@ -10,11 +10,19 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 async function bootstrap() {
+  const isProduction = process.env.NODE_ENV === 'production';
   const certsPath = path.join(process.cwd(), 'certs');
-  const httpsOptions = {
-    key: fs.readFileSync(path.join(certsPath, 'localhost-key.pem')),
-    cert: fs.readFileSync(path.join(certsPath, 'localhost-cert.pem')),
-  };
+  const hasDevCerts =
+    fs.existsSync(path.join(certsPath, 'localhost-key.pem')) &&
+    fs.existsSync(path.join(certsPath, 'localhost-cert.pem'));
+
+  const httpsOptions =
+    !isProduction && hasDevCerts
+      ? {
+          key: fs.readFileSync(path.join(certsPath, 'localhost-key.pem')),
+          cert: fs.readFileSync(path.join(certsPath, 'localhost-cert.pem')),
+        }
+      : undefined;
 
   const app = await NestFactory.create(AppModule, {
     logger: new CustomLoggerService(),
@@ -48,7 +56,10 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  logger.log(`Application listening on https://localhost:${port}`, 'Bootstrap');
+  logger.log(
+    `Application listening on ${httpsOptions ? 'https' : 'http'}://0.0.0.0:${port}`,
+    'Bootstrap',
+  );
 }
 
 bootstrap();

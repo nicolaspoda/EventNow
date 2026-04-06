@@ -186,4 +186,8 @@ jobs:
             cd "${{ secrets.DEPLOY_APP_PATH }}"
             git fetch origin main
             git reset --hard origin/main
-            docker compose up -d --build
+            if [ ! -f .env.production ]; then
+              echo "Missing .env.production on server (${PWD}/.env.production)"
+              exit 1
+            fi
+            docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build --remove-orphans
