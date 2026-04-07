@@ -17,8 +17,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="hero-subtitle">
-            Suivez les sorties de votre réseau, trouvez les meilleurs événements et achetez vos billets
-            facilement pour partager l'expérience ensemble.
+            Suivez les sorties de votre réseau, créez des événements communautaires, trouvez les meilleurs
+            événements et achetez vos billets facilement pour partager l'expérience ensemble.
           </p>
 
           <div className="hero-cta">
@@ -102,7 +102,8 @@ export default function LandingPage() {
           <div className="cta-section">
             <h2 className="text-3xl font-bold mb-4 relative z-10">Vivez vos événements de A à Z</h2>
             <p className="text-lg mb-8 relative z-10" style={{ color: 'rgba(255,255,255,0.85)' }}>
-              Du partage social à la réservation de billets, tout est pensé pour sortir plus simplement.
+              Du partage social à la création d'événements communautaires et à la réservation de billets,
+              tout est pensé pour sortir plus simplement.
             </p>
             <div className="flex items-center justify-center gap-4 flex-wrap relative z-10">
               <Link to="/register" className="btn-modern btn-accent">

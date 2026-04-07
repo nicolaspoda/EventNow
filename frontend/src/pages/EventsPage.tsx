@@ -60,8 +60,8 @@ const EventsPage: React.FC = () => {
           </h1>
 
           <p className="hero-subtitle">
-            Découvrez où vont vos amis, trouvez les meilleurs événements près de chez vous et achetez vos billets
-            en quelques clics.
+            Découvrez où vont vos amis, créez vos propres événements communautaires, trouvez les meilleurs
+            événements près de chez vous et achetez vos billets en quelques clics.
           </p>
 
           {/* Search bar integrated into hero */}
