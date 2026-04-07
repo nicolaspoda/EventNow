@@ -31,9 +31,9 @@ const EventsPage: React.FC = () => {
   // En vue carte : demander la position une fois pour afficher le point bleu (sans changer le tri)
   useEffect(() => {
     if (viewMode === 'map' && !userPosition && !positionLoading && navigator.geolocation) {
-      requestUserPosition({ forDisplayOnly: true });
+      requestUserPosition({ forDisplayOnly: true, silent: true });
     }
-  }, [viewMode]);
+  }, [viewMode, userPosition, positionLoading, requestUserPosition]);
 
   const handleSortChange = (value: string) => {
     if (value === 'DISTANCE_ASC') {
@@ -179,7 +179,12 @@ const EventsPage: React.FC = () => {
                   </svg>
                 </button>
                 <button
-                  onClick={() => setViewMode('map')}
+                  onClick={() => {
+                    setViewMode('map');
+                    if (!userPosition && !positionLoading && navigator.geolocation) {
+                      requestUserPosition({ forDisplayOnly: true });
+                    }
+                  }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     viewMode === 'map'
                       ? 'bg-primary-600 text-white'
@@ -199,8 +204,36 @@ const EventsPage: React.FC = () => {
                   onChange={handleSortChange}
                 />
               )}
+              {viewMode === 'map' && (
+                <button
+                  type="button"
+                  onClick={() => requestUserPosition({ forDisplayOnly: true })}
+                  disabled={positionLoading}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                >
+                  {positionLoading ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-primary-500 border-t-transparent" aria-hidden="true" />
+                      Position...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Me localiser
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
+          {viewMode === 'map' && positionError && (
+            <p className="text-sm text-red-600 dark:text-red-400 mb-4" role="alert">
+              {positionError}
+            </p>
+          )}
 
           {loading ? (
             <div className="text-center py-16" role="status" aria-live="polite">

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from 'react-leaflet';
 import { Icon, LatLngBounds } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -19,6 +19,9 @@ interface EventsMapProps {
   className?: string;
 }
 
+const isValidCoordinate = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+
 const defaultIcon = new Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -37,21 +40,24 @@ function MapBoundsUpdater({
   userPosition?: UserPosition | null;
 }) {
   const map = useMap();
+  const lastViewportKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const eventsWithCoords = events.filter(
-      (event) => event.latitude != null && event.longitude != null,
-    );
-
-    const positions: [number, number][] = eventsWithCoords.map((event) => [
-      event.latitude!,
-      event.longitude!,
-    ]);
-    if (userPosition) {
+    const positions: [number, number][] = events
+      .filter((event) => isValidCoordinate(event.latitude) && isValidCoordinate(event.longitude))
+      .map((event) => [event.latitude as number, event.longitude as number]);
+    if (userPosition && isValidCoordinate(userPosition.lat) && isValidCoordinate(userPosition.lon)) {
       positions.push([userPosition.lat, userPosition.lon]);
     }
 
     if (positions.length === 0) return;
+
+    const viewportKey = `${events
+      .map((event) => `${event.id}:${event.latitude}:${event.longitude}`)
+      .join('|')}|${userPosition ? `${userPosition.lat}:${userPosition.lon}` : 'no-user'}`;
+
+    if (lastViewportKeyRef.current === viewportKey) return;
+    lastViewportKeyRef.current = viewportKey;
 
     if (positions.length === 1) {
       map.setView(positions[0], MAP_CONFIG.defaultZoom + 7);
@@ -65,8 +71,9 @@ function MapBoundsUpdater({
 }
 
 export function EventsMap({ events, userPosition, onEventClick, className = '' }: EventsMapProps) {
-  const eventsWithCoords = events.filter(
-    (event) => event.latitude != null && event.longitude != null,
+  const eventsWithCoords = useMemo(
+    () => events.filter((event) => isValidCoordinate(event.latitude) && isValidCoordinate(event.longitude)),
+    [events]
   );
 
   const defaultCenter: [number, number] = [MAP_CONFIG.defaultCenter.lat, MAP_CONFIG.defaultCenter.lng];
@@ -118,7 +125,7 @@ export function EventsMap({ events, userPosition, onEventClick, className = '' }
         
         <MapBoundsUpdater events={eventsWithCoords} userPosition={userPosition} />
 
-        {userPosition && (
+        {userPosition && isValidCoordinate(userPosition.lat) && isValidCoordinate(userPosition.lon) && (
           <CircleMarker
             center={[userPosition.lat, userPosition.lon]}
             radius={10}

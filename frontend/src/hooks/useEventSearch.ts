@@ -97,7 +97,7 @@ export const useEventSearch = () => {
     void fetchEvents();
   }, [filters, userPosition]);
 
-  const requestUserPosition = useCallback((options?: { forDisplayOnly?: boolean; sortOnly?: boolean }) => {
+  const requestUserPosition = useCallback((options?: { forDisplayOnly?: boolean; sortOnly?: boolean; silent?: boolean }) => {
     setPositionError(null);
     setPositionLoading(true);
     if (!navigator.geolocation) {
@@ -105,25 +105,56 @@ export const useEventSearch = () => {
       setPositionLoading(false);
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserPosition({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-        setPositionLoading(false);
-        if (!options?.forDisplayOnly) {
-          setSearchParams((prev) => {
-            const next = new URLSearchParams(prev);
-            next.set('sortBy', 'DISTANCE_ASC');
-            if (!options?.sortOnly) next.set('radiusKm', '50');
-            return next;
-          });
-        }
-      },
-      () => {
-        setPositionError('Impossible d\'obtenir votre position. Vérifiez les autorisations.');
-        setPositionLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    );
+    const performGeolocationRequest = () => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserPosition({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+          setPositionLoading(false);
+          if (!options?.forDisplayOnly) {
+            setSearchParams((prev) => {
+              const next = new URLSearchParams(prev);
+              next.set('sortBy', 'DISTANCE_ASC');
+              if (!options?.sortOnly) next.set('radiusKm', '50');
+              return next;
+            });
+          }
+        },
+        (error) => {
+          if (!options?.silent) {
+            if (error.code === error.PERMISSION_DENIED) {
+              setPositionError('Géolocalisation bloquée. Autorisez la localisation dans votre navigateur puis réessayez.');
+            } else if (error.code === error.TIMEOUT) {
+              setPositionError('La localisation a expiré. Réessayez dans quelques secondes.');
+            } else {
+              setPositionError('Impossible d\'obtenir votre position. Vérifiez les autorisations.');
+            }
+          }
+          setPositionLoading(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      );
+    };
+
+    if (navigator.permissions?.query) {
+      void navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((permissionStatus) => {
+          if (permissionStatus.state === 'denied') {
+            if (!options?.silent) {
+              setPositionError('Géolocalisation bloquée. Autorisez la localisation dans votre navigateur puis réessayez.');
+            }
+            setPositionLoading(false);
+            return;
+          }
+          performGeolocationRequest();
+        })
+        .catch(() => {
+          performGeolocationRequest();
+        });
+      return;
+    }
+
+    performGeolocationRequest();
   }, [setSearchParams]);
 
   const clearNearMeFilter = useCallback(() => {
