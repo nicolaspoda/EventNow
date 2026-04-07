@@ -55,18 +55,19 @@ const EventsPage: React.FC = () => {
           {/* Badge */}
           <div className="hero-badge">
             <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" aria-hidden="true" />
-            Billetterie nouvelle génération
+            Réseau social et billetterie événementielle
           </div>
 
           <h1 className="hero-title">
-            Découvrez des événements
+            Rejoignez, découvrez et réservez
             <span className="hero-title-accent">
-              inoubliables
+              avec votre réseau
             </span>
           </h1>
 
           <p className="hero-subtitle">
-            Concerts, festivals, conférences et événements communautaires — réservez en quelques clics.
+            Découvrez où vont vos amis, trouvez les meilleurs événements près de chez vous et achetez vos billets
+            en quelques clics.
           </p>
 
           {/* Search bar integrated into hero */}

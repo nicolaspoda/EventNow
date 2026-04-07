@@ -8,6 +8,7 @@ import ErrorState from '../components/ui/ErrorState';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import UpcomingEventCard from '../components/upcoming/UpcomingEventCard';
+import { FriendsActivitySection } from '../components/dashboard/FriendsActivitySection';
 
 const MyUpcomingEventsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -48,9 +49,9 @@ const MyUpcomingEventsPage: React.FC = () => {
       <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
-            Mes événements à venir
+            Mes prochaines sorties
           </h1>
-          <LoadingState message="Chargement de vos événements..." />
+          <LoadingState message="Chargement de vos sorties..." />
         </div>
       </main>
     );
@@ -61,7 +62,7 @@ const MyUpcomingEventsPage: React.FC = () => {
       <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
-            Mes événements à venir
+            Mes prochaines sorties
           </h1>
           <ErrorState message={error} onRetry={fetchUpcomingEvents} />
         </div>
@@ -74,7 +75,7 @@ const MyUpcomingEventsPage: React.FC = () => {
       <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
-            Mes événements à venir
+            Mes prochaines sorties
           </h1>
           <EmptyState
             icon={
@@ -92,10 +93,10 @@ const MyUpcomingEventsPage: React.FC = () => {
                 />
               </svg>
             }
-            title="Aucun événement à venir"
-            message="Vous n'avez pas encore d'événements programmés. Découvrez nos événements et réservez vos places !"
-            actionLabel="Découvrir les événements"
-            onAction={() => navigate('/events')}
+            title="Aucune sortie prévue"
+            message="Rejoignez vos amis sur leurs événements ou découvrez de nouvelles sorties ensemble !"
+            actionLabel="Voir les sorties de mes amis"
+            onAction={() => navigate('/events?friendsOnly=true')}
           />
           <p className="text-center mt-6">
             <button
@@ -117,18 +118,18 @@ const MyUpcomingEventsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-              Mes événements à venir
+              Mes prochaines sorties
             </h1>
             <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-              {events.length} événement{events.length > 1 ? 's' : ''} programmé{events.length > 1 ? 's' : ''}
+              {events.length} sortie{events.length > 1 ? 's' : ''} programmée{events.length > 1 ? 's' : ''}
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => navigate('/my-participated-events')}>
               Mes participations
             </Button>
-            <Button variant="ghost" onClick={() => navigate('/events')}>
-              Découvrir plus d'événements
+            <Button variant="primary" onClick={() => navigate('/events?friendsOnly=true')}>
+              Sorties de mes amis
             </Button>
           </div>
         </div>
@@ -189,6 +190,10 @@ const MyUpcomingEventsPage: React.FC = () => {
             ))}
           </div>
         )}
+
+        <div className="mt-12">
+          <FriendsActivitySection />
+        </div>
       </div>
     </main>
   );

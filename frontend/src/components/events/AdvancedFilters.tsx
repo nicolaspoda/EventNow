@@ -83,6 +83,28 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       <div className="space-y-4">
         <div>
           <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Découverte
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => onFilterChange('friendsOnly', !(filters.friendsOnly as boolean))}
+              className={`px-4 py-2.5 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-accent-500 transition-all flex items-center gap-2 ${
+                filters.friendsOnly
+                  ? 'bg-gradient-to-r from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-500/30'
+                  : 'bg-neutral-100 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 border border-neutral-300 dark:border-neutral-600'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Événements de mes amis
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Type d'événement
           </p>
           <div className="flex flex-wrap gap-2">
@@ -159,21 +181,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700"
             />
             <span className="text-sm text-neutral-700 dark:text-neutral-300">
-              Uniquement les organisateurs que je suis
-            </span>
-          </label>
-        </div>
-
-        <div>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={(filters.friendsOnly as boolean) || false}
-              onChange={(e) => onFilterChange('friendsOnly', e.target.checked)}
-              className="mr-2 h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700"
-            />
-            <span className="text-sm text-neutral-700 dark:text-neutral-300">
-              Uniquement mes amis (organisateurs)
+              Organisateurs que je suis
             </span>
           </label>
         </div>

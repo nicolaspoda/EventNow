@@ -229,50 +229,51 @@ const EventDetailPage: React.FC = () => {
                 <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                   Contenu
                 </p>
-                <div className="flex flex-wrap gap-2" role="tablist" aria-label="Sections de la page">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={activeTab === tab.id}
-                      aria-controls={`panel-${tab.id}`}
-                      id={`tab-${tab.id}`}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 ${
-                        activeTab === tab.id
-                          ? 'bg-primary-600 text-white dark:bg-primary-500'
-                          : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-600'
-                      }`}
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-wrap gap-2" role="tablist" aria-label="Sections de la page">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={activeTab === tab.id}
+                        aria-controls={`panel-${tab.id}`}
+                        id={`tab-${tab.id}`}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 ${
+                          activeTab === tab.id
+                            ? 'bg-primary-600 text-white dark:bg-primary-500'
+                            : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-600'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {event.type === 'COMMUNITY' && isAuthenticated && (myParticipationRequest?.status === 'ACCEPTED' || event.organizerId === user?.id) && (
+                    <Button
+                      variant="secondary"
+                      className="w-full md:w-auto border border-neutral-300 dark:border-neutral-600"
+                      onClick={async () => {
+                        try {
+                          const conversation = await messageService.getEventConversation(event.id);
+                          navigate(`/messages/${conversation.id}`);
+                        } catch (err) {
+                          console.error('Erreur:', err);
+                        }
+                      }}
+                      leftIcon={
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      }
                     >
-                      {tab.label}
-                    </button>
-                  ))}
+                      Accéder à la messagerie de groupe
+                    </Button>
+                  )}
                 </div>
               </div>
-
-              {event.type === 'COMMUNITY' && isAuthenticated && (myParticipationRequest?.status === 'ACCEPTED' || event.organizerId === user?.id) && (
-                <div className="mb-6">
-                  <Button
-                    variant="accent"
-                    onClick={async () => {
-                      try {
-                        const conversation = await messageService.getEventConversation(event.id);
-                        navigate(`/messages/${conversation.id}`);
-                      } catch (err) {
-                        console.error('Erreur:', err);
-                      }
-                    }}
-                    leftIcon={
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                    }
-                  >
-                    Accéder à la messagerie de groupe
-                  </Button>
-                </div>
-              )}
 
               <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30 p-8 md:p-10 lg:p-12">
                 {activeTab === 'details' && (
