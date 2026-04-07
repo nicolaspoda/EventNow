@@ -52,12 +52,6 @@ const EventsPage: React.FC = () => {
       {/* ── Hero ──────────────────────────────────── */}
       <section className="hero-section">
         <div className="hero-content">
-          {/* Badge */}
-          <div className="hero-badge">
-            <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" aria-hidden="true" />
-            Réseau social et billetterie événementielle
-          </div>
-
           <h1 className="hero-title">
             Rejoignez, découvrez et réservez
             <span className="hero-title-accent">
