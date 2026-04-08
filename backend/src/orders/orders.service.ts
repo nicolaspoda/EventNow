@@ -32,13 +32,14 @@ export class OrdersService {
     this.paymentService = paymentService;
     this.mailService = mailService;
     this.notificationsService = notificationsService;
-    
+
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
     this.stripe = new Stripe(stripeSecretKey);
-    this.webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
+    this.webhookSecret =
+      this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
   }
 
   async initiatePayment(bookingId: string, userId: string) {
@@ -314,7 +315,8 @@ export class OrdersService {
 
     const event = order.tickets[0]?.ticketCategory?.event;
     if (event?.organizerId) {
-      const requesterName = order.user?.username ?? order.user?.email ?? 'Un client';
+      const requesterName =
+        order.user?.username ?? order.user?.email ?? 'Un client';
       await this.notificationsService.create({
         userId: event.organizerId,
         type: 'REFUND_REQUESTED',
@@ -383,12 +385,8 @@ export class OrdersService {
       );
     }
 
-    let stripeRefund;
     try {
-      stripeRefund = await this.paymentService.refundPayment(
-        order.paymentIntentId,
-        orderId,
-      );
+      await this.paymentService.refundPayment(order.paymentIntentId, orderId);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Erreur lors du remboursement';
@@ -512,13 +510,16 @@ export class OrdersService {
 
     switch (event.type) {
       case 'payment_intent.succeeded':
-        await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        await this.handlePaymentIntentSucceeded(event.data.object);
         break;
       case 'payment_intent.payment_failed':
-        await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+        await this.handlePaymentIntentFailed(event.data.object);
         break;
       case 'payment_intent.requires_action':
-        console.log('Payment requires action (3D Secure):', event.data.object.id);
+        console.log(
+          'Payment requires action (3D Secure):',
+          event.data.object.id,
+        );
         break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
@@ -527,7 +528,9 @@ export class OrdersService {
     return { received: true };
   }
 
-  private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+  private async handlePaymentIntentSucceeded(
+    paymentIntent: Stripe.PaymentIntent,
+  ) {
     const bookingId = paymentIntent.metadata.bookingId;
     const userId = paymentIntent.metadata.userId;
 
@@ -566,7 +569,10 @@ export class OrdersService {
     const userId = paymentIntent.metadata.userId;
 
     if (!bookingId || !userId) {
-      console.error('Missing metadata in failed payment intent:', paymentIntent.id);
+      console.error(
+        'Missing metadata in failed payment intent:',
+        paymentIntent.id,
+      );
       return;
     }
 

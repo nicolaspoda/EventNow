@@ -11,7 +11,6 @@ interface CancelOrderButtonProps {
 
 const CancelOrderButton: React.FC<CancelOrderButtonProps> = ({
   orderId,
-  eventDate: _eventDate,
   onSuccess,
 }) => {
   const [showModal, setShowModal] = useState(false);

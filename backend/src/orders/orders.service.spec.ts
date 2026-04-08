@@ -356,7 +356,11 @@ describe('OrdersService', () => {
             id: 'ticket-1',
             ticketCategoryId: 'category-1',
             ticketCategory: {
-              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+              event: {
+                id: 'event-1',
+                title: 'Test Event',
+                organizerId: 'org-1',
+              },
             },
           },
         ],
@@ -404,7 +408,11 @@ describe('OrdersService', () => {
             id: 'ticket-1',
             ticketCategoryId: 'category-1',
             ticketCategory: {
-              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+              event: {
+                id: 'event-1',
+                title: 'Test Event',
+                organizerId: 'org-1',
+              },
             },
           },
         ],
@@ -426,7 +434,11 @@ describe('OrdersService', () => {
             id: 'ticket-1',
             ticketCategoryId: 'category-1',
             ticketCategory: {
-              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+              event: {
+                id: 'event-1',
+                title: 'Test Event',
+                organizerId: 'org-1',
+              },
             },
           },
         ],
@@ -448,7 +460,11 @@ describe('OrdersService', () => {
             id: 'ticket-1',
             ticketCategoryId: 'category-1',
             ticketCategory: {
-              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+              event: {
+                id: 'event-1',
+                title: 'Test Event',
+                organizerId: 'org-1',
+              },
             },
           },
         ],
@@ -475,7 +491,11 @@ describe('OrdersService', () => {
             id: 'ticket-1',
             ticketCategoryId: 'category-1',
             ticketCategory: {
-              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+              event: {
+                id: 'event-1',
+                title: 'Test Event',
+                organizerId: 'org-1',
+              },
             },
           },
         ],
