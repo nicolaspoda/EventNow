@@ -137,6 +137,30 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
           </div>
         )}
 
+        {/* Social signal - Friends attending */}
+        {event.friendsAttendingCount != null && event.friendsAttendingCount > 0 && (
+          <div className="mb-3 p-2.5 bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {event.friendsAttending?.slice(0, 3).map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 border-2 border-white dark:border-neutral-800 flex items-center justify-center text-white text-xs font-semibold"
+                    title={friend.username || 'Ami'}
+                  >
+                    {friend.username?.[0]?.toUpperCase() || '?'}
+                  </div>
+                ))}
+              </div>
+              <span className="text-sm font-semibold text-accent-700 dark:text-accent-300">
+                {event.friendsAttendingCount === 1
+                  ? '1 ami participe'
+                  : `${event.friendsAttendingCount} amis participent`}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Meta info */}
         <div
           className="space-y-1.5 mb-4 text-neutral-600 dark:text-neutral-300"

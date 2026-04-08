@@ -39,6 +39,7 @@ describe('OrdersService', () => {
   const mockPaymentService = {
     createPaymentIntent: jest.fn(),
     simulatePayment: jest.fn(),
+    refundPayment: jest.fn(),
   };
 
   const mockMailService = {
@@ -341,6 +342,149 @@ describe('OrdersService', () => {
 
       await expect(service.getOrderById('order-1', 'user-1')).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe('approveRefund', () => {
+    it('should approve refund and call Stripe API', async () => {
+      const orderWithTickets = {
+        ...mockOrder,
+        status: OrderStatus.REFUND_REQUESTED,
+        tickets: [
+          {
+            id: 'ticket-1',
+            ticketCategoryId: 'category-1',
+            ticketCategory: {
+              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+            },
+          },
+        ],
+      };
+
+      const stripeRefundResponse = {
+        refundId: 'refund_123',
+        amount: 200,
+        currency: 'EUR',
+        status: 'succeeded',
+        paymentIntentId: 'payment-1',
+      };
+
+      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+      mockPaymentService.refundPayment.mockResolvedValue(stripeRefundResponse);
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.ticketCategory.update.mockResolvedValue({});
+      mockPrismaService.booking.updateMany.mockResolvedValue({ count: 1 });
+      mockPrismaService.order.update.mockResolvedValue({
+        ...orderWithTickets,
+        status: OrderStatus.REFUNDED,
+      });
+
+      const result = await service.approveRefund('order-1', 'org-1');
+
+      expect(mockPaymentService.refundPayment).toHaveBeenCalledWith(
+        'payment-1',
+        'order-1',
+      );
+      expect(result.status).toBe(OrderStatus.REFUNDED);
+      expect(mockPrismaService.ticketCategory.update).toHaveBeenCalledWith({
+        where: { id: 'category-1' },
+        data: { currentStock: { increment: 1 } },
+      });
+    });
+
+    it('should throw if order not in REFUND_REQUESTED status', async () => {
+      const orderWithTickets = {
+        ...mockOrder,
+        status: OrderStatus.PAID,
+        tickets: [
+          {
+            id: 'ticket-1',
+            ticketCategoryId: 'category-1',
+            ticketCategory: {
+              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+            },
+          },
+        ],
+      };
+
+      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+
+      await expect(service.approveRefund('order-1', 'org-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw if organizer not authorized', async () => {
+      const orderWithTickets = {
+        ...mockOrder,
+        status: OrderStatus.REFUND_REQUESTED,
+        tickets: [
+          {
+            id: 'ticket-1',
+            ticketCategoryId: 'category-1',
+            ticketCategory: {
+              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+            },
+          },
+        ],
+      };
+
+      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+
+      await expect(
+        service.approveRefund('order-1', 'wrong-org'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw if Stripe refund fails', async () => {
+      const orderWithTickets = {
+        ...mockOrder,
+        status: OrderStatus.REFUND_REQUESTED,
+        tickets: [
+          {
+            id: 'ticket-1',
+            ticketCategoryId: 'category-1',
+            ticketCategory: {
+              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+            },
+          },
+        ],
+      };
+
+      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+      mockPaymentService.refundPayment.mockRejectedValue(
+        new Error('Stripe API error'),
+      );
+
+      await expect(service.approveRefund('order-1', 'org-1')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPrismaService.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('should throw if paymentIntentId is missing', async () => {
+      const orderWithTickets = {
+        ...mockOrder,
+        paymentIntentId: null,
+        status: OrderStatus.REFUND_REQUESTED,
+        tickets: [
+          {
+            id: 'ticket-1',
+            ticketCategoryId: 'category-1',
+            ticketCategory: {
+              event: { id: 'event-1', title: 'Test Event', organizerId: 'org-1' },
+            },
+          },
+        ],
+      };
+
+      mockPrismaService.order.findUnique.mockResolvedValue(orderWithTickets);
+
+      await expect(service.approveRefund('order-1', 'org-1')).rejects.toThrow(
+        BadRequestException,
       );
     });
   });

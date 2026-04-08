@@ -6,6 +6,7 @@ import { StatCard } from '../components/dashboard/StatCard';
 import { EventsTable } from '../components/dashboard/EventsTable';
 import { ParticipantsChart } from '../components/dashboard/ParticipantsChart';
 import { PendingRequestsList } from '../components/dashboard/PendingRequestsList';
+import { FriendsActivitySection } from '../components/dashboard/FriendsActivitySection';
 import type {
   ClientOverview,
   DashboardEvent,
@@ -111,6 +112,8 @@ export const ClientDashboardPage: React.FC = () => {
         <StatCard title="Participants totaux" value={overview.totalParticipants} />
         <StatCard title="Moyenne / événement" value={overview.averageParticipants} />
       </section>
+
+      <FriendsActivitySection />
 
       {events.length > 0 && (
         <section

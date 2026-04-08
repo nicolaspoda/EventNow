@@ -8,8 +8,10 @@ import { stripeService } from '../services/stripeService';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import StripePaymentForm from '../components/payment/StripePaymentForm';
 import Button from '../components/ui/Button';
+import { useTheme } from '../contexts/ThemeContext';
 
 const CheckoutPage: React.FC = () => {
+  const { theme } = useTheme();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [initiating, setInitiating] = useState(true);
@@ -72,19 +74,26 @@ const CheckoutPage: React.FC = () => {
   };
 
   const appearance = useMemo(
-    () => ({
-      theme: 'stripe' as const,
-      variables: {
-        colorPrimary: '#6366f1',
-        colorBackground: '#ffffff',
-        colorText: '#1f2937',
-        colorDanger: '#ef4444',
-        fontFamily: 'system-ui, sans-serif',
-        spacingUnit: '4px',
-        borderRadius: '8px',
-      },
-    }),
-    []
+    () => {
+      const isDark = theme === 'dark';
+
+      return {
+        theme: 'stripe' as const,
+        variables: {
+          colorPrimary: '#6366f1',
+          colorBackground: isDark ? '#111827' : '#ffffff',
+          colorText: isDark ? '#f3f4f6' : '#1f2937',
+          colorDanger: '#ef4444',
+          colorTextSecondary: isDark ? '#9ca3af' : '#6b7280',
+          colorIcon: isDark ? '#9ca3af' : '#6b7280',
+          colorBorder: isDark ? '#374151' : '#d1d5db',
+          fontFamily: 'system-ui, sans-serif',
+          spacingUnit: '4px',
+          borderRadius: '8px',
+        },
+      };
+    },
+    [theme]
   );
 
   const elementsOptions = useMemo(
@@ -187,11 +196,12 @@ const CheckoutPage: React.FC = () => {
         )}
 
         {clientSecret && stripePromise && elementsOptions && (
-          <Elements key={clientSecret} stripe={stripePromise} options={elementsOptions}>
+          <Elements key={`${clientSecret}-${theme}`} stripe={stripePromise} options={elementsOptions}>
             <StripePaymentForm
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               onCancel={handleCancel}
+              bookingId={bookingId || undefined}
             />
           </Elements>
         )}

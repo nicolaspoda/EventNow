@@ -35,6 +35,8 @@ export interface Event {
   organizer?: Organizer;
   createdAt: string;
   updatedAt: string;
+  friendsAttending?: Array<{ id: string; username?: string; avatarUrl?: string }>;
+  friendsAttendingCount?: number;
 }
 
 export interface EventFilters {

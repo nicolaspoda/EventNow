@@ -36,7 +36,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
   };
 
   const hasTickets = order.status === 'PAID';
-  const canCancel = order.status === 'PAID' && !!eventDate;
+  const canCancel = order.status === 'PAID';
 
   return (
     <div className="glass-card p-6 hover:shadow-lg transition-shadow">

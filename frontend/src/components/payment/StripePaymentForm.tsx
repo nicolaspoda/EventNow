@@ -6,12 +6,14 @@ interface StripePaymentFormProps {
   onSuccess: () => void;
   onError: (error: string) => void;
   onCancel: () => void;
+  bookingId?: string;
 }
 
 const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
   onSuccess,
   onError,
   onCancel,
+  bookingId,
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -27,21 +29,36 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
     setProcessing(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const returnUrl = bookingId 
+        ? `${window.location.origin}/payment/success?bookingId=${bookingId}`
+        : `${window.location.origin}/payment/success`;
+
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: window.location.origin + '/payment/success',
+          return_url: returnUrl,
         },
-        redirect: 'if_required',
+        redirect: 'always',
       });
 
       if (error) {
-        onError(error.message || 'Erreur lors du paiement');
+        if (error.type === 'card_error' || error.type === 'validation_error') {
+          onError(error.message || 'Erreur de validation de la carte');
+        } else if (error.type === 'authentication_error') {
+          onError('Échec de l\'authentification bancaire. Veuillez réessayer.');
+        } else {
+          onError(error.message || 'Erreur lors du paiement');
+        }
+        setProcessing(false);
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        onSuccess();
+      } else if (paymentIntent && paymentIntent.status === 'requires_action') {
+        onError('L\'authentification bancaire est requise. Veuillez suivre les instructions de votre banque.');
         setProcessing(false);
       } else {
         onSuccess();
       }
-    } catch {
+    } catch (err) {
       onError('Une erreur est survenue lors du paiement');
       setProcessing(false);
     }
@@ -49,17 +66,14 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-6">
-        <p className="text-sm text-primary-800 dark:text-primary-300">
-          <strong>Mode test :</strong> Utilisez la carte 4242 4242 4242 4242 avec n'importe quelle date future et CVC.
-        </p>
-      </div>
-
       <PaymentElement
         options={{
           wallets: {
             applePay: 'never',
             googlePay: 'never',
+          },
+          terms: {
+            card: 'auto',
           },
         }}
       />

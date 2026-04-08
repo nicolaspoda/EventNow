@@ -5,26 +5,18 @@ import Button from '../ui/Button';
 
 interface CancelOrderButtonProps {
   orderId: string;
-  eventDate: string;
+  eventDate?: string;
   onSuccess: () => void;
 }
 
 const CancelOrderButton: React.FC<CancelOrderButtonProps> = ({
   orderId,
-  eventDate,
+  eventDate: _eventDate,
   onSuccess,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const daysUntilEvent = Math.ceil(
-    (new Date(eventDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
-
-  if (daysUntilEvent < 7) {
-    return null;
-  }
 
   const handleCancel = async () => {
     setLoading(true);
