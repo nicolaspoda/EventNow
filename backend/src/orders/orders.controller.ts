@@ -8,7 +8,11 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Headers,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
+import type { RawBodyRequest } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, ConfirmPaymentDto } from './dto';
@@ -16,6 +20,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
+import { Request } from 'express';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -87,5 +93,24 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   rejectRefund(@Param('id') id: string, @CurrentUser() user: any) {
     return this.ordersService.rejectRefund(id, user.id);
+  }
+
+  @Post('webhook/stripe')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  async handleStripeWebhook(
+    @Headers('stripe-signature') signature: string,
+    @Req() request: RawBodyRequest<Request>,
+  ) {
+    if (!signature) {
+      throw new BadRequestException('Signature Stripe manquante');
+    }
+
+    const rawBody = request.rawBody;
+    if (!rawBody) {
+      throw new BadRequestException('Corps de la requête manquant');
+    }
+
+    return this.ordersService.handleStripeWebhook(rawBody, signature);
   }
 }

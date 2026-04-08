@@ -8,6 +8,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { CustomLoggerService } from './logger/logger.service';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -34,6 +35,16 @@ async function bootstrap() {
   configureHelmet(app);
 
   app.enableCors(corsConfig);
+
+  app.use(
+    bodyParser.json({
+      verify: (req: any, _res, buf) => {
+        if (req.originalUrl.includes('/webhook/stripe')) {
+          req.rawBody = buf;
+        }
+      },
+    }),
+  );
 
   app.useGlobalPipes(
     new ValidationPipe({

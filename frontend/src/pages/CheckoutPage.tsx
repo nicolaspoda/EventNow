@@ -201,6 +201,7 @@ const CheckoutPage: React.FC = () => {
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               onCancel={handleCancel}
+              bookingId={bookingId || undefined}
             />
           </Elements>
         )}

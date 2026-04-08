@@ -306,7 +306,7 @@ describe('BookingsService', () => {
   });
 
   describe('getUserBookings', () => {
-    it('should return all bookings for user', async () => {
+    it('should return only active and relevant bookings for user', async () => {
       const bookings = [mockBooking, { ...mockBooking, id: 'booking-2' }];
       mockPrismaService.booking.findMany.mockResolvedValue(bookings);
 
@@ -314,7 +314,20 @@ describe('BookingsService', () => {
 
       expect(result).toEqual(bookings);
       expect(mockPrismaService.booking.findMany).toHaveBeenCalledWith({
-        where: { userId: 'user-1' },
+        where: {
+          userId: 'user-1',
+          OR: [
+            {
+              status: {
+                in: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED],
+              },
+            },
+            {
+              status: BookingStatus.PENDING,
+              expiresAt: { gt: expect.any(Date) },
+            },
+          ],
+        },
         include: expect.any(Object),
         orderBy: { createdAt: 'desc' },
       });

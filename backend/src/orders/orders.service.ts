@@ -3,12 +3,14 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 import * as crypto from 'crypto';
+import Stripe from 'stripe';
 
 @Injectable()
 export class OrdersService {
@@ -16,17 +18,27 @@ export class OrdersService {
   private readonly paymentService: PaymentService;
   private readonly mailService: MailService;
   private readonly notificationsService: NotificationsService;
+  private readonly stripe: Stripe;
+  private readonly webhookSecret: string;
 
   constructor(
     prisma: PrismaService,
     paymentService: PaymentService,
     mailService: MailService,
     notificationsService: NotificationsService,
+    private readonly configService: ConfigService,
   ) {
     this.prisma = prisma;
     this.paymentService = paymentService;
     this.mailService = mailService;
     this.notificationsService = notificationsService;
+    
+    const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    if (!stripeSecretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    this.stripe = new Stripe(stripeSecretKey);
+    this.webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
   }
 
   async initiatePayment(bookingId: string, userId: string) {
@@ -237,6 +249,12 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
+        user: {
+          select: {
+            email: true,
+            username: true,
+          },
+        },
         tickets: {
           include: {
             ticketCategory: { include: { event: true } },
@@ -294,6 +312,18 @@ export class OrdersService {
       },
     });
 
+    const event = order.tickets[0]?.ticketCategory?.event;
+    if (event?.organizerId) {
+      const requesterName = order.user?.username ?? order.user?.email ?? 'Un client';
+      await this.notificationsService.create({
+        userId: event.organizerId,
+        type: 'REFUND_REQUESTED',
+        title: 'Nouvelle demande de remboursement',
+        body: `${requesterName} a demandé le remboursement de la commande #${order.id.slice(0, 8)} pour "${event.title}".`,
+        relatedId: order.id,
+      });
+    }
+
     return this.mapOrderDecimalToNumber(updated);
   }
 
@@ -324,30 +354,50 @@ export class OrdersService {
   }
 
   async approveRefund(orderId: string, organizerId: string) {
-    return this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.findUnique({
-        where: { id: orderId },
-        include: {
-          tickets: {
-            include: {
-              ticketCategory: { include: { event: true } },
-            },
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        tickets: {
+          include: {
+            ticketCategory: { include: { event: true } },
           },
         },
-      });
+      },
+    });
 
-      if (!order) throw new NotFoundException('Commande introuvable');
-      if (order.status !== OrderStatus.REFUND_REQUESTED) {
-        throw new BadRequestException(
-          "Cette commande n'est pas en attente de remboursement.",
-        );
-      }
+    if (!order) throw new NotFoundException('Commande introuvable');
+    if (order.status !== OrderStatus.REFUND_REQUESTED) {
+      throw new BadRequestException(
+        "Cette commande n'est pas en attente de remboursement.",
+      );
+    }
 
-      const event = order.tickets[0]?.ticketCategory?.event;
-      if (!event || event.organizerId !== organizerId) {
-        throw new NotFoundException('Commande introuvable ou non autorisée');
-      }
+    const event = order.tickets[0]?.ticketCategory?.event;
+    if (!event || event.organizerId !== organizerId) {
+      throw new NotFoundException('Commande introuvable ou non autorisée');
+    }
 
+    if (!order.paymentIntentId) {
+      throw new BadRequestException(
+        'Aucun identifiant de paiement trouvé pour cette commande',
+      );
+    }
+
+    let stripeRefund;
+    try {
+      stripeRefund = await this.paymentService.refundPayment(
+        order.paymentIntentId,
+        orderId,
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Erreur lors du remboursement';
+      throw new BadRequestException(
+        `Impossible d'effectuer le remboursement Stripe: ${message}`,
+      );
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
       const ticketCount = order.tickets.length;
       const categoryId = order.tickets[0].ticketCategoryId;
 
@@ -361,7 +411,7 @@ export class OrdersService {
         data: { status: BookingStatus.CANCELLED },
       });
 
-      const updated = await tx.order.update({
+      const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: { status: OrderStatus.REFUNDED },
         include: {
@@ -378,13 +428,15 @@ export class OrdersService {
           userId: order.userId,
           type: 'REFUND_APPROVED',
           title: 'Remboursement approuvé',
-          body: `Votre demande de remboursement pour "${event.title}" a été approuvée`,
+          body: `Votre demande de remboursement pour "${event.title}" a été approuvée. Le montant de ${Number(order.totalAmount).toFixed(2)} € sera crédité sous 5 à 10 jours ouvrés.`,
           relatedId: orderId,
         },
       });
 
-      return this.mapOrderDecimalToNumber(updated);
+      return updatedOrder;
     });
+
+    return this.mapOrderDecimalToNumber(updated);
   }
 
   async rejectRefund(orderId: string, organizerId: string) {
@@ -438,5 +490,94 @@ export class OrdersService {
     });
 
     return this.mapOrderDecimalToNumber(updated);
+  }
+
+  async handleStripeWebhook(rawBody: Buffer, signature: string) {
+    let event: Stripe.Event;
+
+    try {
+      if (this.webhookSecret) {
+        event = this.stripe.webhooks.constructEvent(
+          rawBody,
+          signature,
+          this.webhookSecret,
+        );
+      } else {
+        event = JSON.parse(rawBody.toString());
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Signature invalide';
+      throw new BadRequestException(`Webhook Error: ${message}`);
+    }
+
+    switch (event.type) {
+      case 'payment_intent.succeeded':
+        await this.handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        break;
+      case 'payment_intent.payment_failed':
+        await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+        break;
+      case 'payment_intent.requires_action':
+        console.log('Payment requires action (3D Secure):', event.data.object.id);
+        break;
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    return { received: true };
+  }
+
+  private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
+    const bookingId = paymentIntent.metadata.bookingId;
+    const userId = paymentIntent.metadata.userId;
+
+    if (!bookingId || !userId) {
+      console.error('Missing metadata in payment intent:', paymentIntent.id);
+      return;
+    }
+
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        order: true,
+      },
+    });
+
+    if (!booking) {
+      console.error('Booking not found:', bookingId);
+      return;
+    }
+
+    if (booking.status === BookingStatus.CONFIRMED && booking.order) {
+      console.log('Payment already processed for booking:', bookingId);
+      return;
+    }
+
+    try {
+      await this.confirmPayment(bookingId, paymentIntent.id, userId);
+      console.log('Payment confirmed via webhook for booking:', bookingId);
+    } catch (err) {
+      console.error('Error confirming payment via webhook:', err);
+    }
+  }
+
+  private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+    const bookingId = paymentIntent.metadata.bookingId;
+    const userId = paymentIntent.metadata.userId;
+
+    if (!bookingId || !userId) {
+      console.error('Missing metadata in failed payment intent:', paymentIntent.id);
+      return;
+    }
+
+    await this.notificationsService.create({
+      userId: userId,
+      type: 'PAYMENT_FAILED',
+      title: 'Échec du paiement',
+      body: 'Votre paiement a échoué. Veuillez réessayer ou utiliser un autre moyen de paiement.',
+      relatedId: bookingId,
+    });
+
+    console.log('Payment failed for booking:', bookingId);
   }
 }
