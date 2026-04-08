@@ -145,7 +145,9 @@ export class BookingsService {
       where: {
         userId,
         OR: [
-          { status: { in: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED] } },
+          {
+            status: { in: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED] },
+          },
           {
             status: BookingStatus.PENDING,
             expiresAt: { gt: new Date() },

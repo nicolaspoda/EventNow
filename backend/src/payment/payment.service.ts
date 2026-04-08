@@ -117,9 +117,8 @@ export class PaymentService {
     }
 
     try {
-      const paymentIntent = await this.stripe.paymentIntents.retrieve(
-        paymentIntentId,
-      );
+      const paymentIntent =
+        await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
       if (paymentIntent.status !== 'succeeded') {
         throw new BadRequestException(
@@ -133,7 +132,8 @@ export class PaymentService {
       });
 
       const totalRefunded = existingRefunds.data.reduce(
-        (sum, refund) => sum + (refund.status === 'succeeded' ? refund.amount : 0),
+        (sum, refund) =>
+          sum + (refund.status === 'succeeded' ? refund.amount : 0),
         0,
       );
 
