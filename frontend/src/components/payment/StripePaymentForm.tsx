@@ -10,7 +10,6 @@ interface StripePaymentFormProps {
 }
 
 const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
-  onSuccess,
   onError,
   onCancel,
   bookingId,
@@ -33,7 +32,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
         ? `${window.location.origin}/payment/success?bookingId=${bookingId}`
         : `${window.location.origin}/payment/success`;
 
-      const { error, paymentIntent } = await stripe.confirmPayment({
+      const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: returnUrl,
@@ -50,13 +49,9 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
           onError(error.message || 'Erreur lors du paiement');
         }
         setProcessing(false);
-      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        onSuccess();
-      } else if (paymentIntent && paymentIntent.status === 'requires_action') {
-        onError('L\'authentification bancaire est requise. Veuillez suivre les instructions de votre banque.');
-        setProcessing(false);
       } else {
-        onSuccess();
+        // En mode "always", Stripe redirige vers return_url pour finaliser l'etat du paiement.
+        // Le traitement du resultat se fait sur la page de retour.
       }
     } catch {
       onError('Une erreur est survenue lors du paiement');

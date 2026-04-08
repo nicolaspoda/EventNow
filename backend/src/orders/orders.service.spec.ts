@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ConfigService } from '@nestjs/config';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 
@@ -33,6 +34,9 @@ describe('OrdersService', () => {
     user: {
       findUnique: jest.fn(),
     },
+    notification: {
+      create: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -48,6 +52,14 @@ describe('OrdersService', () => {
 
   const mockNotificationsService = {
     create: jest.fn(),
+  };
+
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === 'STRIPE_SECRET_KEY') return 'sk_test_mock';
+      if (key === 'STRIPE_WEBHOOK_SECRET') return 'whsec_mock';
+      return undefined;
+    }),
   };
 
   const mockBooking = {
@@ -99,6 +111,10 @@ describe('OrdersService', () => {
         {
           provide: NotificationsService,
           useValue: mockNotificationsService,
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile();
