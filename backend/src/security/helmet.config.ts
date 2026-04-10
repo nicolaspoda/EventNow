@@ -57,7 +57,7 @@ export function configureHelmet(app: INestApplication) {
   app.use((_req, res, next) => {
     res.setHeader(
       'Permissions-Policy',
-      'geolocation=(), camera=(), microphone=(), payment=(self)',
+      'geolocation=(self), camera=(), microphone=(), payment=(self)',
     );
     next();
   });
