@@ -51,6 +51,7 @@ export class OrdersService {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: {
+          order: true,
           ticketCategory: {
             include: { event: true },
           },
@@ -62,6 +63,37 @@ export class OrdersService {
       }
 
       if (booking.status !== BookingStatus.PENDING) {
+        // Idempotence: si Stripe/webhook a déjà traité la réservation, on renvoie
+        // la commande existante pour éviter un faux échec côté page de retour.
+        if (booking.status === BookingStatus.CONFIRMED && booking.orderId) {
+          const existingOrder = await tx.order.findUnique({
+            where: { id: booking.orderId },
+            include: {
+              tickets: {
+                include: {
+                  ticketCategory: {
+                    include: { event: true },
+                  },
+                },
+              },
+            },
+          });
+
+          if (!existingOrder) {
+            throw new NotFoundException('Commande introuvable');
+          }
+
+          return {
+            order: existingOrder,
+            tickets: existingOrder.tickets,
+            event:
+              existingOrder.tickets[0]?.ticketCategory?.event ??
+              booking.ticketCategory.event,
+            ticketCategory:
+              existingOrder.tickets[0]?.ticketCategory ?? booking.ticketCategory,
+          };
+        }
+
         throw new BadRequestException('Réservation déjà traitée');
       }
 
