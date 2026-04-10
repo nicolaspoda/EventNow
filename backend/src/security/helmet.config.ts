@@ -56,9 +56,6 @@ export function configureHelmet(app: INestApplication) {
       noSniff: true,
       xssFilter: true,
       referrerPolicy: { policy: 'no-referrer' },
-      // Désactiver la gestion automatique de Permissions-Policy par Helmet
-      // pour éviter les features expérimentales non reconnues (ex: window-placement)
-      permissionsPolicy: false,
     }),
   );
 
