@@ -7,12 +7,31 @@ import './styles/map.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
-// Masquer l'avertissement "outdated JSX transform" en dev : il vient de react-big-calendar
-// (bibliothèque compilée avec l'ancien transform). À retirer quand la lib sera mise à jour.
+// Filtrer les warnings/logs inutiles ou provenant de bibliothèques externes
 if (import.meta.env.DEV) {
+  // En développement : masquer uniquement les warnings connus et non critiques
   const originalWarn = console.warn
   console.warn = (...args: unknown[]) => {
     const msg = typeof args[0] === 'string' ? args[0] : ''
+    // react-big-calendar : warning sur l'ancien JSX transform
+    if (msg.includes('outdated JSX transform')) return
+    originalWarn.apply(console, args)
+  }
+} else {
+  // En production : filtrer les logs non critiques de bibliothèques externes
+  const originalLog = console.log
+  const originalWarn = console.warn
+  
+  console.log = (...args: unknown[]) => {
+    const msg = typeof args[0] === 'string' ? args[0] : ''
+    // react-big-calendar : log "no layout data!" non critique
+    if (msg.includes('no layout data')) return
+    originalLog.apply(console, args)
+  }
+  
+  console.warn = (...args: unknown[]) => {
+    const msg = typeof args[0] === 'string' ? args[0] : ''
+    // Filtrer les warnings non critiques si nécessaire
     if (msg.includes('outdated JSX transform')) return
     originalWarn.apply(console, args)
   }

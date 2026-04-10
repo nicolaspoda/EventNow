@@ -29,7 +29,13 @@ export function configureHelmet(app: INestApplication) {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          // Stripe nécessite 'unsafe-inline' pour les styles injectés dynamiquement
+          // car le PaymentElement injecte des styles inline pour le theming
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://js.stripe.com',
+          ],
           scriptSrc: ["'self'", ...stripeScriptSrc, ...extraCspHosts],
           imgSrc: ["'self'", 'data:', 'https:'],
           frameSrc: ["'self'", ...stripeFrameSrc, ...extraCspHosts],
@@ -50,10 +56,14 @@ export function configureHelmet(app: INestApplication) {
       noSniff: true,
       xssFilter: true,
       referrerPolicy: { policy: 'no-referrer' },
+      // Désactiver la gestion automatique de Permissions-Policy par Helmet
+      // pour éviter les features expérimentales non reconnues (ex: window-placement)
+      permissionsPolicy: false,
     }),
   );
 
-  // Compat navigateurs: évite les warnings "Unrecognized feature: window-placement".
+  // Permissions-Policy : définition manuelle avec uniquement les features standards
+  // Évite les warnings "Unrecognized feature" pour des directives expérimentales
   app.use((_req, res, next) => {
     res.setHeader(
       'Permissions-Policy',
