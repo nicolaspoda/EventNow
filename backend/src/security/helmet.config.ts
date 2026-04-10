@@ -36,6 +36,9 @@ export function configureHelmet(app: INestApplication) {
             "'unsafe-inline'",
             'https://js.stripe.com',
           ],
+          // Stripe peut appliquer des styles inline via attributs style="".
+          // On l'autorise explicitement pour éviter les violations style-src-attr.
+          styleSrcAttr: ["'unsafe-inline'"],
           scriptSrc: ["'self'", ...stripeScriptSrc, ...extraCspHosts],
           imgSrc: ["'self'", 'data:', 'https:'],
           frameSrc: ["'self'", ...stripeFrameSrc, ...extraCspHosts],
