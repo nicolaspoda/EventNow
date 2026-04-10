@@ -52,4 +52,13 @@ export function configureHelmet(app: INestApplication) {
       referrerPolicy: { policy: 'no-referrer' },
     }),
   );
+
+  // Compat navigateurs: évite les warnings "Unrecognized feature: window-placement".
+  app.use((_req, res, next) => {
+    res.setHeader(
+      'Permissions-Policy',
+      'geolocation=(), camera=(), microphone=(), payment=(self)',
+    );
+    next();
+  });
 }
