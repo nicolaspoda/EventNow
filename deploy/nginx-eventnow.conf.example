@@ -34,8 +34,8 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
     # CSP compatible Stripe (Payment Element + page de confirmation paiement).
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://q.stripe.com https://r.stripe.com https://m.stripe.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com; child-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com; font-src 'self' data: https:; worker-src 'self' blob:; form-action 'self' https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://api.stripe.com; frame-ancestors 'self';" always;
-    add_header Permissions-Policy "geolocation=(self), camera=(), microphone=(), payment=(self)" always;
+    # CSP et Permissions-Policy sont gérés par le backend (Helmet)
+    # afin d'éviter les doublons de headers entre Nginx et l'application.
 
     location /api/ {
         proxy_pass http://127.0.0.1:3000;
