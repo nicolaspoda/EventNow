@@ -6,71 +6,67 @@
 
 ## Description
 
-EventNow est une **plateforme sociale centrée sur les événements** : billetterie en ligne pour les événements professionnels (concerts, conférences, festivals, etc.) et espace communautaire pour les événements sur invitation ou sur demande de participation. Au-delà de l’achat de billets, elle propose un **graphe social** (suivre des organisateurs ou d’autres utilisateurs, voir qui participe à quels événements), une **messagerie temps réel** (conversations directes, de groupe ou liées à un événement), des **avis entre participants** et des **profils publics**. La billetterie reste au cœur du produit (Stripe, QR codes, validation à l’entrée, gestion des stocks et de la concurrence), mais l’ensemble forme plutôt une plateforme « événements + communauté + billetterie » qu’une simple billetterie.
+EventNow est une **plateforme sociale centrée sur les événements** : billetterie en ligne pour les **événements professionnels** (concerts, conférences, festivals, etc.) et **événements communautaires** sur demande de participation. Le produit combine **billetterie** (Stripe, QR codes, validation à l’entrée, stocks avec verrous Redis), **graphe social** (suivre des personnes, « amis » lorsque le suivi est mutuel, voir qui participe), **messagerie temps réel** (Socket.io), **avis** sur les événements et **avis entre participants** (après événements communautaires), **notifications in-app**, **profils publics** et **outils organisateur** (tableaux de bord, statistiques, staff, remboursements).
 
-### Fonctionnalités principales
+Deux rôles principaux existent dans l’application : **Client** et **Organisateur** (inscriptions distinctes). Un **troisième cas d’usage** concerne toute personne **invitée comme staff** sur un événement : elle peut valider des billets sans être l’organisateur du spectacle.
 
-**Billetterie & événements**
-- Création d’événements (titre, description, lieu, adresse, ville, CP, coordonnées GPS, image de couverture, galerie d’images)
-- Catégories de billets (nom, prix, stock initial / temps réel)
-- Recherche et filtres avancés (catégorie, type, date, lieu, ville), suggestions de recherche, liste des lieux/villes disponibles
-- Types d’événements : Professionnel (vente de billets) / Communautaire (demandes de participation)
+---
 
-**Authentification & utilisateurs**
-- Inscription Client et Inscription Organisateur (avec nom d’organisation)
-- Connexion JWT (email/mot de passe) + **OAuth Google** (échange de code via Redis)
-- Profil utilisateur (avatar, username, organisation), mise à jour du profil
-- **Profil public** consultable par d’autres utilisateurs (`/user/:userId/profile`)
-- Recherche d’utilisateurs (autocomplétion pour créer des conversations)
+## Ce que chaque utilisateur peut faire (par rôle)
 
-**Paiement & commandes**
-- Paiement Stripe (création d’intention de paiement, confirmation)
-- Historique des commandes, annulation de commande
-- **Demande de remboursement** par le client ; **approbation / rejet** par l’organisateur (page Refund Requests)
+### Organisateur (`ORGANIZER`)
 
-**Billets & entrée**
-- Billets avec **QR code** unique par place
-- **Validation des billets** par le staff (scan QR), historique des validations et statistiques par événement
-- Téléchargement du billet en **PDF**
-- Page « Mes billets » avec affichage QR et lien téléchargement
+- **Créer et gérer des événements professionnels** : titre, description, lieu, adresse, ville, code postal, pays, coordonnées GPS, image de couverture, galerie (Cloudinary), date/heure de début et de **fin obligatoire**, catégories de billets (nom, prix minimum appliqué côté app, stock).
+- **Vendre des billets** : réservation avec expiration, passage commande, **paiement Stripe** (intention de paiement), confirmation ; emails de **confirmation de commande** et **rappels J-7 / J-1**.
+- **Tableau de bord organisateur** : vue d’ensemble (revenus, ventes), liste des événements, **statistiques par événement** (graphiques ventes/revenus), accès aux pages dédiées.
+- **Inviter du staff** par e-mail (lien avec token), suivi des invitations ; les invités acceptent ou refusent depuis une page dédiée.
+- **Traiter les demandes de remboursement** des clients (approbation / rejet).
+- **Gérer les demandes de participation** sur ses **événements communautaires** (acceptation / refus) — l’organisateur est le propriétaire de l’événement concerné.
+- **Modifier / supprimer** ses événements, consulter les demandes en attente sur la page prévue à cet effet.
 
-**Staff**
-- **Invitations staff** par email (lien avec token) ; acceptation / refus ; expiration ; nettoyage automatique des staff des événements terminés (job planifié)
-- Pages Staff : scan QR, liste des validations, événements où l’utilisateur est staff
+Dans l’interface actuelle, le formulaire « Créer un événement » pour un compte organisateur est orienté **événement professionnel** (billetterie). Côté API, le modèle autorise aussi d’autres combinaisons ; le parcours client dédié aux **événements communautaires** est décrit ci-dessous.
 
-**Événements communautaires**
-- **Demandes de participation** (message optionnel) ; l’organisateur accepte ou refuse
-- Liste des demandes en attente pour l’organisateur ; « Mes événements à venir » / « Mes événements participés » pour le client
-- **Avis sur les événements** (notes + commentaires) et **avis entre participants** (participant reviews) après un événement communautaire
+**En tant qu’utilisateur connecté**, un organisateur peut aussi (comme tout compte authentifié le permet) : **acheter des billets** chez d’autres organisateurs, **réserver**, consulter **mes billets** (QR, PDF), **mes commandes**, **réservations** ; **demander à participer** à des événements communautaires ; **suivre / ne plus suivre** d’autres utilisateurs, voir abonnés / abonnements / **amis** (suivi mutuel) ; utiliser la **messagerie** ; être **staff** sur l’événement d’un autre organisateur ; laisser des **avis** sur un événement après y avoir assisté (billet validé pour un pro, participation acceptée pour un communautaire). Le **tableau de bord client** (`/dashboard/client`) et la page **liste des participants** d’un événement communautaire (`/dashboard/events/:id/participants`) sont réservés au rôle **Client** dans l’UI.
 
-**Dashboards**
-- **Dashboard Organisateur** : vue d’ensemble (revenus, ventes), liste des événements, stats par événement (graphiques ventes/revenus), demandes de remboursement, invitations staff
-- **Dashboard Client** : vue d’ensemble, événements à venir / participés, **liste des participants** par événement communautaire
-- Tableau de bord unifié avec redirection selon le rôle (Organisateur / Client)
+### Client (`CLIENT`)
 
-**Messagerie & social**
-- **Messagerie temps réel** (Socket.io) : conversations **directes**, **groupe** et **événement** ; création de conversation, ajout de membres, modification (nom, image) ; envoi de messages ; liste des conversations avec indicateur de non-lus
-- **Suivi d’utilisateurs** (follow/unfollow), liste abonnés/abonnements, activation/désactivation des notifications pour un suivi
-- **Notifications in-app** (cloche, compteur non lus, marquer comme lu / tout marquer comme lu, suppression)
+- **Payer des places** sur les **événements professionnels** : parcours réservations → checkout → Stripe ; **mes billets**, **mes commandes**, **annulation** de commande lorsque c’est prévu, **demande de remboursement** côté client.
+- **Créer des événements communautaires** : places limitées, type « communautaire », pas de billetterie « pro » (parcours dédié dans le formulaire de création).
+- **Demander à participer** à des événements communautaires (message optionnel) ; consulter **mes événements à venir**, **mes participations**, **mon calendrier**.
+- **Tableau de bord client** : vue d’ensemble et lien vers la **liste des participants** pour les événements communautaires auxquels il participe.
+- **Social** : **suivre** des organisateurs ou d’autres personnes, **notifications** configurables par suivi ; les **amis** sont les personnes avec lesquelles le suivi est **mutuel** (pas d’entité « demande d’ami » séparée) ; filtre **« événements de mes amis »** dans la recherche ; indicateurs du type « X amis participent » sur les cartes d’événements ; section **activité des amis** sur le dashboard client.
+- **Profil** : avatar, pseudo, mise à jour du profil ; **profil public** (`/user/:id/profile`) pour les autres utilisateurs connectés ; modales abonnés / abonnements / amis.
+- **Messagerie temps réel** : conversations **directes**, **de groupe** ou **liées à un événement** ; création, ajout de membres, envoi de messages ; **recherche d’utilisateurs** pour démarrer une conversation.
+- **Avis** : note + commentaire sur un **événement** après la date et après participation (billet validé ou participation acceptée) ; **avis entre participants** après un événement communautaire.
+- **Être invité en staff** : accepter une invitation, puis **scanner les QR codes** à l’entrée et consulter l’**historique des validations** pour les événements où il est staff.
 
-**Contenu & médias**
-- **Upload d’images** (Cloudinary) : image unique ou galerie (jusqu’à 5 images), suppression par `publicId`
-- Géolocalisation : champs latitude/longitude, **carte des événements** (Leaflet), **autocomplétion d’adresse** (géocodage)
+### Staff invité (tout compte authentifié concerné)
 
-**Emails & jobs planifiés**
-- Email de **confirmation de commande**
-- **Rappels par email** (J-7 et J-1) avant la date de l’événement
-- Notifications in-app associées (rappels, nouveaux événements des organisateurs suivis, etc.)
-- Job cron : nettoyage des affectations staff pour les événements terminés
+Indépendamment d’être Client ou Organisateur, si l’utilisateur a une **affectation staff** sur un événement :
 
-**Calendrier**
-- Page **Mon calendrier** (vue calendrier des événements à venir / participés)
+- Menu **Staff** : **validation des billets** (scan caméra), **historique** des validations.
+- Les invitations expirent ; un **job planifié** retire le staff des événements **terminés**.
 
-**Sécurité & qualité**
-- Rate limiting (global + plafond dédié paiement), Helmet, sanitization des entrées (XSS), CORS, CSRF (csurf)
-- Validation des données (class-validator), gestion d’erreurs centralisée, logs (Winston)
-- Accessibilité RGAA Level AA (tests axe, styles dédiés)
-- **Mode sombre** (ThemeContext) et design system cohérent
+---
+
+## Fonctionnalités produit (vue d’ensemble)
+
+**Découverte & lieux**  
+Recherche et filtres (catégorie, type, date, lieu, ville), suggestions, liste des lieux/villes, **carte des événements** (Leaflet), **autocomplétion d’adresse** (géocodage).
+
+**Billets & entrée**  
+QR unique par place, PDF, validation par staff, statistiques de validation par événement.
+
+**Contenu & médias**  
+Upload / suppression d’images via Cloudinary (couverture + galerie).
+
+**Emails & tâches planifiées**  
+Confirmation commande, rappels J-7 / J-1, notifications associées ; nettoyage staff post-événement.
+
+**Sécurité & qualité**  
+Rate limiting (dont plafond paiement), Helmet, sanitization (XSS), CORS, CSRF, validation class-validator, logs Winston, accessibilité (axe, styles dédiés), **mode sombre**.
+
+---
 
 ## Stack technique
 
@@ -172,7 +168,7 @@ EventNow/
 │   │   ├── participant-reviews/ # Avis entre participants (événements communautaires)
 │   │   ├── participation-requests/ # Demandes de participation (communautaire)
 │   │   ├── notifications/     # Notifications in-app (CRUD, marquer lu, compteur)
-│   │   ├── follows/            # Follow / unfollow, abonnés, abonnements, notifications
+│   │   ├── follows/            # Follow / unfollow, abonnés, abonnements, amis (mutuel)
 │   │   ├── messages/           # Conversations (direct, groupe, événement), Socket.io gateway
 │   │   ├── staff-invitations/  # Invitations staff par email, acceptation, expiration
 │   │   ├── security/           # Helmet, rate limit, chiffrement
@@ -206,6 +202,11 @@ EventNow/
 | `docker-compose down` | Arrêter tous les services |
 | `docker-compose logs -f backend` | Voir les logs du backend |
 | `docker-compose logs -f frontend` | Voir les logs du frontend |
+
+## Authentification
+
+- **Inscription Client** et **Inscription Organisateur** (avec nom d’organisation pour ce dernier).
+- **Connexion** e-mail / mot de passe (JWT) et **OAuth Google** (échange de code via Redis).
 
 ## Compétences RNCP Couvertes
 
