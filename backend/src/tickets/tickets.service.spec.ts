@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TicketsService } from './tickets.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { CustomLoggerService } from '../logger/logger.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('TicketsService', () => {
@@ -43,6 +44,13 @@ describe('TicketsService', () => {
     },
   };
 
+  const mockLoggerService = {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -50,6 +58,10 @@ describe('TicketsService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: CustomLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();

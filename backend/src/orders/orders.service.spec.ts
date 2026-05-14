@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CustomLoggerService } from '../logger/logger.service';
 import { ConfigService } from '@nestjs/config';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { BookingStatus, OrderStatus } from '@prisma/client';
@@ -62,6 +63,13 @@ describe('OrdersService', () => {
     }),
   };
 
+  const mockLoggerService = {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  };
+
   const mockBooking = {
     id: 'booking-1',
     userId: 'user-1',
@@ -115,6 +123,10 @@ describe('OrdersService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: CustomLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();

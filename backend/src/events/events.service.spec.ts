@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { FollowsService } from '../follows/follows.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CustomLoggerService } from '../logger/logger.service';
 import {
   NotFoundException,
   ForbiddenException,
@@ -80,6 +81,13 @@ describe('EventsService', () => {
     deleteByTypeAndRelatedIds: jest.fn(),
   };
 
+  const mockLoggerService = {
+    log: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -99,6 +107,10 @@ describe('EventsService', () => {
         {
           provide: NotificationsService,
           useValue: mockNotificationsService,
+        },
+        {
+          provide: CustomLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();
