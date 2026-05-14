@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthUser } from '../auth/types/auth-user.type';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -29,7 +30,7 @@ export class ReviewsController {
   async create(
     @Param('eventId') eventId: string,
     @Body() dto: CreateReviewDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.reviewsService.create(eventId, user.id, dto);
   }
@@ -49,7 +50,7 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard)
   async canUserReview(
     @Param('eventId') eventId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
   ) {
     if (user.role !== 'CLIENT') {
       return {
@@ -63,7 +64,7 @@ export class ReviewsController {
   @Get('my-reviews')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('CLIENT')
-  async getMyReviews(@CurrentUser() user: any) {
+  async getMyReviews(@CurrentUser() user: AuthUser) {
     return this.reviewsService.findAllByUser(user.id);
   }
 
@@ -73,7 +74,7 @@ export class ReviewsController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateReviewDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.reviewsService.update(id, user.id, dto);
   }
@@ -81,7 +82,7 @@ export class ReviewsController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('CLIENT')
-  async delete(@Param('id') id: string, @CurrentUser() user: any) {
+  async delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.reviewsService.delete(id, user.id);
   }
 }

@@ -12,11 +12,13 @@ import {
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { ValidateTicketDto } from './dto';
+import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { EventStaffGuard } from '../auth/guards/event-staff.guard';
+import type { AuthUser } from '../auth/types/auth-user.type';
 
 @Controller('tickets')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -29,7 +31,7 @@ export class TicketsController {
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
-  validateTicket(@Body() dto: ValidateTicketDto, @CurrentUser() user: any) {
+  validateTicket(@Body() dto: ValidateTicketDto, @CurrentUser() user: AuthUser) {
     return this.ticketsService.validateTicket(dto.qrCode, user.id);
   }
 
@@ -38,7 +40,7 @@ export class TicketsController {
   @HttpCode(HttpStatus.OK)
   getValidationStats(
     @Query('event_id') eventId: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.ticketsService.getValidationStats(eventId, user.id);
   }
@@ -46,7 +48,7 @@ export class TicketsController {
   @Get('validations')
   @HttpCode(HttpStatus.OK)
   getValidations(
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Query('event_id') eventId?: string,
   ) {
     return this.ticketsService.getStaffValidations(user.id, eventId);
@@ -54,14 +56,14 @@ export class TicketsController {
 
   @Get('staff-events')
   @HttpCode(HttpStatus.OK)
-  getStaffEvents(@CurrentUser() user: any) {
+  getStaffEvents(@CurrentUser() user: AuthUser) {
     return this.ticketsService.getStaffEvents(user.id);
   }
 
   @Get('my-tickets')
   @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
-  getMyTickets(@CurrentUser() user: any) {
+  getMyTickets(@CurrentUser() user: AuthUser) {
     return this.ticketsService.getUserTickets(user.id);
   }
 
@@ -77,8 +79,8 @@ export class TicketsController {
   @HttpCode(HttpStatus.OK)
   async downloadTicket(
     @Param('id') ticketId: string,
-    @CurrentUser() user: any,
-    @Res() res: any,
+    @CurrentUser() user: AuthUser,
+    @Res() res: Response,
   ) {
     const pdfBuffer = await this.ticketsService.generateTicketPDF(
       ticketId,

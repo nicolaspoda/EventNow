@@ -18,6 +18,7 @@ import { SearchEventsDto } from './dto/search-events.dto';
 import { EventCategory } from './dto/create-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import type { AuthUser } from '../auth/types/auth-user.type';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -34,7 +35,7 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.CREATED)
-  create(@CurrentUser() user: any, @Body() createEventDto: CreateEventDto) {
+  create(@CurrentUser() user: AuthUser, @Body() createEventDto: CreateEventDto) {
     return this.eventsService.create(user.id, createEventDto, user.role);
   }
 
@@ -97,7 +98,7 @@ export class EventsController {
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: AuthUser,
     @Body() updateEventDto: UpdateEventDto,
   ) {
     return this.eventsService.update(id, user.id, updateEventDto);
@@ -107,7 +108,7 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.OK)
-  remove(@Param('id') id: string, @CurrentUser() user: any) {
+  remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.eventsService.remove(id, user.id);
   }
 }

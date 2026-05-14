@@ -28,6 +28,7 @@ import {
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import type { AuthUser } from './types/auth-user.type';
 
 @Controller('auth')
 export class AuthController {
@@ -88,13 +89,13 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async getProfile(@CurrentUser() user: any) {
+  async getProfile(@CurrentUser() user: AuthUser) {
     return user;
   }
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  async getFullProfile(@CurrentUser() user: any) {
+  async getFullProfile(@CurrentUser() user: AuthUser) {
     return this.authService.getFullProfile(user.id);
   }
 
@@ -124,7 +125,7 @@ export class AuthController {
   @Put('profile')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async updateProfile(@CurrentUser() user: any, @Body() dto: UpdateProfileDto) {
+  async updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(user.id, dto);
   }
 
@@ -135,7 +136,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
-    const user = req.user as any;
+    const user = req.user as AuthUser;
     const tokens = await this.authService.generateTokens(
       user.id,
       user.email,
