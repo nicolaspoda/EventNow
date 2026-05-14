@@ -13,6 +13,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { MessagesService } from './messages.service';
+import { CustomLoggerService } from '../logger/logger.service';
 import {
   CreateConversationDto,
   SendMessageDto,
@@ -25,7 +26,10 @@ import {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly logger: CustomLoggerService,
+  ) {}
 
   @Post('conversations')
   @ApiOperation({ summary: 'Créer une nouvelle conversation' })
@@ -50,9 +54,9 @@ export class MessagesController {
         code === 'P2021' ||
         /does not exist|relation.*does not exist/i.test(message)
       ) {
-        console.warn(
-          '[Messages] Tables messagerie absentes ? Exécutez: npx prisma migrate deploy',
-          message,
+        this.logger.warn(
+          `[Messages] Tables messagerie absentes ? Exécutez: npx prisma migrate deploy — ${message}`,
+          'MessagesController',
         );
         return [];
       }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import { safeFormat } from '../utils/date';
 import { formatPrice } from '../utils/price';
 import type { EventStatsDetail } from '../types/dashboard.types';
@@ -14,24 +15,18 @@ export function EventStatsPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    dashboardService
-      .getEventStats(id)
-      .then((res) => {
+    const load = async () => {
+      try {
+        const res = await dashboardService.getEventStats(id);
         if (!cancelled) setData(res);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          const msg =
-            err?.response?.data?.message || 'Erreur lors du chargement des statistiques';
-          setError(msg);
-        }
-      })
-      .finally(() => {
+      } catch (err) {
+        if (!cancelled) setError(getApiErrorMessage(err, 'Erreur lors du chargement des statistiques'));
+      } finally {
         if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
+      }
     };
+    void load();
+    return () => { cancelled = true; };
   }, [id]);
 
   if (loading) {

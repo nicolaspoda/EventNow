@@ -7,6 +7,7 @@ import { EventsTable } from '../components/dashboard/EventsTable';
 import { ParticipantsChart } from '../components/dashboard/ParticipantsChart';
 import { PendingRequestsList } from '../components/dashboard/PendingRequestsList';
 import { FriendsActivitySection } from '../components/dashboard/FriendsActivitySection';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import type {
   ClientOverview,
   DashboardEvent,
@@ -43,13 +44,7 @@ export const ClientDashboardPage: React.FC = () => {
       setEvents(eventsData);
       setPendingRequests(Array.isArray(pendingData) ? pendingData : []);
     } catch (err) {
-      console.error('Erreur chargement dashboard:', err);
-      const errorMessage =
-        err instanceof Error && 'response' in err
-          ? (err as { response?: { data?: { message?: string } } }).response
-              ?.data?.message
-          : undefined;
-      setError(errorMessage || 'Erreur lors du chargement du tableau de bord');
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement du tableau de bord'));
     } finally {
       setLoading(false);
     }

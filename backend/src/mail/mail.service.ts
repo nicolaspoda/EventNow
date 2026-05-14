@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class MailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService,
+    private readonly logger: CustomLoggerService,
   ) {}
 
   async sendOrderConfirmation(orderData: {
@@ -37,12 +39,9 @@ export class MailService {
           supportEmail: 'support@eventnow.com',
         },
       });
-      console.log(`✅ Email confirmation envoyé à ${orderData.userEmail}`);
+      this.logger.log(`Email confirmation envoyé à ${orderData.userEmail}`, 'MailService');
     } catch (error) {
-      console.error(
-        `❌ Erreur envoi email à ${orderData.userEmail}:`,
-        error.message,
-      );
+      this.logger.error(`Erreur envoi email à ${orderData.userEmail}: ${(error as Error).message}`, (error as Error).stack, 'MailService');
     }
   }
 
@@ -68,12 +67,9 @@ export class MailService {
           ticketsUrl: `${frontendUrl}/my-tickets`,
         },
       });
-      console.log(`✅ Rappel J-7 envoyé à ${reminderData.userEmail}`);
+      this.logger.log(`Rappel J-7 envoyé à ${reminderData.userEmail}`, 'MailService');
     } catch (error) {
-      console.error(
-        `❌ Erreur envoi rappel J-7 à ${reminderData.userEmail}:`,
-        error.message,
-      );
+      this.logger.error(`Erreur envoi rappel J-7 à ${reminderData.userEmail}: ${(error as Error).message}`, (error as Error).stack, 'MailService');
     }
   }
 
@@ -99,12 +95,9 @@ export class MailService {
           ticketsUrl: `${frontendUrl}/my-tickets`,
         },
       });
-      console.log(`✅ Rappel J-1 envoyé à ${reminderData.userEmail}`);
+      this.logger.log(`Rappel J-1 envoyé à ${reminderData.userEmail}`, 'MailService');
     } catch (error) {
-      console.error(
-        `❌ Erreur envoi rappel J-1 à ${reminderData.userEmail}:`,
-        error.message,
-      );
+      this.logger.error(`Erreur envoi rappel J-1 à ${reminderData.userEmail}: ${(error as Error).message}`, (error as Error).stack, 'MailService');
     }
   }
 
@@ -116,9 +109,9 @@ export class MailService {
         text: 'Ceci est un email de test. Si vous recevez ce message, la configuration fonctionne !',
         html: '<h1>✅ Email de test</h1><p>Configuration email fonctionnelle !</p>',
       });
-      console.log(`✅ Email test envoyé à ${to}`);
+      this.logger.log(`Email test envoyé à ${to}`, 'MailService');
     } catch (error) {
-      console.error(`❌ Erreur envoi email test:`, error.message);
+      this.logger.error(`Erreur envoi email test: ${(error as Error).message}`, (error as Error).stack, 'MailService');
       throw error;
     }
   }

@@ -6,7 +6,7 @@ import messageService, {
   type Message,
   ConversationType,
 } from '../../services/messageService';
-import socketService from '../../services/socketService';
+import { socketService } from '../../services/socketService';
 import { ChatWindow } from '../../components/messages/ChatWindow';
 import { ConversationHeader } from '../../components/messages/ConversationHeader';
 import { AddMembersModal } from '../../components/messages/AddMembersModal';
@@ -14,18 +14,7 @@ import { EditConversationModal } from '../../components/messages/EditConversatio
 import { ConversationMembersModal } from '../../components/messages/ConversationMembersModal';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
-
-const getErrorMessage = (err: unknown, fallback: string): string => {
-  if (
-    err &&
-    typeof err === 'object' &&
-    'response' in err &&
-    (err as { response?: { data?: { message?: string } } }).response?.data?.message
-  ) {
-    return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
-  }
-  return fallback;
-};
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 
 export const ConversationPage: React.FC = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -140,7 +129,7 @@ export const ConversationPage: React.FC = () => {
       setConversation(data);
       setError(null);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement'));
     }
   };
 
@@ -162,7 +151,7 @@ export const ConversationPage: React.FC = () => {
       setHasMore(data.length === 50);
       setError(null);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
       setLoadingMore(false);

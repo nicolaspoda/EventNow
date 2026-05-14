@@ -6,12 +6,16 @@ import {
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { PrismaService } from '../prisma/prisma.service';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class TicketsService {
   private readonly prisma: PrismaService;
 
-  constructor(prisma: PrismaService) {
+  constructor(
+    prisma: PrismaService,
+    private readonly logger: CustomLoggerService,
+  ) {
     this.prisma = prisma;
   }
 
@@ -61,14 +65,10 @@ export class TicketsService {
           select: { qrCode: true },
         });
         const exampleQr = firstFew?.qrCode ?? '';
-        console.warn('[validateTicket] Aucun billet trouvé.', {
-          receivedLength: qrCode?.length,
-          normalized:
-            normalizedQrCode?.slice(0, 30) +
-            (normalizedQrCode?.length > 30 ? '…' : ''),
-          exampleInDb:
-            exampleQr.slice(0, 30) + (exampleQr.length > 30 ? '…' : ''),
-        });
+        this.logger.warn(
+          `[validateTicket] Aucun billet trouvé — length: ${qrCode?.length}, normalized: ${normalizedQrCode?.slice(0, 30)}${normalizedQrCode?.length > 30 ? '…' : ''}, exampleInDb: ${exampleQr.slice(0, 30)}${exampleQr.length > 30 ? '…' : ''}`,
+          'TicketsService',
+        );
       }
       return {
         valid: false,

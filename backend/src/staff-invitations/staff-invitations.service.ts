@@ -11,6 +11,7 @@ import { CreateStaffInvitationDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthService } from '../auth/auth.service';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class StaffInvitationsService {
@@ -19,6 +20,7 @@ export class StaffInvitationsService {
     private readonly notificationsService: NotificationsService,
     private readonly authService: AuthService,
     private readonly messagesGateway: MessagesGateway,
+    private readonly logger: CustomLoggerService,
   ) {}
 
   private handlePrismaError(err: unknown, context: string): never {
@@ -57,7 +59,7 @@ export class StaffInvitationsService {
         "La base de données n'est pas à jour. Exécutez : npx prisma migrate deploy",
       );
     }
-    console.error(`[StaffInvitations] ${context} error:`, err);
+    this.logger.error(`[StaffInvitations] ${context} error: ${(err as Error).message}`, (err as Error).stack, 'StaffInvitationsService');
     throw new BadRequestException(
       'Une erreur est survenue. Vérifiez que la base de données est à jour (npx prisma migrate deploy).',
     );

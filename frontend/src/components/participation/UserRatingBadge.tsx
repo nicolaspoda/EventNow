@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../utils/useAuth';
-import { authService } from '../../services/auth.service';
-import participantReviewService from '../../services/participantReviewService';
+import { participantReviewService } from '../../services/participantReviewService';
 import { StarRating } from '../reviews/StarRating';
 
 interface UserRatingBadgeProps {
@@ -18,14 +17,13 @@ export function UserRatingBadge({ userId }: UserRatingBadgeProps) {
 
   useEffect(() => {
     const fetchRating = async () => {
-      const token = authService.getAccessToken();
-      if (!token || !user) {
+      if (!user) {
         setLoading(false);
         return;
       }
 
       try {
-        const data = await participantReviewService.getReviewsByParticipant(token, userId);
+        const data = await participantReviewService.getReviewsByParticipant(userId);
         setStats(data.stats);
       } catch (err) {
         console.error('Erreur lors du chargement de la note:', err);

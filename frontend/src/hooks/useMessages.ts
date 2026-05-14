@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import messageService, { type Conversation, type Message } from '../services/messageService';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 
 export const useMessages = (conversationId?: string) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -7,17 +8,6 @@ export const useMessages = (conversationId?: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const getErrorMessage = (err: unknown, fallback: string): string => {
-    if (
-      err &&
-      typeof err === 'object' &&
-      'response' in err &&
-      (err as { response?: { data?: { message?: string } } }).response?.data?.message
-    ) {
-      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
-    }
-    return fallback;
-  };
 
   const loadConversations = async () => {
     try {
@@ -26,7 +16,7 @@ export const useMessages = (conversationId?: string) => {
       setConversations(data);
       setError(null);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }
@@ -39,7 +29,7 @@ export const useMessages = (conversationId?: string) => {
       setCurrentConversation(data);
       setError(null);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +46,7 @@ export const useMessages = (conversationId?: string) => {
       }
       setError(null);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }

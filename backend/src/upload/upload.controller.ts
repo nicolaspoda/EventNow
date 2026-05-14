@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UploadService } from './upload.service';
+import { CustomLoggerService } from '../logger/logger.service';
 
 function extractErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
@@ -33,7 +34,10 @@ const multerOpts = {
 @Controller('upload')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly logger: CustomLoggerService,
+  ) {}
 
   @Post('image')
   @Roles('ORGANIZER', 'CLIENT')
@@ -56,7 +60,7 @@ export class UploadController {
       };
     } catch (err: unknown) {
       const message = extractErrorMessage(err);
-      console.error('Upload image error:', err);
+      this.logger.error(`Upload image error: ${message}`, (err as Error).stack, 'UploadController');
       throw new BadRequestException(message);
     }
   }

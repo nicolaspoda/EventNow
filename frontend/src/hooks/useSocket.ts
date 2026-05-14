@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import socketService from '../services/socketService';
+import { socketService } from '../services/socketService';
 import { useAuth } from '../utils/useAuth';
 
 export const useSocket = () => {

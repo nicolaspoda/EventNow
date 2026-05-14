@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { participationService } from '../services/participationService';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import type { ParticipationRequest } from '../types/participation.types';
 import { ParticipationRequestCard } from '../components/participation/ParticipationRequestCard';
 import LoadingState from '../components/ui/LoadingState';
@@ -14,17 +15,6 @@ export default function EventParticipationRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'refused'>('all');
-  const getErrorMessage = (err: unknown): string => {
-    if (
-      err &&
-      typeof err === 'object' &&
-      'response' in err &&
-      (err as { response?: { data?: { message?: string } } }).response?.data?.message
-    ) {
-      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
-    }
-    return 'Erreur lors du chargement des demandes';
-  };
 
   useEffect(() => {
     fetchRequests();
@@ -38,7 +28,7 @@ export default function EventParticipationRequestsPage() {
       const data = await participationService.getByEvent(eventId);
       setRequests(data);
     } catch (err: unknown) {
-      setError(getErrorMessage(err));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement des demandes'));
     } finally {
       setLoading(false);
     }

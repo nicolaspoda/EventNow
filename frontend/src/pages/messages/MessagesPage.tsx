@@ -10,18 +10,7 @@ import { CreateConversationModal } from '../../components/messages/CreateConvers
 import Button from '../../components/ui/Button';
 import LoadingState from '../../components/ui/LoadingState';
 import ErrorState from '../../components/ui/ErrorState';
-
-const getErrorMessage = (err: unknown, fallback: string): string => {
-  if (
-    err &&
-    typeof err === 'object' &&
-    'response' in err &&
-    (err as { response?: { data?: { message?: string } } }).response?.data?.message
-  ) {
-    return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
-  }
-  return fallback;
-};
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
@@ -42,7 +31,7 @@ export const MessagesPage: React.FC = () => {
       setConversations(data);
       setError(null);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       setLoading(false);
     }
@@ -56,7 +45,7 @@ export const MessagesPage: React.FC = () => {
       });
       navigate(`/messages/${conversation.id}`);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Erreur lors de la création'));
+      alert(getApiErrorMessage(err, 'Erreur lors de la création'));
     }
   };
 
@@ -69,7 +58,7 @@ export const MessagesPage: React.FC = () => {
       });
       navigate(`/messages/${conversation.id}`);
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'Erreur lors de la création'));
+      alert(getApiErrorMessage(err, 'Erreur lors de la création'));
     }
   };
 

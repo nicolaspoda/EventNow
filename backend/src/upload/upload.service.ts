@@ -2,10 +2,14 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import * as streamifier from 'streamifier';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class UploadService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly logger: CustomLoggerService,
+  ) {}
 
   onModuleInit() {
     const cloudName = this.configService.get('CLOUDINARY_CLOUD_NAME');
@@ -74,7 +78,7 @@ export class UploadService {
     try {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      console.error('Erreur suppression image:', error);
+      this.logger.error(`Erreur suppression image: ${(error as Error).message}`, (error as Error).stack, 'UploadService');
       throw new BadRequestException("Erreur lors de la suppression de l'image");
     }
   }

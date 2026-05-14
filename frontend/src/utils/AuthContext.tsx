@@ -25,36 +25,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    api
-      .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken })
-      .then((res) => res.data)
-      .then((data) => {
-        authService.saveAuthData({ ...data, user: initialUser });
+    const doInitialRefresh = async () => {
+      try {
+        const res = await api.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken });
+        authService.saveAuthData({ ...res.data, user: initialUser });
         setIsSessionReady(true);
         initialRefreshDoneRef.current = true;
-      })
-      .catch(() => {
+      } catch {
         authService.clearSession();
         setUser(null);
         setIsSessionReady(true);
         initialRefreshDoneRef.current = true;
-      });
+      }
+    };
+    void doInitialRefresh();
   }, []);
 
   useEffect(() => {
     if (!user || !isSessionReady) return;
 
-    const doRefresh = () => {
+    const doRefresh = async () => {
       const refreshToken = sessionStorage.getItem('refreshToken');
       if (!refreshToken) return;
-      api
-        .post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken })
-        .then((res) => res.data)
-        .then((data) => authService.saveAuthData({ ...data, user }))
-        .catch(() => {
-          authService.clearSession();
-          setUser(null);
-        });
+      try {
+        const res = await api.post<{ accessToken: string; refreshToken: string }>('/auth/refresh', { refreshToken });
+        authService.saveAuthData({ ...res.data, user });
+      } catch {
+        authService.clearSession();
+        setUser(null);
+      }
     };
 
     const intervalId = setInterval(doRefresh, ACCESS_TOKEN_TTL_MS);

@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
-import { authService } from '../services/auth.service';
 import { eventService } from '../services/eventService';
-import participantReviewService, {
-  isEventDatePastForParticipantReviews,
-} from '../services/participantReviewService';
+import { participantReviewService, isEventDatePastForParticipantReviews } from '../services/participantReviewService';
 import type { ParticipantForReview } from '../services/participantReviewService';
 import { Card } from '../components/ui/Card';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import Button from '../components/ui/Button';
 import { StarRating } from '../components/reviews/StarRating';
+import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 
 export default function EventParticipantReviewsPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -24,22 +22,9 @@ export default function EventParticipantReviewsPage() {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [eventDate, setEventDate] = useState<string | null>(null);
-  const getErrorMessage = (err: unknown, fallback: string): string => {
-    if (
-      err &&
-      typeof err === 'object' &&
-      'response' in err &&
-      (err as { response?: { data?: { message?: string } } }).response?.data?.message
-    ) {
-      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
-    }
-    return fallback;
-  };
-
   useEffect(() => {
     const load = async () => {
-      const token = authService.getAccessToken();
-      if (!eventId || !token) {
+      if (!eventId) {
         setLoading(false);
         return;
       }
@@ -52,10 +37,10 @@ export default function EventParticipantReviewsPage() {
           setParticipants([]);
           return;
         }
-        const data = await participantReviewService.getParticipantsForEvent(token, eventId);
+        const data = await participantReviewService.getParticipantsForEvent(eventId);
         setParticipants(data);
       } catch (err: unknown) {
-        setError(getErrorMessage(err, 'Erreur lors du chargement des participants'));
+        setError(getApiErrorMessage(err, 'Erreur lors du chargement des participants'));
       } finally {
         setLoading(false);
       }
@@ -64,30 +49,28 @@ export default function EventParticipantReviewsPage() {
   }, [eventId, user]);
 
   const fetchParticipants = async () => {
-    const token = authService.getAccessToken();
-    if (!eventId || !token) return;
+    if (!eventId) return;
     if (!isEventDatePastForParticipantReviews(eventDate)) {
       setParticipants([]);
       return;
     }
     try {
       setLoading(true);
-      const data = await participantReviewService.getParticipantsForEvent(token, eventId);
+      const data = await participantReviewService.getParticipantsForEvent(eventId);
       setParticipants(data);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Erreur lors du chargement des participants'));
+      setError(getApiErrorMessage(err, 'Erreur lors du chargement des participants'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmitReview = async (participantId: string) => {
-    const token = authService.getAccessToken();
-    if (!token || !eventId) return;
+    if (!eventId) return;
 
     try {
       setSubmitting(true);
-      await participantReviewService.createReview(token, {
+      await participantReviewService.createReview({
         eventId,
         participantId,
         rating,
@@ -98,7 +81,7 @@ export default function EventParticipantReviewsPage() {
       setComment('');
       await fetchParticipants();
     } catch (err: unknown) {
-      alert(getErrorMessage(err, "Erreur lors de la soumission de l'avis"));
+      alert(getApiErrorMessage(err, "Erreur lors de la soumission de l'avis"));
     } finally {
       setSubmitting(false);
     }

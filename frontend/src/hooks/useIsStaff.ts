@@ -58,15 +58,29 @@ export function useIsStaff(userId: string | undefined) {
   // Re-vérifier en arrivant sur une page staff (ex. après redirection post-acceptation)
   useEffect(() => {
     if (!userId || !isStaffPage) return;
-    validationService.getStaffEvents().then((events) => setHasStaffEvents(events.length > 0)).catch(() => setHasStaffEvents(false));
+    const refresh = async () => {
+      try {
+        const events = await validationService.getStaffEvents();
+        setHasStaffEvents(events.length > 0);
+      } catch {
+        setHasStaffEvents(false);
+      }
+    };
+    void refresh();
   }, [userId, isStaffPage]);
 
   // Rafraîchir périodiquement quand on est sur une page staff pour que le menu disparaisse après la fin d'un événement
   useEffect(() => {
     if (!userId || !isStaffPage || !hasStaffEvents) return;
-    const interval = setInterval(() => {
-      validationService.getStaffEvents().then((events) => setHasStaffEvents(events.length > 0)).catch(() => setHasStaffEvents(false));
-    }, 30_000);
+    const refresh = async () => {
+      try {
+        const events = await validationService.getStaffEvents();
+        setHasStaffEvents(events.length > 0);
+      } catch {
+        setHasStaffEvents(false);
+      }
+    };
+    const interval = setInterval(() => { void refresh(); }, 30_000);
     return () => clearInterval(interval);
   }, [userId, isStaffPage, hasStaffEvents]);
 

@@ -1,8 +1,4 @@
-import axios from 'axios';
-
-// Par défaut on utilise le proxy Vite (same-origin) en dev.
-const API_URL = import.meta.env.VITE_API_URL ?? '';
-const API_BASE = `${API_URL}/api/v1`;
+import { api } from './api';
 
 export interface CreateParticipantReviewDto {
   eventId: string;
@@ -64,47 +60,33 @@ export function isEventDatePastForParticipantReviews(
   return d <= new Date();
 }
 
-const participantReviewService = {
-  async createReview(token: string, data: CreateParticipantReviewDto): Promise<ParticipantReview> {
-    const response = await axios.post(`${API_BASE}/participant-reviews`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+export const participantReviewService = {
+  async createReview(data: CreateParticipantReviewDto): Promise<ParticipantReview> {
+    const response = await api.post<ParticipantReview>('/participant-reviews', data);
     return response.data;
   },
 
-  async getReviewsByParticipant(token: string, participantId: string): Promise<ParticipantReviewsResponse> {
-    const response = await axios.get(`${API_BASE}/participant-reviews/participant/${participantId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  async getReviewsByParticipant(participantId: string): Promise<ParticipantReviewsResponse> {
+    const response = await api.get<ParticipantReviewsResponse>(`/participant-reviews/participant/${participantId}`);
     return response.data;
   },
 
-  async getReviewsByEvent(token: string, eventId: string): Promise<ParticipantReview[]> {
-    const response = await axios.get(`${API_BASE}/participant-reviews/event/${eventId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  async getReviewsByEvent(eventId: string): Promise<ParticipantReview[]> {
+    const response = await api.get<ParticipantReview[]>(`/participant-reviews/event/${eventId}`);
     return response.data;
   },
 
-  async getParticipantsForEvent(token: string, eventId: string): Promise<ParticipantForReview[]> {
-    const response = await axios.get(`${API_BASE}/participant-reviews/event/${eventId}/participants`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  async getParticipantsForEvent(eventId: string): Promise<ParticipantForReview[]> {
+    const response = await api.get<ParticipantForReview[]>(`/participant-reviews/event/${eventId}/participants`);
     return response.data;
   },
 
-  async updateReview(token: string, reviewId: string, data: UpdateParticipantReviewDto): Promise<ParticipantReview> {
-    const response = await axios.patch(`${API_BASE}/participant-reviews/${reviewId}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  async updateReview(reviewId: string, data: UpdateParticipantReviewDto): Promise<ParticipantReview> {
+    const response = await api.patch<ParticipantReview>(`/participant-reviews/${reviewId}`, data);
     return response.data;
   },
 
-  async deleteReview(token: string, reviewId: string): Promise<void> {
-    await axios.delete(`${API_BASE}/participant-reviews/${reviewId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  async deleteReview(reviewId: string): Promise<void> {
+    await api.delete(`/participant-reviews/${reviewId}`);
   },
 };
-
-export default participantReviewService;

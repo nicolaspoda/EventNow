@@ -12,6 +12,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { EventType } from './dto/create-event.dto';
 import { SearchEventsDto, SortBy, PriceRange } from './dto/search-events.dto';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class EventsService {
@@ -20,6 +21,7 @@ export class EventsService {
     private readonly uploadService: UploadService,
     private readonly followsService: FollowsService,
     private readonly notificationsService: NotificationsService,
+    private readonly logger: CustomLoggerService,
   ) {}
 
   async create(
@@ -394,7 +396,7 @@ export class EventsService {
       try {
         await this.uploadService.deleteImage(event.imagePublicId);
       } catch (err) {
-        console.error('Erreur suppression ancienne image:', err);
+        this.logger.error(`Erreur suppression ancienne image: ${(err as Error).message}`, (err as Error).stack, 'EventsService');
       }
     }
 
@@ -412,11 +414,9 @@ export class EventsService {
         process.env.NODE_ENV !== 'production' &&
         updateEventDto.ticket_categories
       ) {
-        console.log(
-          '[events.update] ticket_categories envoyées, billets payants:',
-          paidTicketsCount,
-          '→ on ne supprime pas les catégories:',
-          hasPaidTickets,
+        this.logger.debug(
+          `[events.update] ticket_categories envoyées, billets payants: ${paidTicketsCount} → on ne supprime pas les catégories: ${hasPaidTickets}`,
+          'EventsService',
         );
       }
 

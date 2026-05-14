@@ -4,7 +4,7 @@ import { notificationService } from '../services/notificationService';
 import { participationService } from '../services/participationService';
 import { staffInvitationsService } from '../services/staffInvitationsService';
 import { authService } from '../services/auth.service';
-import socketService from '../services/socketService';
+import { socketService } from '../services/socketService';
 import { useAuth } from '../utils/useAuth';
 import { STAFF_STATUS_CHANGED_EVENT } from '../hooks/useIsStaff';
 import type { Notification } from '../types/notification.types';

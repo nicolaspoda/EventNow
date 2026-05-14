@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { ParticipationRequest } from '../../types/participation.types';
 import { participationService } from '../../services/participationService';
+import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 import { Card } from '../ui/Card';
 import Button from '../ui/Button';
 import { UserRatingBadge } from './UserRatingBadge';
@@ -25,17 +26,6 @@ interface ParticipationRequestCardProps {
 export function ParticipationRequestCard({ request, onRespond }: ParticipationRequestCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const getErrorMessage = (err: unknown): string => {
-    if (
-      err &&
-      typeof err === 'object' &&
-      'response' in err &&
-      (err as { response?: { data?: { message?: string } } }).response?.data?.message
-    ) {
-      return (err as { response?: { data?: { message?: string } } }).response!.data!.message!;
-    }
-    return 'Erreur lors de la réponse';
-  };
 
   const handleRespond = async (action: 'ACCEPT' | 'REFUSE') => {
     try {
@@ -44,7 +34,7 @@ export function ParticipationRequestCard({ request, onRespond }: ParticipationRe
       await participationService.respond(request.id, action);
       onRespond?.();
     } catch (err: unknown) {
-      setError(getErrorMessage(err));
+      setError(getApiErrorMessage(err, 'Erreur lors de la réponse'));
     } finally {
       setLoading(false);
     }

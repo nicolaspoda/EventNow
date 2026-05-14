@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import participantReviewService, {
-  isEventDatePastForParticipantReviews,
-} from '../../services/participantReviewService';
+import { participantReviewService, isEventDatePastForParticipantReviews } from '../../services/participantReviewService';
 import type { ParticipantForReview } from '../../services/participantReviewService';
 import { Card } from '../ui/Card';
 import Button from '../ui/Button';
@@ -20,7 +18,6 @@ export function EventParticipantReviewsSection({
   hideTitle = false,
   eventDate,
 }: EventParticipantReviewsSectionProps) {
-  const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
   const [participants, setParticipants] = useState<ParticipantForReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingParticipant, setReviewingParticipant] = useState<string | null>(null);
@@ -30,10 +27,10 @@ export function EventParticipantReviewsSection({
 
   useEffect(() => {
     fetchParticipants();
-  }, [eventId, token, eventDate]);
+  }, [eventId, eventDate]);
 
   const fetchParticipants = async () => {
-    if (!eventId || !token) return;
+    if (!eventId) return;
     if (!isEventDatePastForParticipantReviews(eventDate)) {
       setParticipants([]);
       setLoading(false);
@@ -41,7 +38,7 @@ export function EventParticipantReviewsSection({
     }
     try {
       setLoading(true);
-      const data = await participantReviewService.getParticipantsForEvent(token, eventId);
+      const data = await participantReviewService.getParticipantsForEvent(eventId);
       setParticipants(data);
     } catch {
       setParticipants([]);
@@ -51,10 +48,10 @@ export function EventParticipantReviewsSection({
   };
 
   const handleSubmitReview = async (participantId: string) => {
-    if (!token || !eventId) return;
+    if (!eventId) return;
     try {
       setSubmitting(true);
-      await participantReviewService.createReview(token, {
+      await participantReviewService.createReview({
         eventId,
         participantId,
         rating,
