@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { Logo } from './Logo';
+import { AboutButton } from './AboutButton';
 
 interface AppNavbarProps {
   rightContent?: ReactNode;
@@ -15,9 +16,10 @@ export function AppNavbar({ rightContent }: AppNavbarProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Logo variant="nav" />
-            {rightContent && (
-              <div className="flex items-center flex-nowrap gap-2 min-h-10">{rightContent}</div>
-            )}
+            <div className="flex items-center flex-nowrap gap-2 min-h-10">
+              {rightContent}
+              <AboutButton />
+            </div>
           </div>
         </div>
       </nav>
