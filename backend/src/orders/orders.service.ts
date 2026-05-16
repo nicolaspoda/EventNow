@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import { CustomLoggerService } from '../logger/logger.service';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -19,6 +20,7 @@ export class OrdersService {
   private readonly paymentService: PaymentService;
   private readonly mailService: MailService;
   private readonly notificationsService: NotificationsService;
+  private readonly promoCodesService: PromoCodesService;
   private readonly stripe: Stripe;
   private readonly webhookSecret: string;
 
@@ -27,6 +29,7 @@ export class OrdersService {
     paymentService: PaymentService,
     mailService: MailService,
     notificationsService: NotificationsService,
+    promoCodesService: PromoCodesService,
     private readonly configService: ConfigService,
     private readonly logger: CustomLoggerService,
   ) {
@@ -34,6 +37,7 @@ export class OrdersService {
     this.paymentService = paymentService;
     this.mailService = mailService;
     this.notificationsService = notificationsService;
+    this.promoCodesService = promoCodesService;
 
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
@@ -44,11 +48,35 @@ export class OrdersService {
       this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
   }
 
-  async initiatePayment(bookingId: string, userId: string) {
-    return this.paymentService.createPaymentIntent(bookingId, userId);
+  async initiatePayment(bookingId: string, userId: string, promoCodeId?: string) {
+    if (!promoCodeId) {
+      return this.paymentService.createPaymentIntent(bookingId, userId);
+    }
+
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { ticketCategory: true },
+    });
+
+    if (!booking || booking.userId !== userId) {
+      throw new NotFoundException('Réservation introuvable');
+    }
+
+    const originalAmount = Number(booking.ticketCategory.price) * booking.quantity;
+    const { finalAmount } = await this.promoCodesService.validatePromoCodeById(
+      promoCodeId,
+      originalAmount,
+    );
+
+    return this.paymentService.createPaymentIntent(bookingId, userId, finalAmount);
   }
 
-  async confirmPayment(bookingId: string, paymentId: string, userId: string) {
+  async confirmPayment(
+    bookingId: string,
+    paymentId: string,
+    userId: string,
+    promoCodeId?: string,
+  ) {
     const result = await this.prisma.$transaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
@@ -103,8 +131,17 @@ export class OrdersService {
         throw new BadRequestException('Réservation expirée');
       }
 
-      const totalAmount =
+      let totalAmount =
         Number(booking.ticketCategory.price) * booking.quantity;
+
+      if (promoCodeId) {
+        const { finalAmount } =
+          await this.promoCodesService.validatePromoCodeById(
+            promoCodeId,
+            totalAmount,
+          );
+        totalAmount = finalAmount;
+      }
 
       await tx.booking.update({
         where: { id: bookingId },
@@ -148,6 +185,17 @@ export class OrdersService {
         ticketCategory: booking.ticketCategory,
       };
     });
+
+    if (promoCodeId) {
+      await this.promoCodesService.applyPromoCode(promoCodeId).catch(
+        (err: unknown) =>
+          this.logger.error(
+            `Erreur application code promo: ${(err as Error).message}`,
+            (err as Error).stack,
+            'OrdersService',
+          ),
+      );
+    }
 
     this.sendOrderConfirmationEmail(result, userId).catch((err: unknown) =>
       this.logger.error(`Erreur envoi email confirmation: ${(err as Error).message}`, (err as Error).stack, 'OrdersService'),

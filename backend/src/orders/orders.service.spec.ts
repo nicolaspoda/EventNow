@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from '../payment/payment.service';
 import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import { CustomLoggerService } from '../logger/logger.service';
 import { ConfigService } from '@nestjs/config';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
@@ -53,6 +54,11 @@ describe('OrdersService', () => {
 
   const mockNotificationsService = {
     create: jest.fn(),
+  };
+
+  const mockPromoCodesService = {
+    validatePromoCodeById: jest.fn(),
+    applyPromoCode: jest.fn(),
   };
 
   const mockConfigService = {
@@ -119,6 +125,10 @@ describe('OrdersService', () => {
         {
           provide: NotificationsService,
           useValue: mockNotificationsService,
+        },
+        {
+          provide: PromoCodesService,
+          useValue: mockPromoCodesService,
         },
         {
           provide: ConfigService,

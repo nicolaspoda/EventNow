@@ -26,6 +26,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { FollowsModule } from './follows/follows.module';
 import { MessagesModule } from './messages/messages.module';
 import { StaffInvitationsModule } from './staff-invitations/staff-invitations.module';
+import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -69,6 +70,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     FollowsModule,
     MessagesModule,
     StaffInvitationsModule,
+    PromoCodesModule,
   ],
   controllers: [AppController],
   providers: [

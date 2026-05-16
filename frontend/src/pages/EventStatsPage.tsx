@@ -84,15 +84,26 @@ export function EventStatsPage() {
         <span className="text-neutral-600 dark:text-neutral-400">Statistiques</span>
       </nav>
 
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100" id="stats-title">
-          {event.title}
-        </h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
-          <time dateTime={event.eventDate}>
-            {safeFormat(event.eventDate, "d MMMM yyyy 'à' HH'h'mm")}
-          </time>
-        </p>
+      <header className="mb-8 flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100" id="stats-title">
+            {event.title}
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">
+            <time dateTime={event.eventDate}>
+              {safeFormat(event.eventDate, "d MMMM yyyy 'à' HH'h'mm")}
+            </time>
+          </p>
+        </div>
+        <Link
+          to={`/dashboard/events/${id}/promo-codes`}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          Codes promo
+        </Link>
       </header>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
