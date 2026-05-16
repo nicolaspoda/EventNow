@@ -38,7 +38,7 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ payment: { limit: 5, ttl: 60000 } })
   initiatePayment(@Body() dto: CreateOrderDto, @CurrentUser() user: AuthUser) {
-    return this.ordersService.initiatePayment(dto.bookingId, user.id);
+    return this.ordersService.initiatePayment(dto.bookingId, user.id, dto.promoCodeId);
   }
 
   @Post('payment/confirm')
@@ -50,6 +50,7 @@ export class OrdersController {
       dto.bookingId,
       dto.paymentId,
       user.id,
+      dto.promoCodeId,
     );
   }
 

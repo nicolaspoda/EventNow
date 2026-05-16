@@ -21,7 +21,11 @@ export class PaymentService {
     this.stripe = new Stripe(stripeSecretKey);
   }
 
-  async createPaymentIntent(bookingId: string, userId: string) {
+  async createPaymentIntent(
+    bookingId: string,
+    userId: string,
+    overrideAmount?: number,
+  ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -43,7 +47,10 @@ export class PaymentService {
       throw new BadRequestException('Réservation expirée');
     }
 
-    const amount = Number(booking.ticketCategory.price) * booking.quantity;
+    const amount =
+      overrideAmount !== undefined
+        ? overrideAmount
+        : Number(booking.ticketCategory.price) * booking.quantity;
     const amountCents = Math.round(amount * 100);
 
     if (amountCents < 50) {
@@ -78,6 +85,8 @@ export class PaymentService {
         clientSecret: paymentIntent.client_secret,
         bookingId,
         amount,
+        originalAmount: Number(booking.ticketCategory.price) * booking.quantity,
+        eventId: booking.ticketCategory.event.id,
         currency: 'EUR',
         status: 'pending',
       };

@@ -38,6 +38,7 @@ import EventParticipationRequestsPage from './pages/EventParticipationRequestsPa
 import { MessagesPage } from './pages/messages/MessagesPage';
 import { ConversationPage } from './pages/messages/ConversationPage';
 import { ConversationMembersPage } from './pages/messages/ConversationMembersPage';
+import { PromoCodesPage } from './pages/PromoCodesPage';
 import { useSocket } from './hooks/useSocket';
 
 function AppContent() {
@@ -191,6 +192,14 @@ function AppContent() {
           element={
             <ProtectedRoute roles={['ORGANIZER']}>
               <EventStatsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/events/:id/promo-codes"
+          element={
+            <ProtectedRoute roles={['ORGANIZER']}>
+              <PromoCodesPage />
             </ProtectedRoute>
           }
         />
