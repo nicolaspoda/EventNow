@@ -16,11 +16,15 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
   const category = order.ticketCategory ?? order.tickets?.[0]?.ticketCategory;
   const quantity = order.quantity ?? order.tickets?.length ?? 0;
   const eventDate = order.tickets?.[0]?.ticketCategory?.event?.eventDate;
+  const isEventCancelled = !!(order.tickets?.[0]?.ticketCategory?.event as ({ cancelledAt?: string | null } | undefined))?.cancelledAt;
 
   const categoryPrice = parsePrice(category?.price);
   const totalAmount = parsePrice(order.totalAmount);
 
   const getStatusBadge = (status: Order['status']) => {
+    if (isEventCancelled) {
+      return <Badge variant="error">ANNULÉ</Badge>;
+    }
     switch (status) {
       case 'PAID':
         return <Badge variant="success">Payée</Badge>;
@@ -35,8 +39,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
     }
   };
 
-  const hasTickets = order.status === 'PAID';
-  const canCancel = order.status === 'PAID';
+  const hasTickets = order.status === 'PAID' && !isEventCancelled;
+  const canCancel = order.status === 'PAID' && !isEventCancelled;
 
   return (
     <div className="glass-card p-6 hover:shadow-lg transition-shadow">
@@ -85,7 +89,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, onViewTickets, onCancelSuc
         </div>
       </div>
 
-      {order.status === 'REFUNDED' && (
+      {isEventCancelled && (
+        <div className="mb-4 p-3 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+          <p className="text-sm font-semibold text-error-800 dark:text-error-200 mb-1">Événement annulé</p>
+          <p className="text-sm text-error-700 dark:text-error-300">
+            {order.status === 'REFUNDED'
+              ? `Remboursement de ${formatPrice(totalAmount)} € initié. Comptez 5 à 10 jours ouvrés.`
+              : 'Le remboursement sera traité automatiquement sous 5 à 10 jours ouvrés.'}
+          </p>
+        </div>
+      )}
+
+      {!isEventCancelled && order.status === 'REFUNDED' && (
         <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg">
           <p className="text-sm font-semibold text-primary-900 dark:text-primary-200 mb-1">Commande remboursée</p>
           <p className="text-sm text-primary-800 dark:text-primary-300">

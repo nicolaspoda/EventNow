@@ -35,6 +35,8 @@ export interface Event {
   organizer?: Organizer;
   createdAt: string;
   updatedAt: string;
+  cancelledAt?: string | null;
+  cancelReason?: string | null;
   friendsAttending?: Array<{ id: string; username?: string; avatarUrl?: string }>;
   friendsAttendingCount?: number;
 }
