@@ -14,6 +14,17 @@ import Button from '../components/ui/Button';
 import { ReviewForm } from '../components/reviews/ReviewForm';
 import { ReviewsList } from '../components/reviews/ReviewsList';
 import messageService from '../services/messageService';
+import ReportModal from '../components/ReportModal';
+import EventItemListTab from '../components/events/EventItemListTab';
+import EventPollsTab from '../components/events/EventPollsTab';
+import ShareButton from '../components/events/ShareButton';
+
+interface CancelModalState {
+  open: boolean;
+  reason: string;
+  loading: boolean;
+  error: string | null;
+}
 
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +36,11 @@ const EventDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [canReview, setCanReview] = useState(false);
   const [reviewsVersion, setReviewsVersion] = useState(0);
-  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'reviews'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'reviews' | 'items' | 'polls'>('details');
+  const [cancelModal, setCancelModal] = useState<CancelModalState>({ open: false, reason: '', loading: false, error: null });
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -131,6 +146,40 @@ const EventDetailPage: React.FC = () => {
     }
   };
 
+  const handleCancelConfirm = async () => {
+    if (!id) return;
+    setCancelModal((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      await eventService.cancelEvent(id, cancelModal.reason || undefined);
+      setCancelModal({ open: false, reason: '', loading: false, error: null });
+      const toastMsg = event?.type === 'COMMUNITY'
+        ? 'Événement annulé. Les participants ont été notifiés.'
+        : 'Événement annulé. Les remboursements ont été initiés.';
+      setSuccessToast(toastMsg);
+      setTimeout(() => navigate('/events'), 2000);
+    } catch (err) {
+      setCancelModal((prev) => ({
+        ...prev,
+        loading: false,
+        error: getApiErrorMessage(err, "Erreur lors de l'annulation"),
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      setAlreadyReported(
+        localStorage.getItem(`reported:event:${id}`) === 'true',
+      );
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!successToast) return;
+    const t = setTimeout(() => setSuccessToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [successToast]);
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -206,21 +255,58 @@ const EventDetailPage: React.FC = () => {
           </ol>
         </nav>
 
-        <div className="mb-6">
-          <Button 
-            variant="ghost" 
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
             onClick={() => navigate('/events')}
             aria-label="Retour à la liste des événements"
           >
             ← Retour
           </Button>
+
+          <div className="flex items-center gap-3">
+            <ShareButton eventId={event.id} eventTitle={event.title} variant="button" />
+
+            {isAuthenticated && user != null && event.organizerId !== user.id && (
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(true)}
+                disabled={alreadyReported}
+                className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3v18M3 6l9-3 9 3v9l-9-3-9 3V6z" />
+                </svg>
+                {alreadyReported ? 'Signalé' : 'Signaler'}
+              </button>
+            )}
+
+            {isAuthenticated && user != null && event.organizerId === user.id && !event.cancelledAt && event.eventDate > new Date().toISOString() && (
+              <Button
+                variant="danger"
+                onClick={() => setCancelModal((prev) => ({ ...prev, open: true }))}
+              >
+                Annuler l'événement
+              </Button>
+            )}
+          </div>
         </div>
 
         {(() => {
           const showParticipantsTab = event.type === 'COMMUNITY' && isAuthenticated && user != null && event.organizerId === user.id;
-          const tabs: { id: 'details' | 'participants' | 'reviews'; label: string }[] = [
+          const isOrganizer = isAuthenticated && user != null && event.organizerId === user.id;
+          const isCommunityParticipant =
+            event.type === 'COMMUNITY' &&
+            isAuthenticated &&
+            user != null &&
+            (isOrganizer || myParticipationRequest?.status === 'ACCEPTED');
+          const showItemsTab = isCommunityParticipant;
+          const showPollsTab = isCommunityParticipant;
+          const tabs: { id: 'details' | 'participants' | 'reviews' | 'items' | 'polls'; label: string }[] = [
             { id: 'details', label: 'Détails' },
             ...(showParticipantsTab ? [{ id: 'participants' as const, label: 'Participants' }] : []),
+            ...(showItemsTab ? [{ id: 'items' as const, label: 'Liste de courses' }] : []),
+            ...(showPollsTab ? [{ id: 'polls' as const, label: 'Sondages' }] : []),
             { id: 'reviews', label: 'Avis' },
           ];
           return (
@@ -303,6 +389,26 @@ const EventDetailPage: React.FC = () => {
                   </div>
                 )}
 
+                {activeTab === 'items' && showItemsTab && user != null && (
+                  <div id="panel-items" role="tabpanel" aria-labelledby="tab-items">
+                    <EventItemListTab
+                      eventId={event.id}
+                      currentUserId={user.id}
+                      isOrganizer={isOrganizer}
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'polls' && showPollsTab && user != null && (
+                  <div id="panel-polls" role="tabpanel" aria-labelledby="tab-polls">
+                    <EventPollsTab
+                      eventId={event.id}
+                      currentUserId={user.id}
+                      isOrganizer={isOrganizer}
+                    />
+                  </div>
+                )}
+
                 {activeTab === 'reviews' && (
                   <div id="panel-reviews" role="tabpanel" aria-labelledby="tab-reviews">
                     <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-6">
@@ -327,6 +433,91 @@ const EventDetailPage: React.FC = () => {
           );
         })()}
       </div>
+
+      {reportModalOpen && event && (
+        <ReportModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          type="EVENT"
+          targetId={event.id}
+          targetName={event.title}
+          onSuccess={(msg) => {
+            localStorage.setItem(`reported:event:${event.id}`, 'true');
+            setAlreadyReported(true);
+            setSuccessToast(msg);
+          }}
+          onAlreadyReported={() => {
+            localStorage.setItem(`reported:event:${event.id}`, 'true');
+            setAlreadyReported(true);
+          }}
+        />
+      )}
+
+      {/* Success toast */}
+      {successToast && (
+        <div
+          className="fixed bottom-6 right-6 z-50 bg-success-500 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium"
+          role="status"
+          aria-live="polite"
+        >
+          {successToast}
+        </div>
+      )}
+
+      {/* Cancel confirmation modal */}
+      {cancelModal.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !cancelModal.loading && setCancelModal((prev) => ({ ...prev, open: false }))} />
+          <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h2 id="cancel-modal-title" className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
+              Annuler l'événement
+            </h2>
+            <p className="text-sm text-error-700 dark:text-error-300 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg p-3 mb-4">
+              {event.type === 'COMMUNITY'
+                ? 'Cette action est irréversible. Tous les participants seront notifiés de l\'annulation.'
+                : 'Cette action est irréversible. Tous les participants seront remboursés automatiquement.'}
+            </p>
+
+            <div className="mb-4">
+              <label htmlFor="cancel-reason" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Raison de l'annulation (optionnel)
+              </label>
+              <textarea
+                id="cancel-reason"
+                rows={3}
+                className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                placeholder="Expliquez la raison de l'annulation..."
+                value={cancelModal.reason}
+                onChange={(e) => setCancelModal((prev) => ({ ...prev, reason: e.target.value }))}
+                disabled={cancelModal.loading}
+              />
+            </div>
+
+            {cancelModal.error && (
+              <p className="text-sm text-error-600 dark:text-error-400 mb-4" role="alert">
+                {cancelModal.error}
+              </p>
+            )}
+
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="ghost"
+                onClick={() => setCancelModal({ open: false, reason: '', loading: false, error: null })}
+                disabled={cancelModal.loading}
+              >
+                Retour
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleCancelConfirm}
+                disabled={cancelModal.loading}
+              >
+                {cancelModal.loading ? 'Annulation...' : 'Confirmer l\'annulation'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

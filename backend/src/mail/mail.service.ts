@@ -39,9 +39,16 @@ export class MailService {
           supportEmail: 'support@eventnow.com',
         },
       });
-      this.logger.log(`Email confirmation envoyé à ${orderData.userEmail}`, 'MailService');
+      this.logger.log(
+        `Email confirmation envoyé à ${orderData.userEmail}`,
+        'MailService',
+      );
     } catch (error) {
-      this.logger.error(`Erreur envoi email à ${orderData.userEmail}: ${(error as Error).message}`, (error as Error).stack, 'MailService');
+      this.logger.error(
+        `Erreur envoi email à ${orderData.userEmail}: ${(error as Error).message}`,
+        (error as Error).stack,
+        'MailService',
+      );
     }
   }
 
@@ -67,9 +74,16 @@ export class MailService {
           ticketsUrl: `${frontendUrl}/my-tickets`,
         },
       });
-      this.logger.log(`Rappel J-7 envoyé à ${reminderData.userEmail}`, 'MailService');
+      this.logger.log(
+        `Rappel J-7 envoyé à ${reminderData.userEmail}`,
+        'MailService',
+      );
     } catch (error) {
-      this.logger.error(`Erreur envoi rappel J-7 à ${reminderData.userEmail}: ${(error as Error).message}`, (error as Error).stack, 'MailService');
+      this.logger.error(
+        `Erreur envoi rappel J-7 à ${reminderData.userEmail}: ${(error as Error).message}`,
+        (error as Error).stack,
+        'MailService',
+      );
     }
   }
 
@@ -95,9 +109,51 @@ export class MailService {
           ticketsUrl: `${frontendUrl}/my-tickets`,
         },
       });
-      this.logger.log(`Rappel J-1 envoyé à ${reminderData.userEmail}`, 'MailService');
+      this.logger.log(
+        `Rappel J-1 envoyé à ${reminderData.userEmail}`,
+        'MailService',
+      );
     } catch (error) {
-      this.logger.error(`Erreur envoi rappel J-1 à ${reminderData.userEmail}: ${(error as Error).message}`, (error as Error).stack, 'MailService');
+      this.logger.error(
+        `Erreur envoi rappel J-1 à ${reminderData.userEmail}: ${(error as Error).message}`,
+        (error as Error).stack,
+        'MailService',
+      );
+    }
+  }
+
+  async sendEventCancellation(data: {
+    userEmail: string;
+    userName: string;
+    eventTitle: string;
+    eventDate: string;
+    refundAmount?: number;
+    cancelReason?: string;
+  }) {
+    try {
+      await this.mailerService.sendMail({
+        to: data.userEmail,
+        subject: `[EventNow] L'événement "${data.eventTitle}" a été annulé`,
+        template: 'event-cancelled',
+        context: {
+          userName: data.userName,
+          eventTitle: data.eventTitle,
+          eventDate: data.eventDate,
+          refundAmount:
+            data.refundAmount != null ? data.refundAmount.toFixed(2) : null,
+          cancelReason: data.cancelReason ?? null,
+        },
+      });
+      this.logger.log(
+        `Email annulation événement envoyé à ${data.userEmail}`,
+        'MailService',
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erreur envoi email annulation à ${data.userEmail}: ${(error as Error).message}`,
+        (error as Error).stack,
+        'MailService',
+      );
     }
   }
 
@@ -111,7 +167,11 @@ export class MailService {
       });
       this.logger.log(`Email test envoyé à ${to}`, 'MailService');
     } catch (error) {
-      this.logger.error(`Erreur envoi email test: ${(error as Error).message}`, (error as Error).stack, 'MailService');
+      this.logger.error(
+        `Erreur envoi email test: ${(error as Error).message}`,
+        (error as Error).stack,
+        'MailService',
+      );
       throw error;
     }
   }

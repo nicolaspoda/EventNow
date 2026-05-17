@@ -32,6 +32,7 @@ const EventDetail: React.FC<EventDetailProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<TicketCategory | null>(null);
   const [showParticipationModal, setShowParticipationModal] = useState(false);
   const isCommunity = event.type === 'COMMUNITY';
+  const isCancelled = !!event.cancelledAt;
   const participationCategory = isCommunity && event.ticketCategories?.length
     ? event.ticketCategories.find((c) => c.name === 'Participation') ?? event.ticketCategories[0]
     : null;
@@ -98,6 +99,34 @@ const EventDetail: React.FC<EventDetailProps> = ({
       )}
 
       <div className="p-8 md:p-10 lg:p-12">
+        {isCancelled && (
+          <div
+            className="mb-6 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-xl"
+            role="alert"
+          >
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="font-semibold text-error-800 dark:text-error-200">
+                  Cet événement a été annulé.
+                </p>
+                {!isCommunity && (
+                  <p className="text-sm text-error-700 dark:text-error-300 mt-1">
+                    Si vous aviez un billet, vous serez remboursé sous 5 à 10 jours.
+                  </p>
+                )}
+                {event.cancelReason && (
+                  <p className="text-sm text-error-700 dark:text-error-300 mt-1">
+                    <span className="font-medium">Raison :</span> {event.cancelReason}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-5">
             {event.title}
@@ -136,12 +165,14 @@ const EventDetail: React.FC<EventDetailProps> = ({
               Participation
             </h2>
             <div className="flex flex-wrap items-center gap-4">
-              <Badge variant={isParticipationFull ? 'error' : 'success'}>
-                {isParticipationFull
-                  ? 'Complet'
-                  : `${participationPlacesAvailable} place${participationPlacesAvailable > 1 ? 's' : ''} disponible${participationPlacesAvailable > 1 ? 's' : ''}`}
-              </Badge>
-              {!isOrganizer && (
+              {!isCancelled && (
+                <Badge variant={isParticipationFull ? 'error' : 'success'}>
+                  {isParticipationFull
+                    ? 'Complet'
+                    : `${participationPlacesAvailable} place${participationPlacesAvailable > 1 ? 's' : ''} disponible${participationPlacesAvailable > 1 ? 's' : ''}`}
+                </Badge>
+              )}
+              {!isOrganizer && !isCancelled && (
                 myParticipationRequest ? (
                   <span className="text-sm text-neutral-600 dark:text-neutral-400">
                     {myParticipationRequest.status === 'PENDING' && 'Demande en attente'}
@@ -179,9 +210,11 @@ const EventDetail: React.FC<EventDetailProps> = ({
                   <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     Disponibilité
                   </th>
-                  <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-                    Action
-                  </th>
+                  {!isCancelled && (
+                    <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      Action
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -199,22 +232,28 @@ const EventDetail: React.FC<EventDetailProps> = ({
                       </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap">
-                      {getStockIndicator(category.currentStock, category.initialStock)}
-                    </td>
-                    <td className="px-6 py-5 whitespace-nowrap text-right">
-                      {isOrganizer ? (
-                        <span className="text-sm text-neutral-500 dark:text-neutral-400">—</span>
+                      {isCancelled ? (
+                        <Badge variant="error">Annulé</Badge>
                       ) : (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          disabled={category.currentStock === 0}
-                          onClick={() => handleCategorySelect(category)}
-                        >
-                          {category.currentStock === 0 ? 'Épuisé' : 'Réserver'}
-                        </Button>
+                        getStockIndicator(category.currentStock, category.initialStock)
                       )}
                     </td>
+                    {!isCancelled && (
+                      <td className="px-6 py-5 whitespace-nowrap text-right">
+                        {isOrganizer ? (
+                          <span className="text-sm text-neutral-500 dark:text-neutral-400">—</span>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={category.currentStock === 0}
+                            onClick={() => handleCategorySelect(category)}
+                          >
+                            {category.currentStock === 0 ? 'Épuisé' : 'Réserver'}
+                          </Button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

@@ -4,11 +4,17 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { OrderStatus } from '@prisma/client';
+import {
+  OrderStatus,
+  BookingStatus,
+  ParticipationRequestStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { FollowsService } from '../follows/follows.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PaymentService } from '../payment/payment.service';
+import { MailService } from '../mail/mail.service';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { EventType } from './dto/create-event.dto';
 import { SearchEventsDto, SortBy, PriceRange } from './dto/search-events.dto';
@@ -21,6 +27,8 @@ export class EventsService {
     private readonly uploadService: UploadService,
     private readonly followsService: FollowsService,
     private readonly notificationsService: NotificationsService,
+    private readonly paymentService: PaymentService,
+    private readonly mailService: MailService,
     private readonly logger: CustomLoggerService,
   ) {}
 
@@ -323,6 +331,11 @@ export class EventsService {
       imagePublicId: event.imagePublicId,
       eventDate: eventDate ?? undefined,
       endDate: endDate ?? undefined,
+      cancelledAt:
+        event.cancelledAt instanceof Date
+          ? event.cancelledAt.toISOString()
+          : (event.cancelledAt ?? null),
+      cancelReason: event.cancelReason ?? null,
       organizerId: event.organizerId,
       type: event.type,
       category: event.category,
@@ -396,7 +409,11 @@ export class EventsService {
       try {
         await this.uploadService.deleteImage(event.imagePublicId);
       } catch (err) {
-        this.logger.error(`Erreur suppression ancienne image: ${(err as Error).message}`, (err as Error).stack, 'EventsService');
+        this.logger.error(
+          `Erreur suppression ancienne image: ${(err as Error).message}`,
+          (err as Error).stack,
+          'EventsService',
+        );
       }
     }
 
@@ -559,6 +576,234 @@ export class EventsService {
         })),
       };
     });
+  }
+
+  async cancelEvent(userId: string, eventId: string, reason?: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Événement avec l'ID ${eventId} introuvable`);
+    }
+
+    if (event.organizerId !== userId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez annuler que vos propres événements',
+      );
+    }
+
+    if (event.cancelledAt) {
+      throw new BadRequestException('Event is already cancelled');
+    }
+
+    if (event.eventDate <= new Date()) {
+      throw new BadRequestException(
+        'Cannot cancel an event that has already started',
+      );
+    }
+
+    // Get all PAID/REFUND_REQUESTED orders for this event
+    const confirmedOrders = await this.prisma.order.findMany({
+      where: {
+        status: { in: [OrderStatus.PAID, OrderStatus.REFUND_REQUESTED] },
+        tickets: { some: { ticketCategory: { eventId } } },
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, username: true },
+        },
+      },
+    });
+
+    // Process Stripe refunds outside the DB transaction
+    const refundResults = await Promise.all(
+      confirmedOrders.map(async (order) => {
+        if (!order.paymentIntentId) {
+          return {
+            orderId: order.id,
+            userId: order.userId,
+            user: order.user,
+            success: true,
+            refundAmount: 0,
+            isFree: true,
+          };
+        }
+        try {
+          const result = await this.paymentService.refundPayment(
+            order.paymentIntentId,
+            order.id,
+          );
+          return {
+            orderId: order.id,
+            userId: order.userId,
+            user: order.user,
+            success: true,
+            refundAmount: result.amount,
+            isFree: false,
+          };
+        } catch (err: unknown) {
+          const message =
+            err instanceof Error ? err.message : 'Erreur inconnue';
+          this.logger.error(
+            `Échec remboursement commande ${order.id}: ${message}`,
+            err instanceof Error ? err.stack : undefined,
+            'EventsService',
+          );
+          return {
+            orderId: order.id,
+            userId: order.userId,
+            user: order.user,
+            success: false,
+            refundAmount: 0,
+            isFree: false,
+            error: message,
+          };
+        }
+      }),
+    );
+
+    const failedRefunds = refundResults.filter((r) => !r.success);
+    const successfulRefunds = refundResults.filter((r) => r.success);
+
+    // DB updates in a single transaction
+    await this.prisma.$transaction(async (tx) => {
+      // Update orders and invalidate tickets for successful refunds
+      for (const result of successfulRefunds) {
+        await tx.order.update({
+          where: { id: result.orderId },
+          data: { status: OrderStatus.REFUNDED },
+        });
+        await tx.ticket.updateMany({
+          where: { orderId: result.orderId },
+          data: { validatedAt: null },
+        });
+      }
+
+      // Cancel PENDING bookings and restore stock
+      const pendingBookings = await tx.booking.findMany({
+        where: {
+          status: BookingStatus.PENDING,
+          ticketCategory: { eventId },
+        },
+        select: { id: true, ticketCategoryId: true, quantity: true },
+      });
+
+      for (const booking of pendingBookings) {
+        await tx.booking.update({
+          where: { id: booking.id },
+          data: { status: BookingStatus.CANCELLED },
+        });
+        await tx.ticketCategory.update({
+          where: { id: booking.ticketCategoryId },
+          data: { currentStock: { increment: booking.quantity } },
+        });
+      }
+
+      // Mark event as cancelled
+      await tx.event.update({
+        where: { id: eventId },
+        data: {
+          cancelledAt: new Date(),
+          cancelReason: reason ?? null,
+        },
+      });
+    });
+
+    // Get accepted participation requests (for community events)
+    const acceptedParticipants =
+      await this.prisma.participationRequest.findMany({
+        where: { eventId, status: ParticipationRequestStatus.ACCEPTED },
+        include: {
+          user: { select: { id: true, email: true, username: true } },
+        },
+      });
+
+    // Build the full set of affected user IDs
+    const orderUserIds = new Set(confirmedOrders.map((o) => o.userId));
+    const allAffectedUserIds = new Set<string>(orderUserIds);
+    acceptedParticipants.forEach((p) => allAffectedUserIds.add(p.user.id));
+
+    // Create in-app notifications
+    if (allAffectedUserIds.size > 0) {
+      const reasonSuffix = reason ? ` Raison : ${reason}` : '';
+      const notifBody =
+        event.type === 'COMMUNITY'
+          ? `L'événement "${event.title}" a été annulé.${reasonSuffix}`
+          : `L'événement "${event.title}" a été annulé. Vous serez remboursé sous 5 à 10 jours ouvrés.${reasonSuffix}`;
+      await this.notificationsService.createForManyUsers(
+        Array.from(allAffectedUserIds),
+        {
+          type: 'EVENT_CANCELLED',
+          title: 'Événement annulé',
+          body: notifBody,
+          relatedId: eventId,
+        },
+      );
+    }
+
+    // Send cancellation emails
+    const eventDateFormatted = new Date(event.eventDate).toLocaleDateString(
+      'fr-FR',
+      { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
+    );
+
+    const refundByUserId = new Map(
+      refundResults.map((r) => [r.userId, r.refundAmount]),
+    );
+
+    // Collect all affected users (order owners + participation-only users)
+    const participationOnlyUsers = acceptedParticipants
+      .filter((p) => !orderUserIds.has(p.user.id))
+      .map((p) => p.user);
+
+    const emailTargets = [
+      ...confirmedOrders.map((o) => o.user),
+      ...participationOnlyUsers,
+    ];
+
+    await Promise.all(
+      emailTargets.map(async (user) => {
+        if (!user?.email) return;
+        const refundAmount = refundByUserId.get(user.id);
+        await this.mailService.sendEventCancellation({
+          userEmail: user.email,
+          userName: user.username ?? user.email.split('@')[0],
+          eventTitle: event.title,
+          eventDate: eventDateFormatted,
+          refundAmount:
+            refundAmount && refundAmount > 0 ? refundAmount : undefined,
+          cancelReason: reason,
+        });
+      }),
+    );
+
+    // Clean up staff invitation notifications then delete the event (cascades all related data)
+    const staffInvitations = await this.prisma.staffInvitation.findMany({
+      where: { eventId },
+      select: { token: true },
+    });
+    const tokens = staffInvitations.map((inv) => inv.token);
+    if (tokens.length > 0) {
+      await this.notificationsService.deleteByTypeAndRelatedIds(
+        'STAFF_INVITATION',
+        tokens,
+      );
+    }
+    await this.prisma.event.delete({ where: { id: eventId } });
+
+    return {
+      cancelledOrders: successfulRefunds.length,
+      failedRefunds: failedRefunds.length,
+      totalRefunded: successfulRefunds.reduce(
+        (sum, r) => sum + r.refundAmount,
+        0,
+      ),
+      notifiedUsers: allAffectedUserIds.size,
+      ...(failedRefunds.length > 0 && {
+        failedOrderIds: failedRefunds.map((r) => r.orderId),
+      }),
+    };
   }
 
   async remove(id: string, userId: string) {

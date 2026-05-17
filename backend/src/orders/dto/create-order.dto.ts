@@ -1,8 +1,12 @@
-import { IsString, IsUUID } from 'class-validator';
+import { IsString, IsUUID, IsOptional } from 'class-validator';
 
 export class CreateOrderDto {
   @IsUUID()
   bookingId: string;
+
+  @IsOptional()
+  @IsString()
+  promoCodeId?: string;
 }
 
 export class ConfirmPaymentDto {
@@ -11,4 +15,8 @@ export class ConfirmPaymentDto {
 
   @IsString()
   paymentId: string;
+
+  @IsOptional()
+  @IsString()
+  promoCodeId?: string;
 }

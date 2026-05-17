@@ -62,6 +62,7 @@ describe('OrdersController', () => {
       expect(service.initiatePayment).toHaveBeenCalledWith(
         'booking-1',
         mockUser.id,
+        undefined,
       );
     });
   });
@@ -81,6 +82,7 @@ describe('OrdersController', () => {
         'booking-1',
         'payment-1',
         mockUser.id,
+        undefined,
       );
     });
   });

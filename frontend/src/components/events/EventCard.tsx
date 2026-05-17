@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Event } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import EventTypeBadge from './EventTypeBadge';
+import ShareButton from './ShareButton';
 import { safeFormat } from '../../utils/date';
 import { parsePrice, formatPrice } from '../../utils/price';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
@@ -45,6 +46,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
       : 'bg-success-500';
 
   const isCommunity = event.type === 'COMMUNITY';
+  const isCancelled = !!event.cancelledAt;
 
   return (
     <article
@@ -95,11 +97,19 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
               Mon événement
             </Badge>
           )}
-          {event.type && <EventTypeBadge type={event.type} />}
-          {isPast && (
-            <Badge variant="neutral" size="sm">
-              Terminé
+          {isCancelled ? (
+            <Badge variant="error" size="sm">
+              ANNULÉ
             </Badge>
+          ) : (
+            <>
+              {event.type && <EventTypeBadge type={event.type} />}
+              {isPast && (
+                <Badge variant="neutral" size="sm">
+                  Terminé
+                </Badge>
+              )}
+            </>
           )}
         </div>
 
@@ -258,65 +268,79 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
 
         {/* Footer */}
         <div className="event-card-footer">
-          <div
-            className={`flex items-center mb-3 ${
-              isCommunity ? 'justify-end' : 'justify-between'
-            }`}
-          >
-            {!isCommunity &&
-              (minPrice === 0 ? (
-                <span className="text-lg font-bold text-success-500 dark:text-success-400">Gratuit</span>
-              ) : (
-                <div>
-                  <span className="text-xs text-neutral-400 dark:text-neutral-500 block">À partir de</span>
-                  <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
-                    {formatPrice(minPrice)} €
-                  </span>
-                </div>
-              ))}
+          {isCancelled ? (
+            <p className="text-sm text-error-600 dark:text-error-400 mb-3">
+              Cet événement a été annulé.
+              {event.cancelReason && (
+                <span className="block text-xs mt-1 text-neutral-500 dark:text-neutral-400">
+                  {event.cancelReason}
+                </span>
+              )}
+            </p>
+          ) : (
+            <div
+              className={`flex items-center mb-3 ${
+                isCommunity ? 'justify-end' : 'justify-between'
+              }`}
+            >
+              {!isCommunity &&
+                (minPrice === 0 ? (
+                  <span className="text-lg font-bold text-success-500 dark:text-success-400">Gratuit</span>
+                ) : (
+                  <div>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500 block">À partir de</span>
+                    <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                      {formatPrice(minPrice)} €
+                    </span>
+                  </div>
+                ))}
 
-            {/* Stock indicator */}
-            <div className="text-right">
-              {stockLevel === 'empty' ? (
-                <Badge variant="error" size="sm">Complet</Badge>
-              ) : stockLevel === 'low' ? (
-                <div>
-                  <Badge variant="warning" size="sm">
+              {/* Stock indicator */}
+              <div className="text-right">
+                {stockLevel === 'empty' ? (
+                  <Badge variant="error" size="sm">Complet</Badge>
+                ) : stockLevel === 'low' ? (
+                  <div>
+                    <Badge variant="warning" size="sm">
+                      {totalStock} places
+                    </Badge>
+                    <div className="mt-1 w-16 h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden ml-auto">
+                      <div className={`h-full ${stockBarColor} rounded-full w-1/4`} />
+                    </div>
+                  </div>
+                ) : (
+                  <Badge variant="success" size="sm">
                     {totalStock} places
                   </Badge>
-                  <div className="mt-1 w-16 h-1 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden ml-auto">
-                    <div className={`h-full ${stockBarColor} rounded-full w-1/4`} />
-                  </div>
-                </div>
-              ) : (
-                <Badge variant="success" size="sm">
-                  {totalStock} places
-                </Badge>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
-          <Link
-            to={`/events/${event.id}`}
-            aria-label={`Voir les détails de ${event.title}`}
-            className="btn-modern btn-primary w-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-          >
-            Voir les détails
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/events/${event.id}`}
+              aria-label={`Voir les détails de ${event.title}`}
+              className="btn-modern btn-primary flex-1 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
+              Voir les détails
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+            <ShareButton eventId={event.id} eventTitle={event.title} variant="icon" />
+          </div>
         </div>
       </div>
     </article>

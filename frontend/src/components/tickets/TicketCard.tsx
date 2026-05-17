@@ -12,8 +12,9 @@ interface TicketCardProps {
 
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownload }) => {
   const category = ticket.ticketCategory ?? ticket.order?.ticketCategory;
-  const event = category?.event;
+  const event = category?.event as (NonNullable<typeof category>['event'] & { cancelledAt?: string | null }) | undefined;
   const eventDateRaw = pickEventDate(event);
+  const isEventCancelled = !!event?.cancelledAt;
 
   return (
     <div className="glass-card overflow-hidden hover:shadow-lg transition-shadow">
@@ -22,7 +23,11 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownloa
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             Billet #{ticket.id.slice(0, 8)}
           </h3>
-          {(ticket.isValidated ?? !!ticket.validatedAt) ? (
+          {isEventCancelled ? (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300">
+              ANNULÉ
+            </span>
+          ) : (ticket.isValidated ?? !!ticket.validatedAt) ? (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300">
               Validé
             </span>
@@ -72,40 +77,46 @@ const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownloa
           </p>
         )}
 
-        <div className="space-y-2">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => onViewQRCode(ticket)}
-            disabled={ticket.isValidated ?? !!ticket.validatedAt}
-            className="w-full"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-              />
-            </svg>
-            {(ticket.isValidated ?? ticket.validatedAt) ? 'Billet utilisé' : 'Afficher le QR code'}
-          </Button>
-          {!(ticket.isValidated ?? ticket.validatedAt) && (
+        {isEventCancelled ? (
+          <p className="text-sm text-error-600 dark:text-error-400">
+            Cet événement a été annulé. Si vous avez payé, vous serez remboursé sous 5 à 10 jours.
+          </p>
+        ) : (
+          <div className="space-y-2">
             <Button
-              variant="ghost"
+              variant="primary"
               size="sm"
-              onClick={() => onDownload(ticket)}
+              onClick={() => onViewQRCode(ticket)}
+              disabled={ticket.isValidated ?? !!ticket.validatedAt}
               className="w-full"
             >
-              Télécharger
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                />
+              </svg>
+              {(ticket.isValidated ?? ticket.validatedAt) ? 'Billet utilisé' : 'Afficher le QR code'}
             </Button>
-          )}
-        </div>
+            {!(ticket.isValidated ?? ticket.validatedAt) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDownload(ticket)}
+                className="w-full"
+              >
+                Télécharger
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

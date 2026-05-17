@@ -6,32 +6,32 @@ export interface InitiatePaymentResponse {
   clientSecret: string;
   bookingId: string;
   amount: number;
+  originalAmount: number;
+  eventId: string;
   currency?: string;
   status?: string;
 }
 
 export const orderService = {
-  /**
-   * Initier le paiement à partir d'une réservation (booking)
-   */
-  async initiatePayment(bookingId: string): Promise<InitiatePaymentResponse> {
+  async initiatePayment(
+    bookingId: string,
+    promoCodeId?: string,
+  ): Promise<InitiatePaymentResponse> {
     const response = await api.post<InitiatePaymentResponse>(
       '/orders/payment/initiate',
-      { bookingId },
+      { bookingId, promoCodeId },
     );
     return response.data;
   },
 
-  /**
-   * Confirmer le paiement (crée la commande et les billets)
-   */
   async confirmPayment(
     bookingId: string,
     paymentId: string,
+    promoCodeId?: string,
   ): Promise<ConfirmPaymentResponse> {
     const response = await api.post<ConfirmPaymentResponse>(
       '/orders/payment/confirm',
-      { bookingId, paymentId },
+      { bookingId, paymentId, promoCodeId },
     );
     return response.data;
   },

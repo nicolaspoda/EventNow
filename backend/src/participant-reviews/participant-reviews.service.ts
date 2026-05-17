@@ -238,11 +238,6 @@ export class ParticipantReviewsService {
       );
     }
 
-    // Avant la date de l'événement : liste vide (le front affiche un message dédié, pas une erreur 400).
-    if (!this.isEventPast(event.eventDate)) {
-      return [];
-    }
-
     const acceptedParticipants =
       await this.prisma.participationRequest.findMany({
         where: {

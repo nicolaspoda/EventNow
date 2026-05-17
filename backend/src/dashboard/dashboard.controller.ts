@@ -39,7 +39,10 @@ export class DashboardController {
   @Get('organizer/events/:id/stats')
   @Roles('ORGANIZER')
   @HttpCode(HttpStatus.OK)
-  async getEventStats(@Param('id') eventId: string, @CurrentUser() user: AuthUser) {
+  async getEventStats(
+    @Param('id') eventId: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.dashboardService.getEventStats(eventId, user.id);
   }
 

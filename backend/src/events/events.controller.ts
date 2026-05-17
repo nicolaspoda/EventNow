@@ -13,7 +13,12 @@ import {
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { EventsService } from './events.service';
-import { CreateEventDto, UpdateEventDto, GetEventsQueryDto } from './dto';
+import {
+  CreateEventDto,
+  UpdateEventDto,
+  GetEventsQueryDto,
+  CancelEventDto,
+} from './dto';
 import { SearchEventsDto } from './dto/search-events.dto';
 import { EventCategory } from './dto/create-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -35,7 +40,10 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.CREATED)
-  create(@CurrentUser() user: AuthUser, @Body() createEventDto: CreateEventDto) {
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body() createEventDto: CreateEventDto,
+  ) {
     return this.eventsService.create(user.id, createEventDto, user.role);
   }
 
@@ -102,6 +110,18 @@ export class EventsController {
     @Body() updateEventDto: UpdateEventDto,
   ) {
     return this.eventsService.update(id, user.id, updateEventDto);
+  }
+
+  @Patch(':id/cancel')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ORGANIZER', 'CLIENT')
+  @HttpCode(HttpStatus.OK)
+  cancelEvent(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() cancelEventDto: CancelEventDto,
+  ) {
+    return this.eventsService.cancelEvent(user.id, id, cancelEventDto.reason);
   }
 
   @Delete(':id')

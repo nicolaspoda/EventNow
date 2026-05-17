@@ -36,6 +36,11 @@ export const EventStatusBadge: React.FC<EventStatusBadgeProps> = ({
       color: 'bg-gray-100 text-gray-800',
       ariaLabel: 'Statut: Terminé',
     },
+    CANCELLED: {
+      label: 'ANNULÉ',
+      color: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+      ariaLabel: 'Statut: Annulé',
+    },
   };
 
   const config = statusConfig[status] || statusConfig.ON_SALE;

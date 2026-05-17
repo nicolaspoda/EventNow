@@ -81,6 +81,8 @@ describe('PaymentService', () => {
         clientSecret: 'cs_test_123',
         bookingId: 'booking-123',
         amount: 100.0,
+        originalAmount: 100.0,
+        eventId: 'event-123',
         currency: 'EUR',
         status: 'pending',
       });

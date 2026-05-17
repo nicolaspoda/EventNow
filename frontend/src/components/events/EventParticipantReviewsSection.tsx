@@ -31,11 +31,6 @@ export function EventParticipantReviewsSection({
 
   const fetchParticipants = async () => {
     if (!eventId) return;
-    if (!isEventDatePastForParticipantReviews(eventDate)) {
-      setParticipants([]);
-      setLoading(false);
-      return;
-    }
     try {
       setLoading(true);
       const data = await participantReviewService.getParticipantsForEvent(eventId);
@@ -87,16 +82,18 @@ export function EventParticipantReviewsSection({
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary-500 border-t-transparent mx-auto" />
           <p className="text-neutral-500 dark:text-neutral-400 mt-2 text-sm">Chargement des participants...</p>
         </div>
-      ) : !isEventDatePastForParticipantReviews(eventDate) ? (
-        <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-          La liste des participants et les avis entre participants seront disponibles après la date de l&apos;événement.
-        </p>
       ) : participants.length === 0 ? (
         <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-          Aucun participant accepté pour le moment. Les avis pourront être laissés une fois des participants inscrits.
+          Aucun participant accepté pour le moment.
         </p>
       ) : (
-        <ul className="space-y-4">
+        <>
+          {!isEventDatePastForParticipantReviews(eventDate) && (
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4 italic">
+              Les avis entre participants seront disponibles après la date de l&apos;événement.
+            </p>
+          )}
+          <ul className="space-y-4">
           {participants.map((participant) => (
             <li key={participant.id}>
               <Card className="p-4">
@@ -120,7 +117,6 @@ export function EventParticipantReviewsSection({
                     )}
                   </Link>
                   <div className="flex-1 min-w-0">
-                    {/* Ligne : nom à côté du bouton avec espace */}
                     <div className="flex flex-wrap items-center gap-3">
                       <Link
                         to={`/user/${participant.id}/profile`}
@@ -128,16 +124,18 @@ export function EventParticipantReviewsSection({
                       >
                         {displayName(participant)}
                       </Link>
-                      {participant.hasReview && participant.review ? null : reviewingParticipant !== participant.id ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setReviewingParticipant(participant.id)}
-                          className="shrink-0"
-                        >
-                          Laisser une note et un avis
-                        </Button>
-                      ) : null}
+                      {isEventDatePastForParticipantReviews(eventDate) && (
+                        participant.hasReview && participant.review ? null : reviewingParticipant !== participant.id ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setReviewingParticipant(participant.id)}
+                            className="shrink-0"
+                          >
+                            Laisser une note et un avis
+                          </Button>
+                        ) : null
+                      )}
                     </div>
 
                     {participant.hasReview && participant.review ? (
@@ -209,6 +207,7 @@ export function EventParticipantReviewsSection({
             </li>
           ))}
         </ul>
+        </>
       )}
     </div>
   );

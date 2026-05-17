@@ -125,6 +125,27 @@ export class MessagesGateway
     }
   }
 
+  @SubscribeMessage('joinEventRoom')
+  async handleJoinEventRoom(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { eventId: string },
+  ) {
+    if (!client.userId) {
+      return { error: 'Unauthorized' };
+    }
+    client.join(`event-${data.eventId}`);
+    return { success: true };
+  }
+
+  @SubscribeMessage('leaveEventRoom')
+  handleLeaveEventRoom(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { eventId: string },
+  ) {
+    client.leave(`event-${data.eventId}`);
+    return { success: true };
+  }
+
   @SubscribeMessage('joinConversation')
   async handleJoinConversation(
     @ConnectedSocket() client: AuthenticatedSocket,
@@ -271,5 +292,17 @@ export class MessagesGateway
 
   emitNewNotificationToUser(userId: string) {
     this.server.to(`user:${userId}`).emit('newNotification', {});
+  }
+
+  notifyPollCreated(eventId: string, poll: any) {
+    this.server.to(`event-${eventId}`).emit('pollCreated', poll);
+  }
+
+  notifyPollUpdated(eventId: string, poll: any) {
+    this.server.to(`event-${eventId}`).emit('pollUpdated', poll);
+  }
+
+  notifyPollDeleted(eventId: string, pollId: string) {
+    this.server.to(`event-${eventId}`).emit('pollDeleted', { pollId });
   }
 }
