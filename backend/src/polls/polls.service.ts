@@ -136,14 +136,8 @@ export class PollsService {
     return this.formatPoll(poll, userId);
   }
 
-  private async fetchPollForBroadcast(pollId: string) {
-    const poll = await this.prisma.poll.findUnique({
-      where: { id: pollId },
-      include: POLL_INCLUDE,
-    });
-    if (!poll) throw new NotFoundException('Sondage introuvable');
-    const base = this.formatPoll(poll, '');
-    return { ...base, hasVoted: false, myVotes: [], isCreatedByMe: false };
+  private neutralizePoll<T extends { hasVoted: boolean; myVotes: string[]; isCreatedByMe: boolean }>(poll: T) {
+    return { ...poll, hasVoted: false, myVotes: [] as string[], isCreatedByMe: false };
   }
 
   async getEventPolls(userId: string, eventId: string) {
@@ -246,7 +240,7 @@ export class PollsService {
     });
 
     const updated = await this.fetchFormattedPoll(pollId, userId);
-    const broadcast = await this.fetchPollForBroadcast(pollId);
+    const broadcast = this.neutralizePoll(updated);
     this.gateway.notifyPollUpdated(eventId, broadcast);
     return updated;
   }
@@ -297,7 +291,7 @@ export class PollsService {
     });
 
     const updated = await this.fetchFormattedPoll(pollId, userId);
-    const broadcast = await this.fetchPollForBroadcast(pollId);
+    const broadcast = this.neutralizePoll(updated);
     this.gateway.notifyPollUpdated(eventId, broadcast);
     return updated;
   }
@@ -332,7 +326,7 @@ export class PollsService {
     });
 
     const updated = await this.fetchFormattedPoll(pollId, userId);
-    const broadcast = await this.fetchPollForBroadcast(pollId);
+    const broadcast = this.neutralizePoll(updated);
     this.gateway.notifyPollUpdated(eventId, broadcast);
     return updated;
   }
