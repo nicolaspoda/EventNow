@@ -43,6 +43,11 @@ export const eventService = {
     await api.delete(`/events/${id}`);
   },
 
+  cancelEvent: async (id: string, reason?: string): Promise<{ cancelledOrders: number; failedRefunds: number; totalRefunded: number; notifiedUsers: number }> => {
+    const response = await api.patch(`/events/${id}/cancel`, { reason });
+    return response.data;
+  },
+
   searchEvents: async (filters: Record<string, unknown>) => {
     const params = new URLSearchParams();
     Object.keys(filters).forEach((key) => {

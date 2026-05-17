@@ -26,13 +26,18 @@ export class DashboardService {
 
     const totalEvents = events.length;
     const now = new Date();
-    const upcomingEvents = events.filter((e) => e.eventDate > now).length;
-    const pastEvents = totalEvents - upcomingEvents;
+    const upcomingEvents = events.filter(
+      (e) => e.eventDate > now && !e.cancelledAt,
+    ).length;
+    const pastEvents = events.filter(
+      (e) => e.eventDate <= now && !e.cancelledAt,
+    ).length;
 
     let totalRevenue = 0;
     let totalTicketsSold = 0;
 
     for (const event of events) {
+      if (event.cancelledAt) continue;
       for (const category of event.ticketCategories) {
         const soldTickets = category.initialStock - category.currentStock;
         totalTicketsSold += soldTickets;
@@ -79,7 +84,9 @@ export class DashboardService {
 
       const fillRate =
         totalCapacity > 0 ? (totalSold / totalCapacity) * 100 : 0;
-      const status = this.getEventStatus(event.eventDate, fillRate);
+      const status = event.cancelledAt
+        ? 'CANCELLED'
+        : this.getEventStatus(event.eventDate, fillRate);
 
       return {
         ...event,
@@ -87,6 +94,11 @@ export class DashboardService {
           event.eventDate instanceof Date
             ? event.eventDate.toISOString()
             : event.eventDate,
+        cancelledAt: event.cancelledAt
+          ? event.cancelledAt instanceof Date
+            ? event.cancelledAt.toISOString()
+            : event.cancelledAt
+          : null,
         ticketCategories: event.ticketCategories.map((c) => ({
           ...c,
           price: Number(c.price),

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <h2 style="color: #e53e3e;">Événement annulé</h2>
+  <p>Bonjour {{userName}},</p>
+  <p>Nous vous informons que l'événement
+     <strong>{{eventTitle}}</strong> prévu le
+     <strong>{{eventDate}}</strong> a été annulé.</p>
+  {{#if cancelReason}}
+  <p><strong>Raison :</strong> {{cancelReason}}</p>
+  {{/if}}
+  {{#if refundAmount}}
+  <p style="color: #38a169;">
+    Un remboursement de <strong>{{refundAmount}}€</strong>
+    a été initié sur votre moyen de paiement.
+    Comptez 5 à 10 jours ouvrés.
+  </p>
+  {{/if}}
+  <p>Nous nous excusons pour la gêne occasionnée.</p>
+  <p>L'équipe EventNow</p>
+</body>
+</html>

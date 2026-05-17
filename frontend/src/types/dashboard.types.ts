@@ -27,6 +27,8 @@ export interface DashboardEvent {
   type: 'PROFESSIONAL' | 'COMMUNITY';
   createdAt: string;
   updatedAt: string;
+  cancelledAt?: string | null;
+  cancelReason?: string | null;
   ticketCategories: TicketCategory[];
   stats: EventStats;
 }

@@ -119,6 +119,8 @@ model Event {
   galleryImages Json?        @map("gallery_images")
   eventDate   DateTime      @map("event_date")
   endDate     DateTime?     @map("end_date")
+  cancelledAt DateTime?     @map("cancelled_at")
+  cancelReason String?      @map("cancel_reason") @db.Text
   organizerId String        @map("organizer_id")
   type        EventType     @default(PROFESSIONAL)
   category    EventCategory @default(OTHER)

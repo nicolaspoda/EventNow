@@ -118,7 +118,7 @@ export class PaymentService {
     return this.configService.get<string>('STRIPE_PUBLISHABLE_KEY') || '';
   }
 
-  async refundPayment(paymentIntentId: string, orderId: string) {
+  async refundPayment(paymentIntentId: string, orderId: string, amount?: number) {
     if (!paymentIntentId) {
       throw new BadRequestException(
         'Aucun identifiant de paiement trouvé pour cette commande',
@@ -154,6 +154,7 @@ export class PaymentService {
 
       const refund = await this.stripe.refunds.create({
         payment_intent: paymentIntentId,
+        ...(amount !== undefined && { amount: Math.round(amount * 100) }),
         metadata: {
           orderId,
           refundedAt: new Date().toISOString(),
