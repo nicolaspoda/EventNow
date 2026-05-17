@@ -59,7 +59,11 @@ export class StaffInvitationsService {
         "La base de données n'est pas à jour. Exécutez : npx prisma migrate deploy",
       );
     }
-    this.logger.error(`[StaffInvitations] ${context} error: ${(err as Error).message}`, (err as Error).stack, 'StaffInvitationsService');
+    this.logger.error(
+      `[StaffInvitations] ${context} error: ${(err as Error).message}`,
+      (err as Error).stack,
+      'StaffInvitationsService',
+    );
     throw new BadRequestException(
       'Une erreur est survenue. Vérifiez que la base de données est à jour (npx prisma migrate deploy).',
     );

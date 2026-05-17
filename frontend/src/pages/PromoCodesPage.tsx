@@ -240,10 +240,11 @@ export function PromoCodesPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="promo-code" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   Code *
                 </label>
                 <input
+                  id="promo-code"
                   type="text"
                   required
                   value={form.code}
@@ -256,10 +257,11 @@ export function PromoCodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="promo-discount-type" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   Type de réduction *
                 </label>
                 <select
+                  id="promo-discount-type"
                   value={form.discountType}
                   onChange={(e) => setForm({ ...form, discountType: e.target.value as DiscountType })}
                   className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
@@ -270,11 +272,12 @@ export function PromoCodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="promo-discount-value" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   Valeur *{' '}
                   {form.discountType === 'PERCENTAGE' ? '(entre 1 et 100)' : '(montant en €)'}
                 </label>
                 <input
+                  id="promo-discount-value"
                   type="number"
                   required
                   value={form.discountValue}
@@ -287,10 +290,11 @@ export function PromoCodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="promo-max-uses" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   Nombre max d'utilisations (optionnel)
                 </label>
                 <input
+                  id="promo-max-uses"
                   type="number"
                   value={form.maxUses}
                   onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
@@ -301,10 +305,11 @@ export function PromoCodesPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="promo-expires-at" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   Date d'expiration (optionnel)
                 </label>
                 <input
+                  id="promo-expires-at"
                   type="datetime-local"
                   value={form.expiresAt}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}

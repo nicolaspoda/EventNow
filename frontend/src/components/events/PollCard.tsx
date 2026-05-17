@@ -15,7 +15,6 @@ interface Props {
 
 const PollCard: React.FC<Props> = ({
   poll,
-  currentUserId,
   eventId,
   isOrganizer,
   onUpdate,

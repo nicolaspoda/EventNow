@@ -5,7 +5,11 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { EventType, ParticipationRequestStatus, PollStatus } from '@prisma/client';
+import {
+  EventType,
+  ParticipationRequestStatus,
+  PollStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesGateway } from '../messages/messages.gateway';
 import { CreatePollDto } from './dto/create-poll.dto';
@@ -318,7 +322,7 @@ export class PollsService {
     const isOrganizer = event.organizerId === userId;
     if (!isCreator && !isOrganizer) {
       throw new ForbiddenException(
-        'Seul le créateur ou l\'organisateur peut fermer ce sondage',
+        "Seul le créateur ou l'organisateur peut fermer ce sondage",
       );
     }
 
@@ -349,7 +353,7 @@ export class PollsService {
     const isOrganizer = event.organizerId === userId;
     if (!isCreator && !isOrganizer) {
       throw new ForbiddenException(
-        'Seul le créateur ou l\'organisateur peut supprimer ce sondage',
+        "Seul le créateur ou l'organisateur peut supprimer ce sondage",
       );
     }
 

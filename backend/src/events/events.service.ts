@@ -4,7 +4,11 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { OrderStatus, BookingStatus, ParticipationRequestStatus } from '@prisma/client';
+import {
+  OrderStatus,
+  BookingStatus,
+  ParticipationRequestStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
 import { FollowsService } from '../follows/follows.service';
@@ -327,9 +331,10 @@ export class EventsService {
       imagePublicId: event.imagePublicId,
       eventDate: eventDate ?? undefined,
       endDate: endDate ?? undefined,
-      cancelledAt: event.cancelledAt instanceof Date
-        ? event.cancelledAt.toISOString()
-        : event.cancelledAt ?? null,
+      cancelledAt:
+        event.cancelledAt instanceof Date
+          ? event.cancelledAt.toISOString()
+          : (event.cancelledAt ?? null),
       cancelReason: event.cancelReason ?? null,
       organizerId: event.organizerId,
       type: event.type,
@@ -404,7 +409,11 @@ export class EventsService {
       try {
         await this.uploadService.deleteImage(event.imagePublicId);
       } catch (err) {
-        this.logger.error(`Erreur suppression ancienne image: ${(err as Error).message}`, (err as Error).stack, 'EventsService');
+        this.logger.error(
+          `Erreur suppression ancienne image: ${(err as Error).message}`,
+          (err as Error).stack,
+          'EventsService',
+        );
       }
     }
 
@@ -702,14 +711,13 @@ export class EventsService {
     });
 
     // Get accepted participation requests (for community events)
-    const acceptedParticipants = await this.prisma.participationRequest.findMany(
-      {
+    const acceptedParticipants =
+      await this.prisma.participationRequest.findMany({
         where: { eventId, status: ParticipationRequestStatus.ACCEPTED },
         include: {
           user: { select: { id: true, email: true, username: true } },
         },
-      },
-    );
+      });
 
     // Build the full set of affected user IDs
     const orderUserIds = new Set(confirmedOrders.map((o) => o.userId));
@@ -719,9 +727,10 @@ export class EventsService {
     // Create in-app notifications
     if (allAffectedUserIds.size > 0) {
       const reasonSuffix = reason ? ` Raison : ${reason}` : '';
-      const notifBody = event.type === 'COMMUNITY'
-        ? `L'événement "${event.title}" a été annulé.${reasonSuffix}`
-        : `L'événement "${event.title}" a été annulé. Vous serez remboursé sous 5 à 10 jours ouvrés.${reasonSuffix}`;
+      const notifBody =
+        event.type === 'COMMUNITY'
+          ? `L'événement "${event.title}" a été annulé.${reasonSuffix}`
+          : `L'événement "${event.title}" a été annulé. Vous serez remboursé sous 5 à 10 jours ouvrés.${reasonSuffix}`;
       await this.notificationsService.createForManyUsers(
         Array.from(allAffectedUserIds),
         {
@@ -759,11 +768,11 @@ export class EventsService {
         const refundAmount = refundByUserId.get(user.id);
         await this.mailService.sendEventCancellation({
           userEmail: user.email,
-          userName:
-            user.username ?? user.email.split('@')[0],
+          userName: user.username ?? user.email.split('@')[0],
           eventTitle: event.title,
           eventDate: eventDateFormatted,
-          refundAmount: refundAmount && refundAmount > 0 ? refundAmount : undefined,
+          refundAmount:
+            refundAmount && refundAmount > 0 ? refundAmount : undefined,
           cancelReason: reason,
         });
       }),

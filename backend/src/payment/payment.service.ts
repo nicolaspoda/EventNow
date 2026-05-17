@@ -118,7 +118,11 @@ export class PaymentService {
     return this.configService.get<string>('STRIPE_PUBLISHABLE_KEY') || '';
   }
 
-  async refundPayment(paymentIntentId: string, orderId: string, amount?: number) {
+  async refundPayment(
+    paymentIntentId: string,
+    orderId: string,
+    amount?: number,
+  ) {
     if (!paymentIntentId) {
       throw new BadRequestException(
         'Aucun identifiant de paiement trouvé pour cette commande',

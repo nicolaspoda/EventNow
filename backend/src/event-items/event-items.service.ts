@@ -5,7 +5,11 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { EventType, ItemStatus, ParticipationRequestStatus } from '@prisma/client';
+import {
+  EventType,
+  ItemStatus,
+  ParticipationRequestStatus,
+} from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
@@ -191,10 +195,7 @@ export class EventItemsService {
       throw new NotFoundException('Article introuvable');
     }
 
-    if (
-      item.status === ItemStatus.CLAIMED &&
-      item.claimedById !== userId
-    ) {
+    if (item.status === ItemStatus.CLAIMED && item.claimedById !== userId) {
       throw new ConflictException('Item already claimed by someone else');
     }
 

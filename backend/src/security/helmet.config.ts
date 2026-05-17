@@ -21,7 +21,12 @@ export function configureHelmet(app: INestApplication) {
   ];
 
   const mergedHosts = Array.from(
-    new Set([...extraCspHosts, ...stripeScriptSrc, ...stripeFrameSrc, ...stripeConnectSrc]),
+    new Set([
+      ...extraCspHosts,
+      ...stripeScriptSrc,
+      ...stripeFrameSrc,
+      ...stripeConnectSrc,
+    ]),
   );
 
   app.use(
@@ -31,11 +36,7 @@ export function configureHelmet(app: INestApplication) {
           defaultSrc: ["'self'"],
           // Stripe nécessite 'unsafe-inline' pour les styles injectés dynamiquement
           // car le PaymentElement injecte des styles inline pour le theming
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://js.stripe.com',
-          ],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://js.stripe.com'],
           // Stripe peut appliquer des styles inline via attributs style="".
           // On l'autorise explicitement pour éviter les violations style-src-attr.
           styleSrcAttr: ["'unsafe-inline'"],

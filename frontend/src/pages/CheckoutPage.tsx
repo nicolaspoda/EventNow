@@ -269,11 +269,12 @@ const CheckoutPage: React.FC = () => {
               </div>
             ) : (
               <div>
-                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                <label htmlFor="promo-code-input" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                   Code promo (optionnel)
                 </label>
                 <div className="flex gap-2">
                   <input
+                    id="promo-code-input"
                     type="text"
                     value={promoInput}
                     onChange={(e) => setPromoInput(e.target.value.toUpperCase())}

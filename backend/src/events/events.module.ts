@@ -9,7 +9,14 @@ import { PaymentModule } from '../payment/payment.module';
 import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [PrismaModule, UploadModule, FollowsModule, NotificationsModule, PaymentModule, MailModule],
+  imports: [
+    PrismaModule,
+    UploadModule,
+    FollowsModule,
+    NotificationsModule,
+    PaymentModule,
+    MailModule,
+  ],
   controllers: [EventsController],
   providers: [EventsService],
   exports: [EventsService],

@@ -580,7 +580,11 @@ describe('EventsService', () => {
     it('should cancel event with no orders successfully', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(futureEvent);
 
-      const result = await service.cancelEvent('user-1', 'event-1', 'Test reason');
+      const result = await service.cancelEvent(
+        'user-1',
+        'event-1',
+        'Test reason',
+      );
 
       expect(result).toEqual(
         expect.objectContaining({
@@ -593,7 +597,10 @@ describe('EventsService', () => {
       expect(mockPrismaService.event.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: 'event-1' },
-          data: expect.objectContaining({ cancelledAt: expect.any(Date), cancelReason: 'Test reason' }),
+          data: expect.objectContaining({
+            cancelledAt: expect.any(Date),
+            cancelReason: 'Test reason',
+          }),
         }),
       );
     });
@@ -608,12 +615,18 @@ describe('EventsService', () => {
         status: 'succeeded',
         paymentIntentId: 'pi_test123',
       });
-      mockPrismaService.order.update.mockResolvedValue({ ...mockOrder, status: 'REFUNDED' });
+      mockPrismaService.order.update.mockResolvedValue({
+        ...mockOrder,
+        status: 'REFUNDED',
+      });
       mockPrismaService.ticket.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await service.cancelEvent('user-1', 'event-1');
 
-      expect(mockPaymentService.refundPayment).toHaveBeenCalledWith('pi_test123', 'order-1');
+      expect(mockPaymentService.refundPayment).toHaveBeenCalledWith(
+        'pi_test123',
+        'order-1',
+      );
       expect(result.cancelledOrders).toBe(1);
       expect(result.totalRefunded).toBe(100);
     });
@@ -642,7 +655,11 @@ describe('EventsService', () => {
       mockPrismaService.event.findUnique.mockResolvedValue(futureEvent);
       mockPrismaService.participationRequest.findMany.mockResolvedValue([
         {
-          user: { id: 'participant-1', email: 'participant@test.com', username: 'participant' },
+          user: {
+            id: 'participant-1',
+            email: 'participant@test.com',
+            username: 'participant',
+          },
         },
       ]);
 
@@ -658,17 +675,17 @@ describe('EventsService', () => {
     it('should throw NotFoundException if event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
 
-      await expect(service.cancelEvent('user-1', 'nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.cancelEvent('user-1', 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if not the organizer', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(futureEvent);
 
-      await expect(service.cancelEvent('other-user', 'event-1')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.cancelEvent('other-user', 'event-1'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw BadRequestException if event already cancelled', async () => {
@@ -698,7 +715,13 @@ describe('EventsService', () => {
       mockPrismaService.event.findUnique.mockResolvedValue(futureEvent);
       mockPrismaService.order.findMany.mockResolvedValue([mockOrder, order2]);
       mockPaymentService.refundPayment
-        .mockResolvedValueOnce({ refundId: 're_1', amount: 100, currency: 'EUR', status: 'succeeded', paymentIntentId: 'pi_test123' })
+        .mockResolvedValueOnce({
+          refundId: 're_1',
+          amount: 100,
+          currency: 'EUR',
+          status: 'succeeded',
+          paymentIntentId: 'pi_test123',
+        })
         .mockRejectedValueOnce(new Error('Stripe error'));
       mockPrismaService.order.update.mockResolvedValue({});
       mockPrismaService.ticket.updateMany.mockResolvedValue({ count: 1 });

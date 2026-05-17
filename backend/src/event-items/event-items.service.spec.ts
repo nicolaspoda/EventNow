@@ -225,7 +225,10 @@ describe('EventItemsService', () => {
       setupParticipantAccess();
       const item = makeItem({ addedById: USER_ID });
       mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.update.mockResolvedValue({ ...item, name: 'Updated' });
+      mockPrisma.eventItem.update.mockResolvedValue({
+        ...item,
+        name: 'Updated',
+      });
 
       await expect(
         service.updateItem(USER_ID, EVENT_ID, ITEM_ID, { name: 'Updated' }),
@@ -240,10 +243,15 @@ describe('EventItemsService', () => {
       });
       const item = makeItem({ addedById: OTHER_USER_ID });
       mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.update.mockResolvedValue({ ...item, name: 'Updated' });
+      mockPrisma.eventItem.update.mockResolvedValue({
+        ...item,
+        name: 'Updated',
+      });
 
       await expect(
-        service.updateItem(ORGANIZER_ID, EVENT_ID, ITEM_ID, { name: 'Updated' }),
+        service.updateItem(ORGANIZER_ID, EVENT_ID, ITEM_ID, {
+          name: 'Updated',
+        }),
       ).resolves.toBeDefined();
     });
 

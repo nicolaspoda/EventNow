@@ -20,7 +20,7 @@ describe('ReportsService', () => {
     },
   };
 
-  const mockUser = { id: 'user-1', username: 'alice' };
+  const _mockUser = { id: 'user-1', username: 'alice' };
   const mockTargetUser = { id: 'user-2', username: 'bob' };
   const mockEvent = { id: 'event-1', title: 'Cool Event' };
 
@@ -166,7 +166,9 @@ describe('ReportsService', () => {
           reason: ReportReason.SPAM,
           targetEventId: 'event-1',
         }),
-      ).rejects.toThrow(new ConflictException('You have already reported this'));
+      ).rejects.toThrow(
+        new ConflictException('You have already reported this'),
+      );
     });
 
     it('throws BadRequestException when type is EVENT but targetUserId is provided', async () => {

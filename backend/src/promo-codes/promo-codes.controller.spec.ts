@@ -37,11 +37,17 @@ describe('PromoCodesController', () => {
       discountType: DiscountType.PERCENTAGE,
       discountValue: 10,
     };
-    mockPromoCodesService.createPromoCode.mockResolvedValue({ id: 'promo-1', ...dto });
+    mockPromoCodesService.createPromoCode.mockResolvedValue({
+      id: 'promo-1',
+      ...dto,
+    });
 
     const result = await controller.createPromoCode(dto, mockUser as any);
 
-    expect(mockPromoCodesService.createPromoCode).toHaveBeenCalledWith('user-1', dto);
+    expect(mockPromoCodesService.createPromoCode).toHaveBeenCalledWith(
+      'user-1',
+      dto,
+    );
     expect(result).toMatchObject({ id: 'promo-1' });
   });
 
@@ -64,14 +70,22 @@ describe('PromoCodesController', () => {
 
     await controller.getEventPromoCodes('event-1', mockUser as any);
 
-    expect(mockPromoCodesService.getEventPromoCodes).toHaveBeenCalledWith('user-1', 'event-1');
+    expect(mockPromoCodesService.getEventPromoCodes).toHaveBeenCalledWith(
+      'user-1',
+      'event-1',
+    );
   });
 
   it('deletePromoCode delegates to service', async () => {
-    mockPromoCodesService.deletePromoCode.mockResolvedValue({ isActive: false });
+    mockPromoCodesService.deletePromoCode.mockResolvedValue({
+      isActive: false,
+    });
 
     await controller.deletePromoCode('promo-1', mockUser as any);
 
-    expect(mockPromoCodesService.deletePromoCode).toHaveBeenCalledWith('user-1', 'promo-1');
+    expect(mockPromoCodesService.deletePromoCode).toHaveBeenCalledWith(
+      'user-1',
+      'promo-1',
+    );
   });
 });

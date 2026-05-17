@@ -38,14 +38,21 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   @Throttle({ payment: { limit: 5, ttl: 60000 } })
   initiatePayment(@Body() dto: CreateOrderDto, @CurrentUser() user: AuthUser) {
-    return this.ordersService.initiatePayment(dto.bookingId, user.id, dto.promoCodeId);
+    return this.ordersService.initiatePayment(
+      dto.bookingId,
+      user.id,
+      dto.promoCodeId,
+    );
   }
 
   @Post('payment/confirm')
   @Roles('CLIENT', 'ORGANIZER')
   @HttpCode(HttpStatus.CREATED)
   @Throttle({ payment: { limit: 5, ttl: 60000 } })
-  confirmPayment(@Body() dto: ConfirmPaymentDto, @CurrentUser() user: AuthUser) {
+  confirmPayment(
+    @Body() dto: ConfirmPaymentDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.ordersService.confirmPayment(
       dto.bookingId,
       dto.paymentId,

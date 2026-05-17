@@ -13,7 +13,12 @@ import {
 } from '@nestjs/common';
 import { SkipThrottle } from '@nestjs/throttler';
 import { EventsService } from './events.service';
-import { CreateEventDto, UpdateEventDto, GetEventsQueryDto, CancelEventDto } from './dto';
+import {
+  CreateEventDto,
+  UpdateEventDto,
+  GetEventsQueryDto,
+  CancelEventDto,
+} from './dto';
 import { SearchEventsDto } from './dto/search-events.dto';
 import { EventCategory } from './dto/create-event.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -35,7 +40,10 @@ export class EventsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ORGANIZER', 'CLIENT')
   @HttpCode(HttpStatus.CREATED)
-  create(@CurrentUser() user: AuthUser, @Body() createEventDto: CreateEventDto) {
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body() createEventDto: CreateEventDto,
+  ) {
     return this.eventsService.create(user.id, createEventDto, user.role);
   }
 

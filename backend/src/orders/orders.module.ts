@@ -8,7 +8,13 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PromoCodesModule } from '../promo-codes/promo-codes.module';
 
 @Module({
-  imports: [PrismaModule, PaymentModule, MailModule, NotificationsModule, PromoCodesModule],
+  imports: [
+    PrismaModule,
+    PaymentModule,
+    MailModule,
+    NotificationsModule,
+    PromoCodesModule,
+  ],
   controllers: [OrdersController],
   providers: [OrdersService],
   exports: [OrdersService],

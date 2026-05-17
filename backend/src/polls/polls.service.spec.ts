@@ -99,7 +99,12 @@ describe('PollsService', () => {
     it('returns polls with vote counts and user vote info', async () => {
       const poll = makePoll({
         options: [
-          { id: OPTION_A_ID, text: 'Option A', order: 0, votes: [{ userId: USER_ID }] },
+          {
+            id: OPTION_A_ID,
+            text: 'Option A',
+            order: 0,
+            votes: [{ userId: USER_ID }],
+          },
           { id: OPTION_B_ID, text: 'Option B', order: 1, votes: [] },
         ],
         votes: [{ userId: USER_ID, optionId: OPTION_A_ID }],
@@ -120,7 +125,12 @@ describe('PollsService', () => {
       const poll = makePoll({
         votes: [{ userId: USER_ID, optionId: OPTION_A_ID }],
         options: [
-          { id: OPTION_A_ID, text: 'Option A', order: 0, votes: [{ userId: USER_ID }] },
+          {
+            id: OPTION_A_ID,
+            text: 'Option A',
+            order: 0,
+            votes: [{ userId: USER_ID }],
+          },
           { id: OPTION_B_ID, text: 'Option B', order: 1, votes: [] },
         ],
       });
@@ -134,16 +144,23 @@ describe('PollsService', () => {
     });
 
     it('throws BadRequestException for non-community event', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue({ ...mockEvent, type: 'PROFESSIONAL' });
+      mockPrisma.event.findUnique.mockResolvedValue({
+        ...mockEvent,
+        type: 'PROFESSIONAL',
+      });
 
-      await expect(service.getEventPolls(USER_ID, EVENT_ID)).rejects.toThrow(BadRequestException);
+      await expect(service.getEventPolls(USER_ID, EVENT_ID)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws ForbiddenException when user is not a participant', async () => {
       mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
       mockPrisma.participationRequest.findUnique.mockResolvedValue(null);
 
-      await expect(service.getEventPolls(USER_ID, EVENT_ID)).rejects.toThrow(ForbiddenException);
+      await expect(service.getEventPolls(USER_ID, EVENT_ID)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('sorts closed polls after open polls', async () => {
@@ -167,8 +184,14 @@ describe('PollsService', () => {
     });
 
     it('within open group sorts most recent first', async () => {
-      const older = makePoll({ id: 'poll-old', createdAt: new Date('2026-01-01') });
-      const newer = makePoll({ id: 'poll-new', createdAt: new Date('2026-01-05') });
+      const older = makePoll({
+        id: 'poll-old',
+        createdAt: new Date('2026-01-01'),
+      });
+      const newer = makePoll({
+        id: 'poll-new',
+        createdAt: new Date('2026-01-05'),
+      });
       setupOrganizerAccess();
       mockPrisma.poll.findMany.mockResolvedValue([older, newer]);
 
@@ -197,7 +220,10 @@ describe('PollsService', () => {
 
       expect(mockPrisma.poll.create).toHaveBeenCalled();
       expect(result.question).toBe(created.question);
-      expect(mockGateway.notifyPollCreated).toHaveBeenCalledWith(EVENT_ID, expect.any(Object));
+      expect(mockGateway.notifyPollCreated).toHaveBeenCalledWith(
+        EVENT_ID,
+        expect.any(Object),
+      );
     });
 
     it('creates a poll with multiple choice enabled', async () => {
@@ -227,16 +253,23 @@ describe('PollsService', () => {
     });
 
     it('throws BadRequestException for non-community event', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue({ ...mockEvent, type: 'PROFESSIONAL' });
+      mockPrisma.event.findUnique.mockResolvedValue({
+        ...mockEvent,
+        type: 'PROFESSIONAL',
+      });
 
-      await expect(service.createPoll(USER_ID, EVENT_ID, baseDto)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.createPoll(USER_ID, EVENT_ID, baseDto),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws ForbiddenException when user is not a participant', async () => {
       mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
       mockPrisma.participationRequest.findUnique.mockResolvedValue(null);
 
-      await expect(service.createPoll(USER_ID, EVENT_ID, baseDto)).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.createPoll(USER_ID, EVENT_ID, baseDto),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('throws BadRequestException when closesAt is in the past', async () => {
@@ -272,16 +305,25 @@ describe('PollsService', () => {
       const poll = makePoll();
       mockPrisma.poll.findUnique
         .mockResolvedValueOnce(poll)
-        .mockResolvedValueOnce(makePoll({
-          votes: [{ userId: USER_ID, optionId: OPTION_A_ID }],
-          options: [
-            { id: OPTION_A_ID, text: 'Option A', order: 0, votes: [{ userId: USER_ID }] },
-            { id: OPTION_B_ID, text: 'Option B', order: 1, votes: [] },
-          ],
-        }));
+        .mockResolvedValueOnce(
+          makePoll({
+            votes: [{ userId: USER_ID, optionId: OPTION_A_ID }],
+            options: [
+              {
+                id: OPTION_A_ID,
+                text: 'Option A',
+                order: 0,
+                votes: [{ userId: USER_ID }],
+              },
+              { id: OPTION_B_ID, text: 'Option B', order: 1, votes: [] },
+            ],
+          }),
+        );
       mockPrisma.pollVote.createMany.mockResolvedValue({ count: 1 });
 
-      const result = await service.vote(USER_ID, EVENT_ID, POLL_ID, { optionIds: [OPTION_A_ID] });
+      const result = await service.vote(USER_ID, EVENT_ID, POLL_ID, {
+        optionIds: [OPTION_A_ID],
+      });
 
       expect(mockPrisma.pollVote.createMany).toHaveBeenCalledWith({
         data: [{ pollId: POLL_ID, optionId: OPTION_A_ID, userId: USER_ID }],
@@ -295,17 +337,29 @@ describe('PollsService', () => {
       const poll = makePoll({ multipleChoice: true });
       mockPrisma.poll.findUnique
         .mockResolvedValueOnce(poll)
-        .mockResolvedValueOnce(makePoll({
-          multipleChoice: true,
-          votes: [
-            { userId: USER_ID, optionId: OPTION_A_ID },
-            { userId: USER_ID, optionId: OPTION_B_ID },
-          ],
-          options: [
-            { id: OPTION_A_ID, text: 'Option A', order: 0, votes: [{ userId: USER_ID }] },
-            { id: OPTION_B_ID, text: 'Option B', order: 1, votes: [{ userId: USER_ID }] },
-          ],
-        }));
+        .mockResolvedValueOnce(
+          makePoll({
+            multipleChoice: true,
+            votes: [
+              { userId: USER_ID, optionId: OPTION_A_ID },
+              { userId: USER_ID, optionId: OPTION_B_ID },
+            ],
+            options: [
+              {
+                id: OPTION_A_ID,
+                text: 'Option A',
+                order: 0,
+                votes: [{ userId: USER_ID }],
+              },
+              {
+                id: OPTION_B_ID,
+                text: 'Option B',
+                order: 1,
+                votes: [{ userId: USER_ID }],
+              },
+            ],
+          }),
+        );
       mockPrisma.pollVote.createMany.mockResolvedValue({ count: 2 });
 
       const result = await service.vote(USER_ID, EVENT_ID, POLL_ID, {
@@ -335,13 +389,17 @@ describe('PollsService', () => {
       mockPrisma.poll.findUnique.mockResolvedValue(makePoll());
 
       await expect(
-        service.vote(USER_ID, EVENT_ID, POLL_ID, { optionIds: ['nonexistent-id'] }),
+        service.vote(USER_ID, EVENT_ID, POLL_ID, {
+          optionIds: ['nonexistent-id'],
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('throws BadRequestException when poll is closed', async () => {
       setupParticipantAccess();
-      mockPrisma.poll.findUnique.mockResolvedValue(makePoll({ status: 'CLOSED' }));
+      mockPrisma.poll.findUnique.mockResolvedValue(
+        makePoll({ status: 'CLOSED' }),
+      );
 
       await expect(
         service.vote(USER_ID, EVENT_ID, POLL_ID, { optionIds: [OPTION_A_ID] }),
@@ -350,7 +408,9 @@ describe('PollsService', () => {
 
     it('throws BadRequestException when poll is expired via closesAt', async () => {
       setupParticipantAccess();
-      mockPrisma.poll.findUnique.mockResolvedValue(makePoll({ closesAt: pastDate }));
+      mockPrisma.poll.findUnique.mockResolvedValue(
+        makePoll({ closesAt: pastDate }),
+      );
 
       await expect(
         service.vote(USER_ID, EVENT_ID, POLL_ID, { optionIds: [OPTION_A_ID] }),
@@ -359,7 +419,9 @@ describe('PollsService', () => {
 
     it('throws BadRequestException when multiple options given on single-choice poll', async () => {
       setupParticipantAccess();
-      mockPrisma.poll.findUnique.mockResolvedValue(makePoll({ multipleChoice: false }));
+      mockPrisma.poll.findUnique.mockResolvedValue(
+        makePoll({ multipleChoice: false }),
+      );
 
       await expect(
         service.vote(USER_ID, EVENT_ID, POLL_ID, {
@@ -402,13 +464,20 @@ describe('PollsService', () => {
       });
       mockPrisma.poll.findUnique
         .mockResolvedValueOnce(poll)
-        .mockResolvedValueOnce(makePoll({
-          votes: [{ userId: USER_ID, optionId: OPTION_B_ID }],
-          options: [
-            { id: OPTION_A_ID, text: 'Option A', order: 0, votes: [] },
-            { id: OPTION_B_ID, text: 'Option B', order: 1, votes: [{ userId: USER_ID }] },
-          ],
-        }));
+        .mockResolvedValueOnce(
+          makePoll({
+            votes: [{ userId: USER_ID, optionId: OPTION_B_ID }],
+            options: [
+              { id: OPTION_A_ID, text: 'Option A', order: 0, votes: [] },
+              {
+                id: OPTION_B_ID,
+                text: 'Option B',
+                order: 1,
+                votes: [{ userId: USER_ID }],
+              },
+            ],
+          }),
+        );
       mockPrisma.pollVote.deleteMany.mockResolvedValue({ count: 1 });
       mockPrisma.pollVote.createMany.mockResolvedValue({ count: 1 });
 
@@ -428,10 +497,14 @@ describe('PollsService', () => {
 
     it('throws BadRequestException when poll is closed', async () => {
       setupParticipantAccess();
-      mockPrisma.poll.findUnique.mockResolvedValue(makePoll({ status: 'CLOSED' }));
+      mockPrisma.poll.findUnique.mockResolvedValue(
+        makePoll({ status: 'CLOSED' }),
+      );
 
       await expect(
-        service.changeVote(USER_ID, EVENT_ID, POLL_ID, { optionIds: [OPTION_B_ID] }),
+        service.changeVote(USER_ID, EVENT_ID, POLL_ID, {
+          optionIds: [OPTION_B_ID],
+        }),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -443,7 +516,12 @@ describe('PollsService', () => {
   describe('closePoll', () => {
     it('closes the poll when called by creator', async () => {
       setupParticipantAccess();
-      const poll = { id: POLL_ID, eventId: EVENT_ID, createdById: USER_ID, status: 'OPEN' };
+      const poll = {
+        id: POLL_ID,
+        eventId: EVENT_ID,
+        createdById: USER_ID,
+        status: 'OPEN',
+      };
       mockPrisma.poll.findUnique
         .mockResolvedValueOnce(poll)
         .mockResolvedValueOnce(makePoll({ status: 'CLOSED' }));
@@ -469,7 +547,9 @@ describe('PollsService', () => {
       };
       mockPrisma.poll.findUnique
         .mockResolvedValueOnce(poll)
-        .mockResolvedValueOnce(makePoll({ status: 'CLOSED', createdById: OTHER_USER_ID }));
+        .mockResolvedValueOnce(
+          makePoll({ status: 'CLOSED', createdById: OTHER_USER_ID }),
+        );
       mockPrisma.poll.update.mockResolvedValue({ ...poll, status: 'CLOSED' });
 
       await expect(
@@ -521,13 +601,22 @@ describe('PollsService', () => {
 
       await service.deletePoll(USER_ID, EVENT_ID, POLL_ID);
 
-      expect(mockPrisma.poll.delete).toHaveBeenCalledWith({ where: { id: POLL_ID } });
-      expect(mockGateway.notifyPollDeleted).toHaveBeenCalledWith(EVENT_ID, POLL_ID);
+      expect(mockPrisma.poll.delete).toHaveBeenCalledWith({
+        where: { id: POLL_ID },
+      });
+      expect(mockGateway.notifyPollDeleted).toHaveBeenCalledWith(
+        EVENT_ID,
+        POLL_ID,
+      );
     });
 
     it('deletes the poll when called by organizer', async () => {
       setupOrganizerAccess();
-      const poll = { id: POLL_ID, eventId: EVENT_ID, createdById: OTHER_USER_ID };
+      const poll = {
+        id: POLL_ID,
+        eventId: EVENT_ID,
+        createdById: OTHER_USER_ID,
+      };
       mockPrisma.poll.findUnique.mockResolvedValue(poll);
       mockPrisma.poll.delete.mockResolvedValue(poll);
 
@@ -540,7 +629,11 @@ describe('PollsService', () => {
 
     it('throws ForbiddenException when user is not creator or organizer', async () => {
       setupParticipantAccess();
-      const poll = { id: POLL_ID, eventId: EVENT_ID, createdById: OTHER_USER_ID };
+      const poll = {
+        id: POLL_ID,
+        eventId: EVENT_ID,
+        createdById: OTHER_USER_ID,
+      };
       mockPrisma.poll.findUnique.mockResolvedValue(poll);
 
       await expect(

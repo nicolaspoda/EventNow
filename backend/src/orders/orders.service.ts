@@ -48,7 +48,11 @@ export class OrdersService {
       this.configService.get<string>('STRIPE_WEBHOOK_SECRET') || '';
   }
 
-  async initiatePayment(bookingId: string, userId: string, promoCodeId?: string) {
+  async initiatePayment(
+    bookingId: string,
+    userId: string,
+    promoCodeId?: string,
+  ) {
     if (!promoCodeId) {
       return this.paymentService.createPaymentIntent(bookingId, userId);
     }
@@ -62,13 +66,18 @@ export class OrdersService {
       throw new NotFoundException('Réservation introuvable');
     }
 
-    const originalAmount = Number(booking.ticketCategory.price) * booking.quantity;
+    const originalAmount =
+      Number(booking.ticketCategory.price) * booking.quantity;
     const { finalAmount } = await this.promoCodesService.validatePromoCodeById(
       promoCodeId,
       originalAmount,
     );
 
-    return this.paymentService.createPaymentIntent(bookingId, userId, finalAmount);
+    return this.paymentService.createPaymentIntent(
+      bookingId,
+      userId,
+      finalAmount,
+    );
   }
 
   async confirmPayment(
@@ -120,7 +129,8 @@ export class OrdersService {
               existingOrder.tickets[0]?.ticketCategory?.event ??
               booking.ticketCategory.event,
             ticketCategory:
-              existingOrder.tickets[0]?.ticketCategory ?? booking.ticketCategory,
+              existingOrder.tickets[0]?.ticketCategory ??
+              booking.ticketCategory,
           };
         }
 
@@ -131,8 +141,7 @@ export class OrdersService {
         throw new BadRequestException('Réservation expirée');
       }
 
-      let totalAmount =
-        Number(booking.ticketCategory.price) * booking.quantity;
+      let totalAmount = Number(booking.ticketCategory.price) * booking.quantity;
 
       if (promoCodeId) {
         const { finalAmount } =
@@ -187,18 +196,23 @@ export class OrdersService {
     });
 
     if (promoCodeId) {
-      await this.promoCodesService.applyPromoCode(promoCodeId).catch(
-        (err: unknown) =>
+      await this.promoCodesService
+        .applyPromoCode(promoCodeId)
+        .catch((err: unknown) =>
           this.logger.error(
             `Erreur application code promo: ${(err as Error).message}`,
             (err as Error).stack,
             'OrdersService',
           ),
-      );
+        );
     }
 
     this.sendOrderConfirmationEmail(result, userId).catch((err: unknown) =>
-      this.logger.error(`Erreur envoi email confirmation: ${(err as Error).message}`, (err as Error).stack, 'OrdersService'),
+      this.logger.error(
+        `Erreur envoi email confirmation: ${(err as Error).message}`,
+        (err as Error).stack,
+        'OrdersService',
+      ),
     );
 
     await this.notificationsService.create({
@@ -598,10 +612,16 @@ export class OrdersService {
         await this.handlePaymentIntentFailed(event.data.object);
         break;
       case 'payment_intent.requires_action':
-        this.logger.log(`Payment requires action (3D Secure): ${event.data.object.id}`, 'OrdersService');
+        this.logger.log(
+          `Payment requires action (3D Secure): ${event.data.object.id}`,
+          'OrdersService',
+        );
         break;
       default:
-        this.logger.warn(`Unhandled event type: ${event.type}`, 'OrdersService');
+        this.logger.warn(
+          `Unhandled event type: ${event.type}`,
+          'OrdersService',
+        );
     }
 
     return { received: true };
@@ -614,7 +634,11 @@ export class OrdersService {
     const userId = paymentIntent.metadata.userId;
 
     if (!bookingId || !userId) {
-      this.logger.error(`Missing metadata in payment intent: ${paymentIntent.id}`, undefined, 'OrdersService');
+      this.logger.error(
+        `Missing metadata in payment intent: ${paymentIntent.id}`,
+        undefined,
+        'OrdersService',
+      );
       return;
     }
 
@@ -626,20 +650,34 @@ export class OrdersService {
     });
 
     if (!booking) {
-      this.logger.error(`Booking not found: ${bookingId}`, undefined, 'OrdersService');
+      this.logger.error(
+        `Booking not found: ${bookingId}`,
+        undefined,
+        'OrdersService',
+      );
       return;
     }
 
     if (booking.status === BookingStatus.CONFIRMED && booking.order) {
-      this.logger.log(`Payment already processed for booking: ${bookingId}`, 'OrdersService');
+      this.logger.log(
+        `Payment already processed for booking: ${bookingId}`,
+        'OrdersService',
+      );
       return;
     }
 
     try {
       await this.confirmPayment(bookingId, paymentIntent.id, userId);
-      this.logger.log(`Payment confirmed via webhook for booking: ${bookingId}`, 'OrdersService');
+      this.logger.log(
+        `Payment confirmed via webhook for booking: ${bookingId}`,
+        'OrdersService',
+      );
     } catch (err) {
-      this.logger.error(`Error confirming payment via webhook: ${(err as Error).message}`, (err as Error).stack, 'OrdersService');
+      this.logger.error(
+        `Error confirming payment via webhook: ${(err as Error).message}`,
+        (err as Error).stack,
+        'OrdersService',
+      );
     }
   }
 
@@ -648,7 +686,11 @@ export class OrdersService {
     const userId = paymentIntent.metadata.userId;
 
     if (!bookingId || !userId) {
-      this.logger.error(`Missing metadata in failed payment intent: ${paymentIntent.id}`, undefined, 'OrdersService');
+      this.logger.error(
+        `Missing metadata in failed payment intent: ${paymentIntent.id}`,
+        undefined,
+        'OrdersService',
+      );
       return;
     }
 
@@ -660,6 +702,9 @@ export class OrdersService {
       relatedId: bookingId,
     });
 
-    this.logger.warn(`Payment failed for booking: ${bookingId}`, 'OrdersService');
+    this.logger.warn(
+      `Payment failed for booking: ${bookingId}`,
+      'OrdersService',
+    );
   }
 }

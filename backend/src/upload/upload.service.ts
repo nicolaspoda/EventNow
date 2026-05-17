@@ -78,7 +78,11 @@ export class UploadService {
     try {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      this.logger.error(`Erreur suppression image: ${(error as Error).message}`, (error as Error).stack, 'UploadService');
+      this.logger.error(
+        `Erreur suppression image: ${(error as Error).message}`,
+        (error as Error).stack,
+        'UploadService',
+      );
       throw new BadRequestException("Erreur lors de la suppression de l'image");
     }
   }

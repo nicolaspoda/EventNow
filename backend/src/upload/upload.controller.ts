@@ -60,7 +60,11 @@ export class UploadController {
       };
     } catch (err: unknown) {
       const message = extractErrorMessage(err);
-      this.logger.error(`Upload image error: ${message}`, (err as Error).stack, 'UploadController');
+      this.logger.error(
+        `Upload image error: ${message}`,
+        (err as Error).stack,
+        'UploadController',
+      );
       throw new BadRequestException(message);
     }
   }

@@ -31,7 +31,10 @@ export class TicketsController {
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
-  validateTicket(@Body() dto: ValidateTicketDto, @CurrentUser() user: AuthUser) {
+  validateTicket(
+    @Body() dto: ValidateTicketDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     return this.ticketsService.validateTicket(dto.qrCode, user.id);
   }
 

@@ -238,7 +238,6 @@ export class ParticipantReviewsService {
       );
     }
 
-
     const acceptedParticipants =
       await this.prisma.participationRequest.findMany({
         where: {
