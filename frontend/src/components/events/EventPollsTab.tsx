@@ -49,7 +49,11 @@ const EventPollsTab: React.FC<Props> = ({ eventId, currentUserId, isOrganizer })
 
     const handlePollUpdated = (poll: Poll) => {
       setPolls((prev) =>
-        prev.map((p) => (p.id === poll.id ? poll : p)),
+        prev.map((p) =>
+          p.id === poll.id
+            ? { ...poll, hasVoted: p.hasVoted, myVotes: p.myVotes, isCreatedByMe: p.isCreatedByMe }
+            : p,
+        ),
       );
     };
 
