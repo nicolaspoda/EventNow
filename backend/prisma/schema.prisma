@@ -60,6 +60,27 @@ enum DiscountType {
   FIXED_AMOUNT
 }
 
+enum ReportType {
+  EVENT
+  USER
+}
+
+enum ReportReason {
+  INAPPROPRIATE_CONTENT
+  SPAM
+  FAKE_EVENT
+  HARASSMENT
+  SCAM
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
 enum StaffInvitationStatus {
   PENDING
   ACCEPTED
@@ -99,6 +120,9 @@ model User {
   staffInvitationsReceived StaffInvitation[] @relation("InvitationReceiver")
   eventStaffAssignments   EventStaff[]
 
+  reportsMade     Report[] @relation("ReportsMade")
+  reportsReceived Report[] @relation("ReportsReceived")
+
   @@index([username])
   @@map("users")
 }
@@ -134,6 +158,7 @@ model Event {
   staffAssignments EventStaff[]
   staffInvitations StaffInvitation[]
   promoCodes       PromoCode[]
+  reports          Report[]
 
   @@index([organizerId])
   @@index([eventDate])
@@ -433,4 +458,26 @@ model PromoCode {
   @@index([createdById])
   @@index([code])
   @@map("promo_codes")
+}
+
+model Report {
+  id            String       @id @default(cuid())
+  reporterId    String       @map("reporter_id")
+  reporter      User         @relation("ReportsMade", fields: [reporterId], references: [id])
+  type          ReportType
+  reason        ReportReason
+  description   String?      @db.Text
+  status        ReportStatus @default(PENDING)
+  targetUserId  String?      @map("target_user_id")
+  targetUser    User?        @relation("ReportsReceived", fields: [targetUserId], references: [id])
+  targetEventId String?      @map("target_event_id")
+  targetEvent   Event?       @relation(fields: [targetEventId], references: [id])
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@unique([reporterId, type, targetUserId])
+  @@unique([reporterId, type, targetEventId])
+  @@index([reporterId])
+  @@index([status])
+  @@map("reports")
 }

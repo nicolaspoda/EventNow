@@ -10,6 +10,7 @@ import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import { StarRating } from '../components/reviews/StarRating';
 import Button from '../components/ui/Button';
+import ReportModal from '../components/ReportModal';
 
 export default function UserPublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
@@ -23,6 +24,11 @@ export default function UserPublicProfilePage() {
 
   const isOwnProfile = currentUser && userId === currentUser.id;
   const isFriend = profile?.isFriend === true;
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(() =>
+    userId ? localStorage.getItem(`reported:user:${userId}`) === 'true' : false,
+  );
+  const [reportSuccessToast, setReportSuccessToast] = useState<string | null>(null);
 
   const refreshProfile = async () => {
     if (!userId) return;
@@ -79,6 +85,12 @@ export default function UserPublicProfilePage() {
       setFollowLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!reportSuccessToast) return;
+    const t = setTimeout(() => setReportSuccessToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [reportSuccessToast]);
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} />;
@@ -140,62 +152,77 @@ export default function UserPublicProfilePage() {
                   />
                 </div>
               )}
-              {!isOwnProfile && currentUser && profile.isFollowing !== undefined && (
-                <div className="mb-4">
-                  {profile.isFollowing ? (
+              {!isOwnProfile && currentUser && (
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  {profile.isFollowing !== undefined && (
                     <>
-                      <Button
-                        variant="outline"
-                        onClick={handleUnfollowClick}
-                        disabled={followLoading}
-                        aria-label={isFriend ? 'Ne plus suivre (vous ne serez plus amis)' : 'Ne plus suivre'}
-                      >
-                        {followLoading ? 'Chargement...' : isFriend ? 'Amis' : 'Abonné'}
-                      </Button>
-                      {confirmUnfollow && (
-                        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                          <div
-                            className="fixed inset-0 bg-black/50"
-                            onClick={() => setConfirmUnfollow(false)}
-                            aria-hidden="true"
-                          />
-                          <div className="relative z-10 bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 max-w-sm w-full">
-                            <p className="text-neutral-700 dark:text-neutral-200 mb-4">
-                              {isFriend
-                                ? 'Se désabonner ? Vous ne serez plus amis.'
-                                : 'Se désabonner ? Vous ne verrez plus les publications de cette personne.'}
-                            </p>
-                            <div className="flex gap-3">
-                              <Button
-                                variant="outline"
+                      {profile.isFollowing ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={handleUnfollowClick}
+                            disabled={followLoading}
+                            aria-label={isFriend ? 'Ne plus suivre (vous ne serez plus amis)' : 'Ne plus suivre'}
+                          >
+                            {followLoading ? 'Chargement...' : isFriend ? 'Amis' : 'Abonné'}
+                          </Button>
+                          {confirmUnfollow && (
+                            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                              <div
+                                className="fixed inset-0 bg-black/50"
                                 onClick={() => setConfirmUnfollow(false)}
-                                disabled={followLoading}
-                              >
-                                Annuler
-                              </Button>
-                              <Button
-                                variant="primary"
-                                onClick={handleConfirmUnfollow}
-                                disabled={followLoading}
-                                className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
-                              >
-                                {followLoading ? 'Chargement...' : 'Se désabonner'}
-                              </Button>
+                                aria-hidden="true"
+                              />
+                              <div className="relative z-10 bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 max-w-sm w-full">
+                                <p className="text-neutral-700 dark:text-neutral-200 mb-4">
+                                  {isFriend
+                                    ? 'Se désabonner ? Vous ne serez plus amis.'
+                                    : 'Se désabonner ? Vous ne verrez plus les publications de cette personne.'}
+                                </p>
+                                <div className="flex gap-3">
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setConfirmUnfollow(false)}
+                                    disabled={followLoading}
+                                  >
+                                    Annuler
+                                  </Button>
+                                  <Button
+                                    variant="primary"
+                                    onClick={handleConfirmUnfollow}
+                                    disabled={followLoading}
+                                    className="bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                                  >
+                                    {followLoading ? 'Chargement...' : 'Se désabonner'}
+                                  </Button>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          )}
+                        </>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          onClick={handleFollow}
+                          disabled={followLoading}
+                          aria-label="Suivre"
+                        >
+                          {followLoading ? 'Chargement...' : 'Suivre'}
+                        </Button>
                       )}
                     </>
-                  ) : (
-                    <Button
-                      variant="primary"
-                      onClick={handleFollow}
-                      disabled={followLoading}
-                      aria-label="Suivre"
-                    >
-                      {followLoading ? 'Chargement...' : 'Suivre'}
-                    </Button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => setReportModalOpen(true)}
+                    disabled={alreadyReported}
+                    className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3v18M3 6l9-3 9 3v9l-9-3-9 3V6z" />
+                    </svg>
+                    {alreadyReported ? 'Signalé' : 'Signaler'}
+                  </button>
                 </div>
               )}
 
@@ -327,7 +354,37 @@ export default function UserPublicProfilePage() {
             </div>
           </Card>
         )}
+
       </div>
+
+      {reportModalOpen && userId && (
+        <ReportModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          type="USER"
+          targetId={userId}
+          targetName={displayName}
+          onSuccess={(msg) => {
+            localStorage.setItem(`reported:user:${userId}`, 'true');
+            setAlreadyReported(true);
+            setReportSuccessToast(msg);
+          }}
+          onAlreadyReported={() => {
+            localStorage.setItem(`reported:user:${userId}`, 'true');
+            setAlreadyReported(true);
+          }}
+        />
+      )}
+
+      {reportSuccessToast && (
+        <div
+          className="fixed bottom-6 right-6 z-50 bg-success-500 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium"
+          role="status"
+          aria-live="polite"
+        >
+          {reportSuccessToast}
+        </div>
+      )}
     </div>
   );
 }
