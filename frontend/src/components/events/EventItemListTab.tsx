@@ -300,7 +300,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
           <button
             type="button"
             onClick={onClaim}
-            className="text-xs font-medium border border-success-500 text-success-600 dark:text-success-400 hover:bg-success-50 dark:hover:bg-success-900/20 rounded-lg px-3 py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
+            className="text-xs font-medium rounded-lg px-3 py-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-success-500 border border-success-500 text-success-500 bg-transparent hover:bg-success-500 hover:text-white"
           >
             Je m'en charge
           </button>
