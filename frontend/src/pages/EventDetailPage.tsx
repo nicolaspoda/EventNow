@@ -152,7 +152,7 @@ const EventDetailPage: React.FC = () => {
     try {
       await eventService.cancelEvent(id, cancelModal.reason || undefined);
       setCancelModal({ open: false, reason: '', loading: false, error: null });
-      const toastMsg = event.type === 'COMMUNITY'
+      const toastMsg = event?.type === 'COMMUNITY'
         ? 'Événement annulé. Les participants ont été notifiés.'
         : 'Événement annulé. Les remboursements ont été initiés.';
       setSuccessToast(toastMsg);

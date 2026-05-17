@@ -12,7 +12,7 @@ interface TicketCardProps {
 
 const TicketCard: React.FC<TicketCardProps> = ({ ticket, onViewQRCode, onDownload }) => {
   const category = ticket.ticketCategory ?? ticket.order?.ticketCategory;
-  const event = category?.event as (typeof category.event & { cancelledAt?: string | null }) | undefined;
+  const event = category?.event as (NonNullable<typeof category>['event'] & { cancelledAt?: string | null }) | undefined;
   const eventDateRaw = pickEventDate(event);
   const isEventCancelled = !!event?.cancelledAt;
 
