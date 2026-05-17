@@ -119,7 +119,7 @@ const CreatePollModal: React.FC<Props> = ({ eventId, onClose, onCreate }) => {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               disabled={loading}
-              placeholder="Quelle date vous convient ?"
+              placeholder="Ex : Quel thème préférez-vous ?"
               className="w-full rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
             />
             <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 text-right">
