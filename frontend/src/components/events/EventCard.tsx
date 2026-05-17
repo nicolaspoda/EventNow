@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { Event } from '../../types/event.types';
 import Badge from '../ui/Badge';
 import EventTypeBadge from './EventTypeBadge';
+import ShareButton from './ShareButton';
 import { safeFormat } from '../../utils/date';
 import { parsePrice, formatPrice } from '../../utils/price';
 import { getCloudinarySrcSet } from '../../utils/cloudinary';
@@ -316,27 +317,30 @@ const EventCard: React.FC<EventCardProps> = ({ event, currentUserId }) => {
             </div>
           )}
 
-          <Link
-            to={`/events/${event.id}`}
-            aria-label={`Voir les détails de ${event.title}`}
-            className="btn-modern btn-primary w-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-          >
-            Voir les détails
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/events/${event.id}`}
+              aria-label={`Voir les détails de ${event.title}`}
+              className="btn-modern btn-primary flex-1 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
+              Voir les détails
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+            <ShareButton eventId={event.id} eventTitle={event.title} variant="icon" />
+          </div>
         </div>
       </div>
     </article>

@@ -17,6 +17,7 @@ import messageService from '../services/messageService';
 import ReportModal from '../components/ReportModal';
 import EventItemListTab from '../components/events/EventItemListTab';
 import EventPollsTab from '../components/events/EventPollsTab';
+import ShareButton from '../components/events/ShareButton';
 
 interface CancelModalState {
   open: boolean;
@@ -264,6 +265,8 @@ const EventDetailPage: React.FC = () => {
           </Button>
 
           <div className="flex items-center gap-3">
+            <ShareButton eventId={event.id} eventTitle={event.title} variant="button" />
+
             {isAuthenticated && user != null && event.organizerId !== user.id && (
               <button
                 type="button"
