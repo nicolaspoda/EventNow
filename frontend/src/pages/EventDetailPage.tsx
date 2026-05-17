@@ -16,6 +16,7 @@ import { ReviewsList } from '../components/reviews/ReviewsList';
 import messageService from '../services/messageService';
 import ReportModal from '../components/ReportModal';
 import EventItemListTab from '../components/events/EventItemListTab';
+import EventPollsTab from '../components/events/EventPollsTab';
 
 interface CancelModalState {
   open: boolean;
@@ -34,7 +35,7 @@ const EventDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [canReview, setCanReview] = useState(false);
   const [reviewsVersion, setReviewsVersion] = useState(0);
-  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'reviews' | 'items'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'reviews' | 'items' | 'polls'>('details');
   const [cancelModal, setCancelModal] = useState<CancelModalState>({ open: false, reason: '', loading: false, error: null });
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
@@ -291,15 +292,18 @@ const EventDetailPage: React.FC = () => {
         {(() => {
           const showParticipantsTab = event.type === 'COMMUNITY' && isAuthenticated && user != null && event.organizerId === user.id;
           const isOrganizer = isAuthenticated && user != null && event.organizerId === user.id;
-          const showItemsTab =
+          const isCommunityParticipant =
             event.type === 'COMMUNITY' &&
             isAuthenticated &&
             user != null &&
             (isOrganizer || myParticipationRequest?.status === 'ACCEPTED');
-          const tabs: { id: 'details' | 'participants' | 'reviews' | 'items'; label: string }[] = [
+          const showItemsTab = isCommunityParticipant;
+          const showPollsTab = isCommunityParticipant;
+          const tabs: { id: 'details' | 'participants' | 'reviews' | 'items' | 'polls'; label: string }[] = [
             { id: 'details', label: 'Détails' },
             ...(showParticipantsTab ? [{ id: 'participants' as const, label: 'Participants' }] : []),
             ...(showItemsTab ? [{ id: 'items' as const, label: 'Liste de courses' }] : []),
+            ...(showPollsTab ? [{ id: 'polls' as const, label: 'Sondages' }] : []),
             { id: 'reviews', label: 'Avis' },
           ];
           return (
@@ -385,6 +389,16 @@ const EventDetailPage: React.FC = () => {
                 {activeTab === 'items' && showItemsTab && user != null && (
                   <div id="panel-items" role="tabpanel" aria-labelledby="tab-items">
                     <EventItemListTab
+                      eventId={event.id}
+                      currentUserId={user.id}
+                      isOrganizer={isOrganizer}
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'polls' && showPollsTab && user != null && (
+                  <div id="panel-polls" role="tabpanel" aria-labelledby="tab-polls">
+                    <EventPollsTab
                       eventId={event.id}
                       currentUserId={user.id}
                       isOrganizer={isOrganizer}

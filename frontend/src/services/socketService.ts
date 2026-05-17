@@ -1,6 +1,7 @@
 import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { Conversation, Message } from './messageService';
+import type { Poll } from './pollsService';
 
 function getSocketBaseUrl(): string {
   // Par défaut on utilise le same-origin (proxy Vite en dev, reverse proxy en prod).
@@ -37,6 +38,9 @@ interface SocketEvents {
   memberRemoved: (data: { conversationId: string; userId: string }) => void;
   userTyping: (data: { conversationId: string; userId: string; isTyping: boolean }) => void;
   newNotification: () => void;
+  pollCreated: (poll: Poll) => void;
+  pollUpdated: (poll: Poll) => void;
+  pollDeleted: (data: { pollId: string }) => void;
 }
 
 type EventName = keyof SocketEvents;
@@ -124,6 +128,18 @@ class SocketService {
         this.emit('newNotification');
       });
 
+      this.socket.on('pollCreated', (poll: Poll) => {
+        this.emit('pollCreated', poll);
+      });
+
+      this.socket.on('pollUpdated', (poll: Poll) => {
+        this.emit('pollUpdated', poll);
+      });
+
+      this.socket.on('pollDeleted', (data: { pollId: string }) => {
+        this.emit('pollDeleted', data);
+      });
+
       setTimeout(() => {
         if (this.isConnecting) {
           this.isConnecting = false;
@@ -191,6 +207,28 @@ class SocketService {
   sendTypingIndicator(conversationId: string, isTyping: boolean) {
     if (this.socket?.connected) {
       this.socket.emit('typing', { conversationId, isTyping });
+    }
+  }
+
+  joinEventRoom(eventId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.socket?.connected) {
+        reject(new Error('Socket not connected'));
+        return;
+      }
+      this.socket.emit('joinEventRoom', { eventId }, (response: { error?: string }) => {
+        if (response?.error) {
+          reject(new Error(response.error));
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  leaveEventRoom(eventId: string) {
+    if (this.socket?.connected) {
+      this.socket.emit('leaveEventRoom', { eventId });
     }
   }
 
