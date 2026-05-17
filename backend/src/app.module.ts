@@ -29,6 +29,7 @@ import { StaffInvitationsModule } from './staff-invitations/staff-invitations.mo
 import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { ReportsModule } from './reports/reports.module';
 import { EventItemsModule } from './event-items/event-items.module';
+import { PollsModule } from './polls/polls.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -75,6 +76,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     PromoCodesModule,
     ReportsModule,
     EventItemsModule,
+    PollsModule,
   ],
   controllers: [AppController],
   providers: [
