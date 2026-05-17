@@ -14,6 +14,7 @@ import Button from '../components/ui/Button';
 import { ReviewForm } from '../components/reviews/ReviewForm';
 import { ReviewsList } from '../components/reviews/ReviewsList';
 import messageService from '../services/messageService';
+import ReportModal from '../components/ReportModal';
 
 interface CancelModalState {
   open: boolean;
@@ -35,6 +36,8 @@ const EventDetailPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'reviews'>('details');
   const [cancelModal, setCancelModal] = useState<CancelModalState>({ open: false, reason: '', loading: false, error: null });
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -161,6 +164,14 @@ const EventDetailPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (id) {
+      setAlreadyReported(
+        localStorage.getItem(`reported:event:${id}`) === 'true',
+      );
+    }
+  }, [id]);
+
+  useEffect(() => {
     if (!successToast) return;
     const t = setTimeout(() => setSuccessToast(null), 5000);
     return () => clearTimeout(t);
@@ -250,14 +261,30 @@ const EventDetailPage: React.FC = () => {
             ← Retour
           </Button>
 
-          {isAuthenticated && user != null && event.organizerId === user.id && !event.cancelledAt && event.eventDate > new Date().toISOString() && (
-            <Button
-              variant="danger"
-              onClick={() => setCancelModal((prev) => ({ ...prev, open: true }))}
-            >
-              Annuler l'événement
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            {isAuthenticated && user != null && event.organizerId !== user.id && (
+              <button
+                type="button"
+                onClick={() => setReportModalOpen(true)}
+                disabled={alreadyReported}
+                className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3v18M3 6l9-3 9 3v9l-9-3-9 3V6z" />
+                </svg>
+                {alreadyReported ? 'Signalé' : 'Signaler'}
+              </button>
+            )}
+
+            {isAuthenticated && user != null && event.organizerId === user.id && !event.cancelledAt && event.eventDate > new Date().toISOString() && (
+              <Button
+                variant="danger"
+                onClick={() => setCancelModal((prev) => ({ ...prev, open: true }))}
+              >
+                Annuler l'événement
+              </Button>
+            )}
+          </div>
         </div>
 
         {(() => {
@@ -371,6 +398,25 @@ const EventDetailPage: React.FC = () => {
           );
         })()}
       </div>
+
+      {reportModalOpen && event && (
+        <ReportModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          type="EVENT"
+          targetId={event.id}
+          targetName={event.title}
+          onSuccess={(msg) => {
+            localStorage.setItem(`reported:event:${event.id}`, 'true');
+            setAlreadyReported(true);
+            setSuccessToast(msg);
+          }}
+          onAlreadyReported={() => {
+            localStorage.setItem(`reported:event:${event.id}`, 'true');
+            setAlreadyReported(true);
+          }}
+        />
+      )}
 
       {/* Success toast */}
       {successToast && (

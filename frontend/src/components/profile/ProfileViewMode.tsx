@@ -6,6 +6,7 @@ import { useAuth } from '../../utils/useAuth';
 import Button from '../ui/Button';
 import { ProfileStatsRow } from './ProfileStatsRow';
 import { StarRating } from '../reviews/StarRating';
+import ReportModal from '../ReportModal';
 
 const roleLabels: Record<string, string> = {
   CLIENT: 'Client',
@@ -36,6 +37,11 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
   const [followLoading, setFollowLoading] = useState(false);
   const [localProfile, setLocalProfile] = useState(profile);
   const [confirmUnfollow, setConfirmUnfollow] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [alreadyReported, setAlreadyReported] = useState(
+    () => localStorage.getItem(`reported:user:${userId}`) === 'true',
+  );
+  const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const isOwnProfile = currentUser && userId === currentUser.id;
   const showFollowButton = !isOwnProfile && currentUser && localProfile.isFollowing !== undefined;
@@ -45,6 +51,12 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
   useEffect(() => {
     setLocalProfile(profile);
   }, [profile]);
+
+  useEffect(() => {
+    if (!successToast) return;
+    const t = setTimeout(() => setSuccessToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [successToast]);
 
   const handleFollow = async () => {
     if (!currentUser || followLoading || localProfile.isFollowing === undefined) return;
@@ -209,6 +221,22 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
                   )}
                 </div>
               )}
+              {!isOwnProfile && currentUser && (
+                <div className="mt-3 w-full flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setReportModalOpen(true)}
+                    disabled={alreadyReported}
+                    className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-600 rounded-lg px-3 py-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-neutral-700 dark:hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3v18M3 6l9-3 9 3v9l-9-3-9 3V6z" />
+                    </svg>
+                    {alreadyReported ? 'Signalé' : 'Signaler'}
+                  </button>
+                </div>
+              )}
+
               <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-700 w-full text-center">
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">Membre depuis</p>
                 <p className="text-sm text-neutral-900 dark:text-neutral-100 font-medium">{formatDate(localProfile.createdAt)}</p>
@@ -294,6 +322,35 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
           )}
         </div>
       </div>
+
+      {reportModalOpen && (
+        <ReportModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          type="USER"
+          targetId={userId}
+          targetName={localProfile.username?.trim() || localProfile.email.split('@')[0]}
+          onSuccess={(msg) => {
+            localStorage.setItem(`reported:user:${userId}`, 'true');
+            setAlreadyReported(true);
+            setSuccessToast(msg);
+          }}
+          onAlreadyReported={() => {
+            localStorage.setItem(`reported:user:${userId}`, 'true');
+            setAlreadyReported(true);
+          }}
+        />
+      )}
+
+      {successToast && (
+        <div
+          className="fixed bottom-6 right-6 z-50 bg-success-500 text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium"
+          role="status"
+          aria-live="polite"
+        >
+          {successToast}
+        </div>
+      )}
     </div>
   );
 }
