@@ -38,7 +38,7 @@ export class EventsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: AuthUser,
@@ -102,7 +102,7 @@ export class EventsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
@@ -114,7 +114,7 @@ export class EventsController {
 
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.OK)
   cancelEvent(
     @Param('id') id: string,
@@ -126,7 +126,7 @@ export class EventsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.eventsService.remove(id, user.id);

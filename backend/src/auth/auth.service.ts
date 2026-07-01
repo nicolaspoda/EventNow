@@ -62,7 +62,7 @@ export class AuthService {
         username: dto.username,
         email: dto.email,
         passwordHash,
-        role: 'CLIENT',
+        role: 'USER',
       },
     });
 
@@ -482,7 +482,7 @@ export class AuthService {
         username,
         email: googleUser.email,
         googleId: googleUser.googleId,
-        role: 'CLIENT',
+        role: 'USER',
       },
     });
 

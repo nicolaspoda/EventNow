@@ -20,7 +20,7 @@ describe('OrdersController', () => {
     handleStripeWebhook: jest.fn(),
   };
 
-  const mockUser = { id: 'user-1', email: 'test@test.com', role: 'CLIENT' } as any;
+  const mockUser = { id: 'user-1', email: 'test@test.com', role: 'USER' } as any;
 
   const mockOrder = {
     id: 'order-1',

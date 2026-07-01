@@ -41,7 +41,7 @@ export class EventsService {
       createEventDto.type === EventType.COMMUNITY
         ? EventType.COMMUNITY
         : EventType.PROFESSIONAL;
-    if (userRole === 'CLIENT' && requestedType === EventType.PROFESSIONAL) {
+    if (userRole === 'USER' && requestedType === EventType.PROFESSIONAL) {
       throw new ForbiddenException(
         'Seuls les organisateurs peuvent créer des événements professionnels.',
       );

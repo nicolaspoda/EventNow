@@ -76,7 +76,7 @@ export function RegisterOrganizerPage() {
         <p className="text-sm text-primary-800 dark:text-primary-200">
           Cette page est réservée aux organisateurs d'événements. Si vous souhaitez simplement acheter des billets,{' '}
           <Link to="/register" className="font-semibold underline">
-            créez un compte client
+            créez un compte utilisateur
           </Link>
           .
         </p>
@@ -158,7 +158,7 @@ export function RegisterOrganizerPage() {
             to="/register"
             className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-semibold"
           >
-            Créer un compte client
+            Créer un compte utilisateur
           </Link>
         </p>
         <p className="text-neutral-600 dark:text-neutral-400">

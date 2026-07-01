@@ -60,7 +60,7 @@ describe('DashboardController', () => {
 
   describe('getClientOverview', () => {
     it('should call service with user id', async () => {
-      const mockUser = { id: 'user-2', role: 'CLIENT' };
+      const mockUser = { id: 'user-2', role: 'USER' };
       const mockOverview = {
         totalEvents: 3,
         upcomingEvents: 2,
@@ -109,7 +109,7 @@ describe('DashboardController', () => {
 
   describe('getClientEvents', () => {
     it('should return client events', async () => {
-      const mockUser = { id: 'user-2', role: 'CLIENT' } as any;
+      const mockUser = { id: 'user-2', role: 'USER' } as any;
       mockDashboardService.getClientEvents.mockResolvedValue([{ id: 'e-2' }]);
       const result = await controller.getClientEvents(mockUser);
       expect(service.getClientEvents).toHaveBeenCalledWith('user-2');
@@ -119,7 +119,7 @@ describe('DashboardController', () => {
 
   describe('getEventParticipants', () => {
     it('should return event participants', async () => {
-      const mockUser = { id: 'user-2', role: 'CLIENT' } as any;
+      const mockUser = { id: 'user-2', role: 'USER' } as any;
       mockDashboardService.getEventParticipants.mockResolvedValue([{ id: 'p-1' }]);
       const result = await controller.getEventParticipants('event-1', mockUser);
       expect(service.getEventParticipants).toHaveBeenCalledWith('event-1', 'user-2');

@@ -30,7 +30,7 @@ function toISOString(dateStr: string): string {
 export function CreateEventPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isCommunity = user?.role === 'CLIENT';
+  const isCommunity = user?.role === 'USER';
   const minTicketPrice = 0.5;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -179,7 +179,7 @@ export function CreateEventPage() {
       if (user?.role === 'ORGANIZER') {
         navigate('/dashboard/organizer');
       } else {
-        navigate('/dashboard/client');
+        navigate('/dashboard/user');
       }
     } catch (err: unknown) {
       const res = err && typeof err === 'object' && 'response' in err

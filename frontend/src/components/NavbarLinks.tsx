@@ -209,13 +209,13 @@ export function NavbarLinks() {
           )}
         </div>
 
-        {user?.role === 'CLIENT' && (
-          <Link to="/dashboard/client" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
+        {user?.role === 'USER' && (
+          <Link to="/dashboard/user" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
             Mon tableau de bord
           </Link>
         )}
 
-        {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (
+        {(user?.role === 'ORGANIZER' || user?.role === 'USER') && (
           <Link
             to="/events/create"
             className="flex-shrink-0 flex items-center px-3 py-2 rounded-lg text-sm font-medium text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30 hover:text-accent-700 dark:hover:text-accent-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"

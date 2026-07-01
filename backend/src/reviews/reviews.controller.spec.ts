@@ -14,7 +14,7 @@ describe('ReviewsController', () => {
     delete: jest.fn(),
   };
 
-  const mockClientUser = { id: 'user-1', role: 'CLIENT' };
+  const mockClientUser = { id: 'user-1', role: 'USER' };
   const mockOrganizerUser = { id: 'org-1', role: 'ORGANIZER' };
 
   beforeEach(async () => {

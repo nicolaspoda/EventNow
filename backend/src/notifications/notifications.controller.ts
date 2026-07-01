@@ -22,7 +22,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getForUser(
     @CurrentUser() user: { id: string },
@@ -32,35 +32,35 @@ export class NotificationsController {
   }
 
   @Get('unread-count')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getUnreadCount(@CurrentUser() user: { id: string }) {
     return this.notificationsService.getUnreadCount(user.id);
   }
 
   @Patch(':id/read')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   markAsRead(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.notificationsService.markAsRead(id, user.id);
   }
 
   @Patch('read-all')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   markAllAsRead(@CurrentUser() user: { id: string }) {
     return this.notificationsService.markAllAsRead(user.id);
   }
 
   @Delete(':id')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   delete(@Param('id') id: string, @CurrentUser() user: { id: string }) {
     return this.notificationsService.delete(id, user.id);
   }
 
   @Post('test/create-samples')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.CREATED)
   async createTestNotifications(@CurrentUser() user: { id: string }) {
     if (process.env.NODE_ENV === 'production') {

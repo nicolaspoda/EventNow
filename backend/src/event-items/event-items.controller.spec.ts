@@ -13,7 +13,7 @@ describe('EventItemsController', () => {
     claimItem: jest.fn(),
   };
 
-  const mockUser = { id: 'user-1', role: 'CLIENT' } as any;
+  const mockUser = { id: 'user-1', role: 'USER' } as any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

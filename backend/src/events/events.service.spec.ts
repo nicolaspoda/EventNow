@@ -151,7 +151,7 @@ describe('EventsService', () => {
   describe('create', () => {
     it('should throw ForbiddenException for CLIENT creating PROFESSIONAL event', async () => {
       await expect(
-        service.create('user-1', mockCreateDto, 'CLIENT'),
+        service.create('user-1', mockCreateDto, 'USER'),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -190,7 +190,7 @@ describe('EventsService', () => {
       mockFollowsService.getFollowerIds.mockResolvedValue([]);
       mockFollowsService.getFriendIds.mockResolvedValue([]);
 
-      const result = await service.create('user-1', communityDto, 'CLIENT');
+      const result = await service.create('user-1', communityDto, 'USER');
       expect(result.type).toBe('COMMUNITY');
     });
 

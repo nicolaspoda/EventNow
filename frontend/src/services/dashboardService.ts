@@ -19,19 +19,19 @@ export const dashboardService = {
     return response.data;
   },
 
-  getClientOverview: async () => {
-    const response = await api.get('/dashboard/client/overview');
+  getUserOverview: async () => {
+    const response = await api.get('/dashboard/user/overview');
     return response.data;
   },
 
-  getClientEvents: async () => {
-    const response = await api.get('/dashboard/client/events');
+  getUserEvents: async () => {
+    const response = await api.get('/dashboard/user/events');
     return response.data;
   },
 
   getEventParticipants: async (eventId: string) => {
     const response = await api.get(
-      `/dashboard/client/events/${eventId}/participants`,
+      `/dashboard/user/events/${eventId}/participants`,
     );
     return response.data;
   },

@@ -26,7 +26,7 @@ export class ReviewsController {
 
   @Post('events/:eventId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('CLIENT')
+  @Roles('USER')
   async create(
     @Param('eventId') eventId: string,
     @Body() dto: CreateReviewDto,
@@ -52,7 +52,7 @@ export class ReviewsController {
     @Param('eventId') eventId: string,
     @CurrentUser() user: AuthUser,
   ) {
-    if (user.role !== 'CLIENT') {
+    if (user.role !== 'USER') {
       return {
         canReview: false,
         reason: 'Seuls les clients peuvent laisser un avis',
@@ -63,14 +63,14 @@ export class ReviewsController {
 
   @Get('my-reviews')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('CLIENT')
+  @Roles('USER')
   async getMyReviews(@CurrentUser() user: AuthUser) {
     return this.reviewsService.findAllByUser(user.id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('CLIENT')
+  @Roles('USER')
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateReviewDto,
@@ -81,7 +81,7 @@ export class ReviewsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('CLIENT')
+  @Roles('USER')
   async delete(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.reviewsService.delete(id, user.id);
   }

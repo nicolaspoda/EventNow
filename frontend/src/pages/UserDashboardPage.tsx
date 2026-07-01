@@ -9,14 +9,14 @@ import { PendingRequestsList } from '../components/dashboard/PendingRequestsList
 import { FriendsActivitySection } from '../components/dashboard/FriendsActivitySection';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import type {
-  ClientOverview,
+  UserOverview,
   DashboardEvent,
 } from '../types/dashboard.types';
 import type { ParticipationRequest } from '../types/participation.types';
 
-export const ClientDashboardPage: React.FC = () => {
+export const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const [overview, setOverview] = useState<ClientOverview | null>(null);
+  const [overview, setOverview] = useState<UserOverview | null>(null);
   const [events, setEvents] = useState<DashboardEvent[]>([]);
   const [pendingRequests, setPendingRequests] = useState<ParticipationRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,8 +36,8 @@ export const ClientDashboardPage: React.FC = () => {
     try {
       setError(null);
       const [overviewData, eventsData, pendingData] = await Promise.all([
-        dashboardService.getClientOverview(),
-        dashboardService.getClientEvents(),
+        dashboardService.getUserOverview(),
+        dashboardService.getUserEvents(),
         participationService.getPendingForOrganizer().catch(() => []),
       ]);
       setOverview(overviewData);

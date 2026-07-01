@@ -15,7 +15,7 @@ datasource db {
 }
 
 enum Role {
-  CLIENT
+  USER
   ORGANIZER
 }
 
@@ -106,7 +106,7 @@ model User {
   googleId         String?  @unique @map("google_id")
   avatarUrl        String?  @map("avatar_url")
   organizationName String?  @map("organization_name")
-  role             Role     @default(CLIENT)
+  role             Role     @default(USER)
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 

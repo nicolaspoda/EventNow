@@ -90,7 +90,7 @@ describe('StaffInvitationsService', () => {
 
   describe('createInvitation', () => {
     it('should throw BadRequestException if inviter is not ORGANIZER', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue({ ...mockOrganizerUser, role: 'CLIENT' });
+      mockPrismaService.user.findUnique.mockResolvedValue({ ...mockOrganizerUser, role: 'USER' });
       await expect(service.createInvitation('org-1', { eventId: 'event-1', email: 'test@test.com' })).rejects.toThrow(BadRequestException);
     });
 

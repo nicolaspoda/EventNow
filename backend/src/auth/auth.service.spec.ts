@@ -90,7 +90,7 @@ describe('AuthService', () => {
         username: registerDto.username,
         email: registerDto.email,
         passwordHash: hashedPassword,
-        role: Role.CLIENT,
+        role: Role.USER,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -151,7 +151,7 @@ describe('AuthService', () => {
         username: 'testuser',
         email: loginDto.email,
         passwordHash: 'hashedPassword',
-        role: Role.CLIENT,
+        role: Role.USER,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -195,7 +195,7 @@ describe('AuthService', () => {
         id: '1',
         email: loginDto.email,
         passwordHash: 'hashedPassword',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
@@ -213,12 +213,12 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockUser = {
         id: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         passwordHash: 'hash',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -263,7 +263,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockRedisService.isTokenBlacklisted.mockResolvedValue(false);
@@ -282,7 +282,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         exp: Math.floor(Date.now() / 1000) + 3600,
       };
 
@@ -309,7 +309,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         // no exp
       };
 
@@ -326,7 +326,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         exp: Math.floor(Date.now() / 1000) - 3600, // 1h in the past
       };
 
@@ -344,7 +344,7 @@ describe('AuthService', () => {
         id: 'user-123',
         email: 'test@gmail.com',
         googleId: 'google-123',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(mockUser);
@@ -365,7 +365,7 @@ describe('AuthService', () => {
         id: 'user-123',
         email: 'test@gmail.com',
         googleId: null,
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       const updatedUser = {
@@ -397,7 +397,7 @@ describe('AuthService', () => {
         email: 'new@gmail.com',
         googleId: 'google-789',
         username: 'newuser',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
@@ -415,7 +415,7 @@ describe('AuthService', () => {
         data: expect.objectContaining({
           email: 'new@gmail.com',
           googleId: 'google-789',
-          role: 'CLIENT',
+          role: 'USER',
           username: expect.any(String),
         }),
       });
@@ -427,7 +427,7 @@ describe('AuthService', () => {
         email: 'test3@gmail.com',
         googleId: 'google-999',
         username: 'test3',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
@@ -445,7 +445,7 @@ describe('AuthService', () => {
         data: expect.objectContaining({
           email: 'test3@gmail.com',
           googleId: 'google-999',
-          role: 'CLIENT',
+          role: 'USER',
           username: expect.any(String),
         }),
       });
@@ -457,7 +457,7 @@ describe('AuthService', () => {
       mockPrismaService.user.findFirst
         .mockResolvedValueOnce({ id: 'existing-1' }) // 'test' taken
         .mockResolvedValueOnce(null); // 'test_1' available
-      const newUser = { id: 'user-new', email: 'test@gmail.com', googleId: 'gid', username: 'test_1', role: Role.CLIENT };
+      const newUser = { id: 'user-new', email: 'test@gmail.com', googleId: 'gid', username: 'test_1', role: Role.USER };
       mockPrismaService.user.create.mockResolvedValue(newUser);
       const result = await service.validateGoogleUser({ googleId: 'gid', email: 'test@gmail.com' });
       expect(result.username).toBe('test_1');
@@ -518,7 +518,7 @@ describe('AuthService', () => {
       id: 'user-1',
       username: 'testuser',
       email: 'test@test.com',
-      role: 'CLIENT',
+      role: 'USER',
       avatarUrl: null,
       createdAt: new Date('2024-01-01'),
       _count: { orders: 2, reviews: 1, organizedEvents: 0 },
@@ -548,7 +548,7 @@ describe('AuthService', () => {
       id: 'user-1',
       username: 'testuser',
       email: 'test@test.com',
-      role: 'CLIENT',
+      role: 'USER',
       avatarUrl: null,
       createdAt: new Date('2024-01-01'),
     };
@@ -597,7 +597,7 @@ describe('AuthService', () => {
 
   describe('updateProfile', () => {
     it('should update avatar url', async () => {
-      const updated = { id: 'user-1', username: 'u', email: 'e@t.com', role: 'CLIENT', avatarUrl: 'http://img', createdAt: new Date('2024-01-01') };
+      const updated = { id: 'user-1', username: 'u', email: 'e@t.com', role: 'USER', avatarUrl: 'http://img', createdAt: new Date('2024-01-01') };
       mockPrismaService.user.update.mockResolvedValue(updated);
       const result = await service.updateProfile('user-1', { avatarUrl: 'http://img' });
       expect(result.avatarUrl).toBe('http://img');

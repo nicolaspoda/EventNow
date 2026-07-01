@@ -8,7 +8,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { RegisterOrganizerPage } from './pages/RegisterOrganizerPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { OrganizerDashboardPage } from './pages/OrganizerDashboardPage';
-import { ClientDashboardPage } from './pages/ClientDashboardPage';
+import { UserDashboardPage } from './pages/UserDashboardPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
@@ -180,10 +180,10 @@ function AppContent() {
           element={<AcceptStaffInvitationPage />}
         />
         <Route
-          path="/dashboard/client"
+          path="/dashboard/user"
           element={
-            <ProtectedRoute roles={['CLIENT']}>
-              <ClientDashboardPage />
+            <ProtectedRoute roles={['USER']}>
+              <UserDashboardPage />
             </ProtectedRoute>
           }
         />
@@ -206,7 +206,7 @@ function AppContent() {
         <Route
           path="/dashboard/events/:id/participants"
           element={
-            <ProtectedRoute roles={['CLIENT']}>
+            <ProtectedRoute roles={['USER']}>
               <EventParticipantsPage />
             </ProtectedRoute>
           }

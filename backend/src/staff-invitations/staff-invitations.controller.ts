@@ -40,7 +40,7 @@ export class StaffInvitationsController {
   }
 
   @Get('pending')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   async getPendingInvitations(@CurrentUser() user: { email: string }) {
     return this.staffInvitationsService.getPendingInvitationsForEmail(
       user.email,
@@ -53,7 +53,7 @@ export class StaffInvitationsController {
   }
 
   @Post('accept')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   async acceptInvitation(
     @CurrentUser() user: { id: string },
@@ -63,7 +63,7 @@ export class StaffInvitationsController {
   }
 
   @Post('decline')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   async declineInvitation(
     @CurrentUser() user: { id: string },

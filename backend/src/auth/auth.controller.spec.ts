@@ -64,7 +64,7 @@ describe('AuthController', () => {
           id: '1',
           username: 'testuser',
           email: registerDto.email,
-          role: Role.CLIENT,
+          role: Role.USER,
         },
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -76,7 +76,7 @@ describe('AuthController', () => {
 
       expect(result).toEqual(expectedResult);
       expect(authService.register).toHaveBeenCalledWith(registerDto);
-      expect(result.user.role).toBe(Role.CLIENT);
+      expect(result.user.role).toBe(Role.USER);
     });
   });
 
@@ -116,7 +116,7 @@ describe('AuthController', () => {
         user: {
           id: '1',
           email: loginDto.email,
-          role: Role.CLIENT,
+          role: Role.USER,
         },
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -164,7 +164,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       const result = await controller.getProfile(mockUser);
@@ -178,7 +178,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockReq = { user: mockUser } as any;
       const mockRes = {
@@ -209,7 +209,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockReq = { user: mockUser } as any;
       const mockRes = { redirect: jest.fn() } as any;
@@ -234,7 +234,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockReq = { user: mockUser } as any;
       const mockRes = { redirect: jest.fn() } as any;
@@ -264,7 +264,7 @@ describe('AuthController', () => {
       const validData = {
         accessToken: 'at',
         refreshToken: 'rt',
-        user: { id: '1', email: 'u@e.com', role: Role.CLIENT },
+        user: { id: '1', email: 'u@e.com', role: Role.USER },
       };
       mockRedisService.getAndDeleteOAuthCode.mockResolvedValue(validData);
 
@@ -299,7 +299,7 @@ describe('AuthController', () => {
 
   describe('getFullProfile', () => {
     it('should return full profile for authenticated user', async () => {
-      const mockUser = { id: 'user-1', email: 'u@e.com', role: Role.CLIENT } as any;
+      const mockUser = { id: 'user-1', email: 'u@e.com', role: Role.USER } as any;
       const profile = { id: 'user-1', followersCount: 5, followingCount: 2 };
       mockAuthService.getFullProfile.mockResolvedValue(profile);
       const result = await controller.getFullProfile(mockUser);
@@ -355,7 +355,7 @@ describe('AuthController', () => {
 
   describe('updateProfile', () => {
     it('should update profile and return result', async () => {
-      const mockUser = { id: 'user-1', email: 'u@e.com', role: Role.CLIENT } as any;
+      const mockUser = { id: 'user-1', email: 'u@e.com', role: Role.USER } as any;
       const dto = { avatarUrl: 'https://cdn.example.com/avatar.jpg' } as any;
       const updated = { id: 'user-1', avatarUrl: 'https://cdn.example.com/avatar.jpg' };
       mockAuthService.updateProfile.mockResolvedValue(updated);

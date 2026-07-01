@@ -64,21 +64,21 @@ export class TicketsController {
   }
 
   @Get('my-tickets')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getMyTickets(@CurrentUser() user: AuthUser) {
     return this.ticketsService.getUserTickets(user.id);
   }
 
   @Get('qr/:qrCode')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getTicketByQRCode(@Param('qrCode') qrCode: string) {
     return this.ticketsService.getTicketByQRCode(qrCode);
   }
 
   @Get('download/:id')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   async downloadTicket(
     @Param('id') ticketId: string,

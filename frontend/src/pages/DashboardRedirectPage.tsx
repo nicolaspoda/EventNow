@@ -15,8 +15,8 @@ export function DashboardRedirectPage() {
   switch (user.role) {
     case 'ORGANIZER':
       return <Navigate to="/dashboard/organizer" replace />;
-    case 'CLIENT':
-      return <Navigate to="/dashboard/client" replace />;
+    case 'USER':
+      return <Navigate to="/dashboard/user" replace />;
     default:
       return <Navigate to="/events" replace />;
   }

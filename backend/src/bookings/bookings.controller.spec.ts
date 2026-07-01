@@ -17,7 +17,7 @@ describe('BookingsController', () => {
   const mockUser = {
     id: 'user-1',
     email: 'test@test.com',
-    role: 'CLIENT',
+    role: 'USER',
   };
 
   const mockBooking = {
