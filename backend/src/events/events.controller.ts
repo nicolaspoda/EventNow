@@ -96,8 +96,9 @@ export class EventsController {
   @Get(':id')
   @SkipThrottle()
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  @UseGuards(OptionalJwtAuthGuard)
+  findOne(@Param('id') id: string, @CurrentUser() user?: AuthUser) {
+    return this.eventsService.findOne(id, user?.id);
   }
 
   @Patch(':id')
