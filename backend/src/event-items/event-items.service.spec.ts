@@ -1,433 +1,338 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotFoundException,
-  BadRequestException,
   ForbiddenException,
+  BadRequestException,
   ConflictException,
 } from '@nestjs/common';
 import { EventItemsService } from './event-items.service';
 import { PrismaService } from '../prisma/prisma.service';
-
-const USER_ID = 'user-1';
-const ORGANIZER_ID = 'organizer-1';
-const OTHER_USER_ID = 'other-user-2';
-const EVENT_ID = 'event-1';
-const LIST_ID = 'list-1';
-const ITEM_ID = 'item-1';
-
-const mockEvent = {
-  organizerId: ORGANIZER_ID,
-  type: 'COMMUNITY',
-};
-
-const mockList = {
-  id: LIST_ID,
-  eventId: EVENT_ID,
-  items: [],
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const makeItem = (overrides: Record<string, unknown> = {}) => ({
-  id: ITEM_ID,
-  listId: LIST_ID,
-  name: 'Chips',
-  quantity: 1,
-  unit: null,
-  note: null,
-  status: 'UNCLAIMED',
-  claimedById: null,
-  addedById: USER_ID,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  list: { eventId: EVENT_ID },
-  claimedBy: null,
-  addedBy: { id: USER_ID, username: 'user1' },
-  ...overrides,
-});
-
-const mockPrisma = {
-  event: { findUnique: jest.fn() },
-  participationRequest: { findUnique: jest.fn() },
-  eventItemList: { findUnique: jest.fn(), create: jest.fn() },
-  eventItem: {
-    findUnique: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  },
-};
+import { EventType, ItemStatus, ParticipationRequestStatus } from '@prisma/client';
 
 describe('EventItemsService', () => {
   let service: EventItemsService;
 
+  const mockPrismaService = {
+    event: { findUnique: jest.fn() },
+    participationRequest: { findUnique: jest.fn() },
+    eventItemList: {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+    },
+    eventItem: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+  };
+
+  const mockCommunityEvent = {
+    id: 'event-1',
+    organizerId: 'user-1',
+    type: EventType.COMMUNITY,
+  };
+
+  const mockItem = {
+    id: 'item-1',
+    listId: 'list-1',
+    name: 'Wine',
+    quantity: 2,
+    unit: 'bottles',
+    note: null,
+    status: ItemStatus.UNCLAIMED,
+    claimedById: null,
+    addedById: 'user-1',
+    claimedBy: null,
+    addedBy: { id: 'user-1', username: 'user1' },
+    list: { eventId: 'event-1' },
+  };
+
+  const mockList = {
+    id: 'list-1',
+    eventId: 'event-1',
+    items: [mockItem],
+  };
+
   beforeEach(async () => {
-    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EventItemsService,
-        { provide: PrismaService, useValue: mockPrisma },
+        { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
     service = module.get<EventItemsService>(EventItemsService);
+    jest.clearAllMocks();
   });
 
-  // --- helpers to set up common mocks ---
+  const setupAccess = (userId = 'user-1') => {
+    mockPrismaService.event.findUnique.mockResolvedValue(mockCommunityEvent);
+  };
 
-  function setupOrganizerAccess() {
-    mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-    mockPrisma.eventItemList.findUnique.mockResolvedValue({
-      ...mockList,
-      items: [],
+  const setupParticipantAccess = (userId = 'user-2') => {
+    mockPrismaService.event.findUnique.mockResolvedValue({ ...mockCommunityEvent, organizerId: 'other-user' });
+    mockPrismaService.participationRequest.findUnique.mockResolvedValue({
+      status: ParticipationRequestStatus.ACCEPTED,
     });
-  }
+  };
 
-  function setupParticipantAccess() {
-    mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-    mockPrisma.participationRequest.findUnique.mockResolvedValue({
-      status: 'ACCEPTED',
+  describe('checkAccess (via getList)', () => {
+    it('should throw NotFoundException if event not found', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(null);
+      await expect(service.getList('user-1', 'event-1')).rejects.toThrow(NotFoundException);
     });
-    mockPrisma.eventItemList.findUnique.mockResolvedValue({
-      ...mockList,
-      items: [],
-    });
-  }
 
-  // ============================================================
-  // getList
-  // ============================================================
+    it('should throw BadRequestException if event is not COMMUNITY type', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({
+        ...mockCommunityEvent,
+        type: EventType.PROFESSIONAL,
+      });
+      await expect(service.getList('user-1', 'event-1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw ForbiddenException if not organizer and not accepted participant', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({ ...mockCommunityEvent, organizerId: 'other-user' });
+      mockPrismaService.participationRequest.findUnique.mockResolvedValue(null);
+      await expect(service.getList('user-1', 'event-1')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if participant not accepted', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({ ...mockCommunityEvent, organizerId: 'other-user' });
+      mockPrismaService.participationRequest.findUnique.mockResolvedValue({ status: 'PENDING' });
+      await expect(service.getList('user-1', 'event-1')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow organizer to access', async () => {
+      setupAccess();
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue(mockList);
+      const result = await service.getList('user-1', 'event-1');
+      expect(result).toBeDefined();
+    });
+
+    it('should allow accepted participant to access', async () => {
+      setupParticipantAccess();
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue(mockList);
+      const result = await service.getList('user-2', 'event-1');
+      expect(result).toBeDefined();
+    });
+  });
 
   describe('getList', () => {
-    it('returns sorted list (unclaimed first) for organizer', async () => {
-      const claimedItem = makeItem({
+    it('should create list if none exists', async () => {
+      setupAccess();
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue(null);
+      mockPrismaService.eventItemList.create.mockResolvedValue({ ...mockList, items: [] });
+      const result = await service.getList('user-1', 'event-1');
+      expect(mockPrismaService.eventItemList.create).toHaveBeenCalled();
+    });
+
+    it('should return existing list with sorted items', async () => {
+      setupAccess();
+      const claimedItem = {
+        ...mockItem,
         id: 'item-2',
-        name: 'Balloon',
-        status: 'CLAIMED',
-        claimedById: ORGANIZER_ID,
-      });
-      const unclaimedItem = makeItem({ id: 'item-3', name: 'Chips' });
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.eventItemList.findUnique.mockResolvedValue({
+        name: 'Beer',
+        status: ItemStatus.CLAIMED,
+        claimedById: 'user-1',
+      };
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue({
         ...mockList,
-        items: [claimedItem, unclaimedItem],
+        items: [claimedItem, mockItem],
       });
-
-      const result = await service.getList(ORGANIZER_ID, EVENT_ID);
-
-      expect(result.items[0].status).toBe('UNCLAIMED');
-      expect(result.items[1].status).toBe('CLAIMED');
+      const result = await service.getList('user-1', 'event-1');
+      expect(result.items[0].status).toBe(ItemStatus.UNCLAIMED);
     });
 
-    it('throws NotFoundException when event does not exist', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(null);
-
-      await expect(service.getList(USER_ID, EVENT_ID)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('throws BadRequestException for non-community event', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue({
-        ...mockEvent,
-        type: 'PROFESSIONAL',
-      });
-
-      await expect(service.getList(USER_ID, EVENT_ID)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('throws ForbiddenException when user is not a participant', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue(null);
-
-      await expect(service.getList(USER_ID, EVENT_ID)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
-    it('adds isClaimedByMe flag correctly', async () => {
-      const item = makeItem({ status: 'CLAIMED', claimedById: USER_ID });
-      mockPrisma.event.findUnique.mockResolvedValue({
-        ...mockEvent,
-        organizerId: USER_ID,
-      });
-      mockPrisma.eventItemList.findUnique.mockResolvedValue({
+    it('should mark isClaimedByMe correctly', async () => {
+      setupAccess();
+      const claimedItem = {
+        ...mockItem,
+        id: 'item-2',
+        status: ItemStatus.CLAIMED,
+        claimedById: 'user-1',
+      };
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue({
         ...mockList,
-        items: [item],
+        items: [claimedItem],
       });
-
-      const result = await service.getList(USER_ID, EVENT_ID);
-
+      const result = await service.getList('user-1', 'event-1');
       expect(result.items[0].isClaimedByMe).toBe(true);
     });
   });
 
-  // ============================================================
-  // addItem
-  // ============================================================
-
   describe('addItem', () => {
-    it('creates list if not exists and adds item', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue({
-        status: 'ACCEPTED',
-      });
-      mockPrisma.eventItemList.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ ...mockList, items: [] });
-      mockPrisma.eventItemList.create.mockResolvedValue({
-        ...mockList,
-        items: [],
-      });
-      mockPrisma.eventItem.create.mockResolvedValue(makeItem());
+    it('should add item to list', async () => {
+      setupAccess();
+      mockPrismaService.eventItemList.findUnique
+        .mockResolvedValueOnce(mockList)
+        .mockResolvedValueOnce(mockList);
+      mockPrismaService.eventItem.create.mockResolvedValue(mockItem);
+      const result = await service.addItem('user-1', 'event-1', { name: 'Wine', quantity: 2, unit: 'bottles' });
+      expect(mockPrismaService.eventItem.create).toHaveBeenCalled();
+    });
 
-      const result = await service.addItem(USER_ID, EVENT_ID, {
-        name: 'Chips',
-        quantity: 2,
-      });
-
-      expect(mockPrisma.eventItemList.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { eventId: EVENT_ID } }),
+    it('should use default quantity of 1 if not provided', async () => {
+      setupAccess();
+      mockPrismaService.eventItemList.findUnique
+        .mockResolvedValueOnce(mockList)
+        .mockResolvedValueOnce(mockList);
+      mockPrismaService.eventItem.create.mockResolvedValue(mockItem);
+      await service.addItem('user-1', 'event-1', { name: 'Cheese' });
+      expect(mockPrismaService.eventItem.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ quantity: 1 }),
+        }),
       );
-      expect(mockPrisma.eventItem.create).toHaveBeenCalled();
-      expect(result).toBeDefined();
     });
 
-    it('throws BadRequestException for non-community event', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue({
-        ...mockEvent,
-        type: 'PROFESSIONAL',
-      });
-
-      await expect(
-        service.addItem(USER_ID, EVENT_ID, { name: 'Test' }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws ForbiddenException when user is not a participant', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.addItem(USER_ID, EVENT_ID, { name: 'Test' }),
-      ).rejects.toThrow(ForbiddenException);
+    it('should create list if none exists before adding', async () => {
+      setupAccess();
+      mockPrismaService.eventItemList.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockList);
+      mockPrismaService.eventItemList.create.mockResolvedValue(mockList);
+      mockPrismaService.eventItem.create.mockResolvedValue(mockItem);
+      await service.addItem('user-1', 'event-1', { name: 'Wine' });
+      expect(mockPrismaService.eventItemList.create).toHaveBeenCalled();
     });
   });
-
-  // ============================================================
-  // updateItem
-  // ============================================================
 
   describe('updateItem', () => {
-    it('allows item creator to update their own unclaimed item', async () => {
-      setupParticipantAccess();
-      const item = makeItem({ addedById: USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.update.mockResolvedValue({
-        ...item,
-        name: 'Updated',
-      });
-
+    it('should throw NotFoundException if item not found', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue(null);
       await expect(
-        service.updateItem(USER_ID, EVENT_ID, ITEM_ID, { name: 'Updated' }),
-      ).resolves.toBeDefined();
-    });
-
-    it('allows organizer to update any item', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.eventItemList.findUnique.mockResolvedValue({
-        ...mockList,
-        items: [],
-      });
-      const item = makeItem({ addedById: OTHER_USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.update.mockResolvedValue({
-        ...item,
-        name: 'Updated',
-      });
-
-      await expect(
-        service.updateItem(ORGANIZER_ID, EVENT_ID, ITEM_ID, {
-          name: 'Updated',
-        }),
-      ).resolves.toBeDefined();
-    });
-
-    it('throws NotFoundException when item does not exist', async () => {
-      setupParticipantAccess();
-      mockPrisma.eventItem.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.updateItem(USER_ID, EVENT_ID, 'bad-id', { name: 'x' }),
+        service.updateItem('user-1', 'event-1', 'item-1', { name: 'Updated' }),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('throws ForbiddenException when user is not owner or organizer', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue({
-        status: 'ACCEPTED',
+    it('should throw NotFoundException if item belongs to different event', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue({
+        ...mockItem,
+        list: { eventId: 'other-event' },
       });
-      mockPrisma.eventItemList.findUnique.mockResolvedValue({
-        ...mockList,
-        items: [],
-      });
-      const item = makeItem({ addedById: OTHER_USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-
       await expect(
-        service.updateItem(USER_ID, EVENT_ID, ITEM_ID, { name: 'x' }),
+        service.updateItem('user-1', 'event-1', 'item-1', { name: 'Updated' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if not organizer and not item creator', async () => {
+      setupParticipantAccess('user-2');
+      mockPrismaService.eventItem.findUnique.mockResolvedValue({
+        ...mockItem,
+        addedById: 'user-3',
+        status: ItemStatus.UNCLAIMED,
+      });
+      await expect(
+        service.updateItem('user-2', 'event-1', 'item-1', { name: 'Updated' }),
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('throws ForbiddenException when updating claimed item by non-claimer non-organizer', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue({
-        status: 'ACCEPTED',
+    it('should throw ForbiddenException if item claimed by someone else', async () => {
+      setupParticipantAccess('user-2');
+      mockPrismaService.eventItem.findUnique.mockResolvedValue({
+        ...mockItem,
+        addedById: 'user-2',
+        status: ItemStatus.CLAIMED,
+        claimedById: 'user-3',
+        list: { eventId: 'event-1' },
       });
-      mockPrisma.eventItemList.findUnique.mockResolvedValue({
-        ...mockList,
-        items: [],
-      });
-      const item = makeItem({
-        addedById: USER_ID,
-        status: 'CLAIMED',
-        claimedById: OTHER_USER_ID,
-      });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-
       await expect(
-        service.updateItem(USER_ID, EVENT_ID, ITEM_ID, { name: 'x' }),
+        service.updateItem('user-2', 'event-1', 'item-1', { name: 'Updated' }),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should update item successfully', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue(mockItem);
+      mockPrismaService.eventItem.update.mockResolvedValue({ ...mockItem, name: 'Updated Wine' });
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue(mockList);
+      await service.updateItem('user-1', 'event-1', 'item-1', { name: 'Updated Wine' });
+      expect(mockPrismaService.eventItem.update).toHaveBeenCalled();
     });
   });
-
-  // ============================================================
-  // deleteItem
-  // ============================================================
 
   describe('deleteItem', () => {
-    it('allows item creator to delete their own item', async () => {
-      setupParticipantAccess();
-      const item = makeItem({ addedById: USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.delete.mockResolvedValue(item);
-
-      await expect(
-        service.deleteItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).resolves.toBeDefined();
+    it('should throw NotFoundException if item not found', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue(null);
+      await expect(service.deleteItem('user-1', 'event-1', 'item-1')).rejects.toThrow(NotFoundException);
     });
 
-    it('allows organizer to delete any item', async () => {
-      setupOrganizerAccess();
-      const item = makeItem({ addedById: OTHER_USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.delete.mockResolvedValue(item);
-
-      await expect(
-        service.deleteItem(ORGANIZER_ID, EVENT_ID, ITEM_ID),
-      ).resolves.toBeDefined();
-    });
-
-    it('throws NotFoundException when item does not exist', async () => {
-      setupParticipantAccess();
-      mockPrisma.eventItem.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.deleteItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws ForbiddenException when user is not owner or organizer', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue({
-        status: 'ACCEPTED',
+    it('should throw ForbiddenException if not organizer and not item creator', async () => {
+      setupParticipantAccess('user-2');
+      mockPrismaService.eventItem.findUnique.mockResolvedValue({
+        ...mockItem,
+        addedById: 'user-3',
       });
-      mockPrisma.eventItemList.findUnique.mockResolvedValue({
-        ...mockList,
-        items: [],
-      });
-      const item = makeItem({ addedById: OTHER_USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
+      await expect(service.deleteItem('user-2', 'event-1', 'item-1')).rejects.toThrow(ForbiddenException);
+    });
 
-      await expect(
-        service.deleteItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).rejects.toThrow(ForbiddenException);
+    it('should delete item and return updated list', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue(mockItem);
+      mockPrismaService.eventItem.delete.mockResolvedValue({});
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue({ ...mockList, items: [] });
+      const result = await service.deleteItem('user-1', 'event-1', 'item-1');
+      expect(mockPrismaService.eventItem.delete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
     });
   });
 
-  // ============================================================
-  // claimItem
-  // ============================================================
-
   describe('claimItem', () => {
-    it('claims an unclaimed item', async () => {
-      setupParticipantAccess();
-      const item = makeItem({ status: 'UNCLAIMED', claimedById: null });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.update.mockResolvedValue({
-        ...item,
-        status: 'CLAIMED',
-        claimedById: USER_ID,
-      });
+    it('should throw NotFoundException if item not found', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue(null);
+      await expect(service.claimItem('user-1', 'event-1', 'item-1')).rejects.toThrow(NotFoundException);
+    });
 
-      await expect(
-        service.claimItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).resolves.toBeDefined();
-      expect(mockPrisma.eventItem.update).toHaveBeenCalledWith(
+    it('should throw ConflictException if item already claimed by someone else', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue({
+        ...mockItem,
+        status: ItemStatus.CLAIMED,
+        claimedById: 'user-2',
+      });
+      await expect(service.claimItem('user-1', 'event-1', 'item-1')).rejects.toThrow(ConflictException);
+    });
+
+    it('should claim unclaimed item', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue(mockItem);
+      mockPrismaService.eventItem.update.mockResolvedValue({
+        ...mockItem,
+        status: ItemStatus.CLAIMED,
+        claimedById: 'user-1',
+      });
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue(mockList);
+      await service.claimItem('user-1', 'event-1', 'item-1');
+      expect(mockPrismaService.eventItem.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { status: 'CLAIMED', claimedById: USER_ID },
+          data: expect.objectContaining({ status: ItemStatus.CLAIMED }),
         }),
       );
     });
 
-    it('unclames item already claimed by current user (toggle)', async () => {
-      setupParticipantAccess();
-      const item = makeItem({ status: 'CLAIMED', claimedById: USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-      mockPrisma.eventItem.update.mockResolvedValue({
-        ...item,
-        status: 'UNCLAIMED',
+    it('should unclaim item if already claimed by same user', async () => {
+      setupAccess();
+      mockPrismaService.eventItem.findUnique.mockResolvedValue({
+        ...mockItem,
+        status: ItemStatus.CLAIMED,
+        claimedById: 'user-1',
+      });
+      mockPrismaService.eventItem.update.mockResolvedValue({
+        ...mockItem,
+        status: ItemStatus.UNCLAIMED,
         claimedById: null,
       });
-
-      await expect(
-        service.claimItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).resolves.toBeDefined();
-      expect(mockPrisma.eventItem.update).toHaveBeenCalledWith(
+      mockPrismaService.eventItemList.findUnique.mockResolvedValue(mockList);
+      await service.claimItem('user-1', 'event-1', 'item-1');
+      expect(mockPrismaService.eventItem.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { status: 'UNCLAIMED', claimedById: null },
+          data: expect.objectContaining({ status: ItemStatus.UNCLAIMED, claimedById: null }),
         }),
       );
-    });
-
-    it('throws ConflictException when item is claimed by someone else', async () => {
-      setupParticipantAccess();
-      const item = makeItem({ status: 'CLAIMED', claimedById: OTHER_USER_ID });
-      mockPrisma.eventItem.findUnique.mockResolvedValue(item);
-
-      await expect(
-        service.claimItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).rejects.toThrow(ConflictException);
-    });
-
-    it('throws NotFoundException when item does not exist', async () => {
-      setupParticipantAccess();
-      mockPrisma.eventItem.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.claimItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws ForbiddenException when user is not a participant', async () => {
-      mockPrisma.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrisma.participationRequest.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.claimItem(USER_ID, EVENT_ID, ITEM_ID),
-      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

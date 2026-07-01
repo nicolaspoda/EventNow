@@ -107,6 +107,7 @@
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
+      "!coverage/**",
       "!main.ts",
       "!**/*.module.ts",
       "!**/index.ts"

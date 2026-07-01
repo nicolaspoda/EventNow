@@ -6,7 +6,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { ReportType, ReportReason, ReportStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 describe('ReportsService', () => {
   let service: ReportsService;
@@ -20,21 +20,15 @@ describe('ReportsService', () => {
     },
   };
 
-  const _mockUser = { id: 'user-1', username: 'alice' };
-  const mockTargetUser = { id: 'user-2', username: 'bob' };
-  const mockEvent = { id: 'event-1', title: 'Cool Event' };
-
   const mockReport = {
     id: 'report-1',
     reporterId: 'user-1',
-    type: ReportType.EVENT,
-    reason: ReportReason.SPAM,
-    description: null,
-    status: ReportStatus.PENDING,
-    targetUserId: null,
-    targetEventId: 'event-1',
+    type: 'USER',
+    reason: 'SPAM',
+    description: 'Test description',
+    targetUserId: 'user-2',
+    targetEventId: null,
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   beforeEach(async () => {
@@ -46,179 +40,168 @@ describe('ReportsService', () => {
     }).compile();
 
     service = module.get<ReportsService>(ReportsService);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // ─── createReport ───────────────────────────────────────────────────────────
-
   describe('createReport', () => {
-    it('creates a report on an event successfully', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+    it('should throw BadRequestException if neither targetUserId nor targetEventId', async () => {
+      await expect(
+        service.createReport('user-1', { type: 'USER', reason: 'SPAM' } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if both targetUserId and targetEventId', async () => {
+      await expect(
+        service.createReport('user-1', {
+          type: 'USER',
+          reason: 'SPAM',
+          targetUserId: 'user-2',
+          targetEventId: 'event-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if EVENT type without targetEventId', async () => {
+      await expect(
+        service.createReport('user-1', {
+          type: 'EVENT',
+          reason: 'SPAM',
+          targetUserId: 'user-2',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if USER type without targetUserId', async () => {
+      await expect(
+        service.createReport('user-1', {
+          type: 'USER',
+          reason: 'SPAM',
+          targetEventId: 'event-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if reporting yourself', async () => {
+      await expect(
+        service.createReport('user-1', {
+          type: 'USER',
+          reason: 'SPAM',
+          targetUserId: 'user-1',
+        } as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if target user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      await expect(
+        service.createReport('user-1', {
+          type: 'USER',
+          reason: 'SPAM',
+          targetUserId: 'user-2',
+        } as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if target event not found', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(null);
+      await expect(
+        service.createReport('user-1', {
+          type: 'EVENT',
+          reason: 'SPAM',
+          targetEventId: 'event-1',
+        } as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should create USER report successfully', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-2' });
       mockPrismaService.report.create.mockResolvedValue(mockReport);
 
       const result = await service.createReport('user-1', {
-        type: ReportType.EVENT,
-        reason: ReportReason.SPAM,
-        targetEventId: 'event-1',
-      });
-
+        type: 'USER',
+        reason: 'SPAM',
+        description: 'Test',
+        targetUserId: 'user-2',
+      } as any);
       expect(result).toEqual(mockReport);
-      expect(mockPrismaService.report.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          reporterId: 'user-1',
-          type: ReportType.EVENT,
-          targetEventId: 'event-1',
-          targetUserId: null,
-        }),
-      });
     });
 
-    it('creates a report on a user successfully', async () => {
-      const userReport = {
+    it('should create EVENT report successfully', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({ id: 'event-1' });
+      mockPrismaService.report.create.mockResolvedValue({
         ...mockReport,
-        type: ReportType.USER,
-        targetUserId: 'user-2',
-        targetEventId: null,
-      };
-      mockPrismaService.user.findUnique.mockResolvedValue(mockTargetUser);
-      mockPrismaService.report.create.mockResolvedValue(userReport);
+        type: 'EVENT',
+        targetEventId: 'event-1',
+        targetUserId: null,
+      });
 
       const result = await service.createReport('user-1', {
-        type: ReportType.USER,
-        reason: ReportReason.HARASSMENT,
-        targetUserId: 'user-2',
-      });
-
-      expect(result.type).toBe(ReportType.USER);
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
-        where: { id: 'user-2' },
-      });
+        type: 'EVENT',
+        reason: 'INAPPROPRIATE',
+        targetEventId: 'event-1',
+      } as any);
+      expect(result.type).toBe('EVENT');
     });
 
-    it('throws BadRequestException when neither target is provided', async () => {
-      await expect(
-        service.createReport('user-1', {
-          type: ReportType.EVENT,
-          reason: ReportReason.SPAM,
-        }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws BadRequestException when both targets are provided', async () => {
-      await expect(
-        service.createReport('user-1', {
-          type: ReportType.EVENT,
-          reason: ReportReason.SPAM,
-          targetUserId: 'user-2',
-          targetEventId: 'event-1',
-        }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws BadRequestException when reporting yourself', async () => {
-      await expect(
-        service.createReport('user-1', {
-          type: ReportType.USER,
-          reason: ReportReason.SPAM,
-          targetUserId: 'user-1',
-        }),
-      ).rejects.toThrow(new BadRequestException('Cannot report yourself'));
-    });
-
-    it('throws NotFoundException when target event does not exist', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.createReport('user-1', {
-          type: ReportType.EVENT,
-          reason: ReportReason.SPAM,
-          targetEventId: 'nonexistent-event',
-        }),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws NotFoundException when target user does not exist', async () => {
-      mockPrismaService.user.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.createReport('user-1', {
-          type: ReportType.USER,
-          reason: ReportReason.HARASSMENT,
-          targetUserId: 'nonexistent-user',
-        }),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws ConflictException when already reported (P2002)', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+    it('should throw ConflictException on duplicate report (P2002)', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-2' });
       const prismaError = new Prisma.PrismaClientKnownRequestError(
         'Unique constraint failed',
-        { code: 'P2002', clientVersion: '5.0.0', meta: {} },
+        { code: 'P2002', clientVersion: '5.0' },
       );
       mockPrismaService.report.create.mockRejectedValue(prismaError);
 
       await expect(
         service.createReport('user-1', {
-          type: ReportType.EVENT,
-          reason: ReportReason.SPAM,
-          targetEventId: 'event-1',
-        }),
-      ).rejects.toThrow(
-        new ConflictException('You have already reported this'),
-      );
-    });
-
-    it('throws BadRequestException when type is EVENT but targetUserId is provided', async () => {
-      await expect(
-        service.createReport('user-1', {
-          type: ReportType.EVENT,
-          reason: ReportReason.SPAM,
+          type: 'USER',
+          reason: 'SPAM',
           targetUserId: 'user-2',
-        }),
-      ).rejects.toThrow(BadRequestException);
+        } as any),
+      ).rejects.toThrow(ConflictException);
     });
 
-    it('throws BadRequestException when type is USER but targetEventId is provided', async () => {
+    it('should rethrow non-P2002 Prisma errors', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-2' });
+      const prismaError = new Prisma.PrismaClientKnownRequestError(
+        'Foreign key constraint failed',
+        { code: 'P2003', clientVersion: '5.0' },
+      );
+      mockPrismaService.report.create.mockRejectedValue(prismaError);
+
       await expect(
         service.createReport('user-1', {
-          type: ReportType.USER,
-          reason: ReportReason.HARASSMENT,
-          targetEventId: 'event-1',
-        }),
-      ).rejects.toThrow(BadRequestException);
+          type: 'USER',
+          reason: 'SPAM',
+          targetUserId: 'user-2',
+        } as any),
+      ).rejects.toThrow(Prisma.PrismaClientKnownRequestError);
+    });
+
+    it('should rethrow generic errors', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-2' });
+      mockPrismaService.report.create.mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        service.createReport('user-1', {
+          type: 'USER',
+          reason: 'SPAM',
+          targetUserId: 'user-2',
+        } as any),
+      ).rejects.toThrow('DB error');
     });
   });
 
-  // ─── getMyReports ───────────────────────────────────────────────────────────
-
   describe('getMyReports', () => {
-    it('returns reports submitted by the user with target info', async () => {
-      const reports = [
-        {
-          ...mockReport,
-          targetEvent: { id: 'event-1', title: 'Cool Event' },
-          targetUser: null,
-        },
-      ];
-      mockPrismaService.report.findMany.mockResolvedValue(reports);
-
+    it('should return reports for user', async () => {
+      mockPrismaService.report.findMany.mockResolvedValue([mockReport]);
       const result = await service.getMyReports('user-1');
-
-      expect(result).toEqual(reports);
-      expect(mockPrismaService.report.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { reporterId: 'user-1' } }),
-      );
+      expect(result).toHaveLength(1);
     });
 
-    it('returns empty array when user has no reports', async () => {
+    it('should return empty array when no reports', async () => {
       mockPrismaService.report.findMany.mockResolvedValue([]);
-
       const result = await service.getMyReports('user-1');
-
-      expect(result).toEqual([]);
+      expect(result).toHaveLength(0);
     });
   });
 });

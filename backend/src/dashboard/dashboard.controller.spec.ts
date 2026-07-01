@@ -13,6 +13,9 @@ describe('DashboardController', () => {
     getClientOverview: jest.fn(),
     getClientEvents: jest.fn(),
     getEventParticipants: jest.fn(),
+    getMyUpcomingEvents: jest.fn(),
+    getMyParticipatedEvents: jest.fn(),
+    getMyCalendarEvents: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -91,6 +94,64 @@ describe('DashboardController', () => {
 
       expect(service.getEventStats).toHaveBeenCalledWith('event-1', 'user-1');
       expect(result).toEqual(mockStats);
+    });
+  });
+
+  describe('getOrganizerEvents', () => {
+    it('should return organizer events', async () => {
+      const mockUser = { id: 'user-1', role: 'ORGANIZER' } as any;
+      mockDashboardService.getOrganizerEvents.mockResolvedValue([{ id: 'e-1' }]);
+      const result = await controller.getOrganizerEvents(mockUser);
+      expect(service.getOrganizerEvents).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual([{ id: 'e-1' }]);
+    });
+  });
+
+  describe('getClientEvents', () => {
+    it('should return client events', async () => {
+      const mockUser = { id: 'user-2', role: 'CLIENT' } as any;
+      mockDashboardService.getClientEvents.mockResolvedValue([{ id: 'e-2' }]);
+      const result = await controller.getClientEvents(mockUser);
+      expect(service.getClientEvents).toHaveBeenCalledWith('user-2');
+      expect(result).toEqual([{ id: 'e-2' }]);
+    });
+  });
+
+  describe('getEventParticipants', () => {
+    it('should return event participants', async () => {
+      const mockUser = { id: 'user-2', role: 'CLIENT' } as any;
+      mockDashboardService.getEventParticipants.mockResolvedValue([{ id: 'p-1' }]);
+      const result = await controller.getEventParticipants('event-1', mockUser);
+      expect(service.getEventParticipants).toHaveBeenCalledWith('event-1', 'user-2');
+      expect(result).toEqual([{ id: 'p-1' }]);
+    });
+  });
+
+  describe('getMyUpcomingEvents', () => {
+    it('should return upcoming events for user', async () => {
+      const mockUser = { id: 'user-1' } as any;
+      mockDashboardService.getMyUpcomingEvents.mockResolvedValue([{ id: 'e-3' }]);
+      const result = await controller.getMyUpcomingEvents(mockUser);
+      expect(service.getMyUpcomingEvents).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual([{ id: 'e-3' }]);
+    });
+  });
+
+  describe('getMyParticipatedEvents', () => {
+    it('should return participated events for user', async () => {
+      const mockUser = { id: 'user-1' } as any;
+      mockDashboardService.getMyParticipatedEvents.mockResolvedValue([]);
+      await controller.getMyParticipatedEvents(mockUser);
+      expect(service.getMyParticipatedEvents).toHaveBeenCalledWith('user-1');
+    });
+  });
+
+  describe('getMyCalendarEvents', () => {
+    it('should return calendar events for user', async () => {
+      const mockUser = { id: 'user-1' } as any;
+      mockDashboardService.getMyCalendarEvents.mockResolvedValue([]);
+      await controller.getMyCalendarEvents(mockUser);
+      expect(service.getMyCalendarEvents).toHaveBeenCalledWith('user-1');
     });
   });
 });

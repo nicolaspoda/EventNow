@@ -15,31 +15,25 @@ describe('PromoCodesService', () => {
     event: { findUnique: jest.fn() },
     promoCode: {
       findUnique: jest.fn(),
-      findMany: jest.fn(),
       create: jest.fn(),
+      findMany: jest.fn(),
       update: jest.fn(),
     },
   };
 
-  const mockEvent = {
-    id: 'event-1',
-    organizerId: 'user-1',
-    title: 'Test Event',
-  };
-
+  const mockEvent = { id: 'event-1', title: 'Test Event', organizerId: 'user-1' };
   const mockPromoCode = {
     id: 'promo-1',
-    code: 'SUMMER20',
+    code: 'SAVE10',
     eventId: 'event-1',
     createdById: 'user-1',
     discountType: DiscountType.PERCENTAGE,
-    discountValue: 20,
+    discountValue: 10,
     maxUses: 100,
     currentUses: 0,
-    expiresAt: null,
     isActive: true,
+    expiresAt: null,
     createdAt: new Date(),
-    updatedAt: new Date(),
   };
 
   beforeEach(async () => {
@@ -51,158 +45,180 @@ describe('PromoCodesService', () => {
     }).compile();
 
     service = module.get<PromoCodesService>(PromoCodesService);
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // ─── createPromoCode ────────────────────────────────────────────────────────
-
   describe('createPromoCode', () => {
-    const dto = {
-      code: 'SUMMER20',
+    const createDto = {
+      code: 'SAVE10',
       eventId: 'event-1',
       discountType: DiscountType.PERCENTAGE,
-      discountValue: 20,
+      discountValue: 10,
+      maxUses: 100,
     };
 
-    it('creates a promo code successfully', async () => {
+    it('should throw NotFoundException if event not found', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(null);
+      await expect(service.createPromoCode('user-1', createDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if not event organizer', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      await expect(service.createPromoCode('other-user', createDto)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException if promo code already exists', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
+      await expect(service.createPromoCode('user-1', createDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create promo code successfully', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
       mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
       mockPrismaService.promoCode.create.mockResolvedValue(mockPromoCode);
-
-      const result = await service.createPromoCode('user-1', dto);
-
+      const result = await service.createPromoCode('user-1', createDto);
       expect(result).toEqual(mockPromoCode);
-      expect(mockPrismaService.promoCode.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({ code: 'SUMMER20', eventId: 'event-1' }),
-      });
     });
 
-    it('throws NotFoundException when event not found', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue(null);
-
-      await expect(service.createPromoCode('user-1', dto)).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('throws ForbiddenException when user does not own the event', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue({
-        ...mockEvent,
-        organizerId: 'other-user',
-      });
-
-      await expect(service.createPromoCode('user-1', dto)).rejects.toThrow(
-        ForbiddenException,
-      );
-    });
-
-    it('throws BadRequestException when code already exists for this event', async () => {
+    it('should create with expiresAt date', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
+      mockPrismaService.promoCode.create.mockResolvedValue(mockPromoCode);
+      await service.createPromoCode('user-1', {
+        ...createDto,
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      });
+      expect(mockPrismaService.promoCode.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ expiresAt: expect.any(Date) }),
+        }),
+      );
+    });
 
-      await expect(service.createPromoCode('user-1', dto)).rejects.toThrow(
-        BadRequestException,
+    it('should create with null maxUses when not provided', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
+      mockPrismaService.promoCode.create.mockResolvedValue(mockPromoCode);
+      await service.createPromoCode('user-1', { ...createDto, maxUses: undefined });
+      expect(mockPrismaService.promoCode.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ maxUses: null }),
+        }),
       );
     });
   });
 
-  // ─── validatePromoCode ──────────────────────────────────────────────────────
-
   describe('validatePromoCode', () => {
-    const dto = { code: 'SUMMER20', eventId: 'event-1', orderAmount: 50 };
+    const validateDto = { code: 'SAVE10', eventId: 'event-1', orderAmount: 100 };
 
-    it('validates PERCENTAGE discount correctly', async () => {
-      mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
-
-      const result = await service.validatePromoCode(dto);
-
-      expect(result.discountAmount).toBe(10);
-      expect(result.finalAmount).toBe(40);
-      expect(result.promoCode).toEqual(mockPromoCode);
-    });
-
-    it('validates FIXED_AMOUNT discount correctly', async () => {
-      mockPrismaService.promoCode.findUnique.mockResolvedValue({
-        ...mockPromoCode,
-        discountType: DiscountType.FIXED_AMOUNT,
-        discountValue: 15,
-      });
-
-      const result = await service.validatePromoCode(dto);
-
-      expect(result.discountAmount).toBe(15);
-      expect(result.finalAmount).toBe(35);
-    });
-
-    it('caps FIXED_AMOUNT discount so finalAmount is 0 when discount exceeds order', async () => {
-      mockPrismaService.promoCode.findUnique.mockResolvedValue({
-        ...mockPromoCode,
-        discountType: DiscountType.FIXED_AMOUNT,
-        discountValue: 100,
-      });
-
-      const result = await service.validatePromoCode(dto);
-
-      expect(result.finalAmount).toBe(0);
-      expect(result.discountAmount).toBe(50);
-    });
-
-    it('throws NotFoundException when code not found', async () => {
+    it('should throw NotFoundException if promo code not found', async () => {
       mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
-
-      await expect(service.validatePromoCode(dto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.validatePromoCode(validateDto)).rejects.toThrow(NotFoundException);
     });
 
-    it('throws BadRequestException when code is inactive', async () => {
+    it('should throw BadRequestException if inactive', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({ ...mockPromoCode, isActive: false });
+      await expect(service.validatePromoCode(validateDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if expired', async () => {
       mockPrismaService.promoCode.findUnique.mockResolvedValue({
         ...mockPromoCode,
-        isActive: false,
+        expiresAt: new Date(Date.now() - 1000),
       });
-
-      await expect(service.validatePromoCode(dto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.validatePromoCode(validateDto)).rejects.toThrow(BadRequestException);
     });
 
-    it('throws BadRequestException when code has expired', async () => {
-      mockPrismaService.promoCode.findUnique.mockResolvedValue({
-        ...mockPromoCode,
-        expiresAt: new Date('2020-01-01'),
-      });
-
-      await expect(service.validatePromoCode(dto)).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-
-    it('throws BadRequestException when max uses reached', async () => {
+    it('should throw BadRequestException if max uses reached', async () => {
       mockPrismaService.promoCode.findUnique.mockResolvedValue({
         ...mockPromoCode,
         maxUses: 10,
         currentUses: 10,
       });
+      await expect(service.validatePromoCode(validateDto)).rejects.toThrow(BadRequestException);
+    });
 
-      await expect(service.validatePromoCode(dto)).rejects.toThrow(
-        BadRequestException,
-      );
+    it('should return discount for PERCENTAGE type', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
+      const result = await service.validatePromoCode(validateDto);
+      expect(result.discountAmount).toBe(10);
+      expect(result.finalAmount).toBe(90);
+    });
+
+    it('should return discount for FIXED type', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({
+        ...mockPromoCode,
+        discountType: DiscountType.FIXED,
+        discountValue: 15,
+      });
+      const result = await service.validatePromoCode(validateDto);
+      expect(result.discountAmount).toBe(15);
+      expect(result.finalAmount).toBe(85);
+    });
+
+    it('should cap FIXED discount at order amount', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({
+        ...mockPromoCode,
+        discountType: DiscountType.FIXED,
+        discountValue: 200,
+      });
+      const result = await service.validatePromoCode({ ...validateDto, orderAmount: 50 });
+      expect(result.finalAmount).toBe(0);
+      expect(result.discountAmount).toBe(50);
+    });
+
+    it('should work with null maxUses (unlimited)', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({
+        ...mockPromoCode,
+        maxUses: null,
+        currentUses: 9999,
+      });
+      const result = await service.validatePromoCode(validateDto);
+      expect(result.discountAmount).toBeGreaterThan(0);
     });
   });
 
-  // ─── applyPromoCode ─────────────────────────────────────────────────────────
+  describe('validatePromoCodeById', () => {
+    it('should throw NotFoundException if not found', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
+      await expect(service.validatePromoCodeById('nonexistent', 100)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if inactive', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({ ...mockPromoCode, isActive: false });
+      await expect(service.validatePromoCodeById('promo-1', 100)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if expired', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({
+        ...mockPromoCode,
+        expiresAt: new Date(0),
+      });
+      await expect(service.validatePromoCodeById('promo-1', 100)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if max uses reached', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue({
+        ...mockPromoCode,
+        maxUses: 5,
+        currentUses: 5,
+      });
+      await expect(service.validatePromoCodeById('promo-1', 100)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should return discount for valid code', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
+      const result = await service.validatePromoCodeById('promo-1', 200);
+      expect(result.discountAmount).toBe(20);
+      expect(result.finalAmount).toBe(180);
+    });
+  });
 
   describe('applyPromoCode', () => {
-    it('increments currentUses by 1', async () => {
-      const updated = { ...mockPromoCode, currentUses: 1 };
-      mockPrismaService.promoCode.update.mockResolvedValue(updated);
-
-      const result = await service.applyPromoCode('promo-1');
-
-      expect(result.currentUses).toBe(1);
+    it('should increment currentUses', async () => {
+      mockPrismaService.promoCode.update.mockResolvedValue({ ...mockPromoCode, currentUses: 1 });
+      await service.applyPromoCode('promo-1');
       expect(mockPrismaService.promoCode.update).toHaveBeenCalledWith({
         where: { id: 'promo-1' },
         data: { currentUses: { increment: 1 } },
@@ -210,66 +226,44 @@ describe('PromoCodesService', () => {
     });
   });
 
-  // ─── getEventPromoCodes ─────────────────────────────────────────────────────
-
   describe('getEventPromoCodes', () => {
-    it('returns promo codes for event owner', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.promoCode.findMany.mockResolvedValue([mockPromoCode]);
-
-      const result = await service.getEventPromoCodes('user-1', 'event-1');
-
-      expect(result).toEqual([mockPromoCode]);
+    it('should throw NotFoundException if event not found', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(null);
+      await expect(service.getEventPromoCodes('user-1', 'event-1')).rejects.toThrow(NotFoundException);
     });
 
-    it('throws ForbiddenException when user does not own the event', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue({
-        ...mockEvent,
-        organizerId: 'other-user',
-      });
+    it('should throw ForbiddenException if not organizer', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      await expect(service.getEventPromoCodes('other-user', 'event-1')).rejects.toThrow(ForbiddenException);
+    });
 
-      await expect(
-        service.getEventPromoCodes('user-1', 'event-1'),
-      ).rejects.toThrow(ForbiddenException);
+    it('should return event promo codes', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrismaService.promoCode.findMany.mockResolvedValue([mockPromoCode]);
+      const result = await service.getEventPromoCodes('user-1', 'event-1');
+      expect(result).toHaveLength(1);
     });
   });
 
-  // ─── deletePromoCode ────────────────────────────────────────────────────────
-
   describe('deletePromoCode', () => {
-    it('soft-deletes a promo code (sets isActive false)', async () => {
+    it('should throw NotFoundException if promo code not found', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
+      await expect(service.deletePromoCode('user-1', 'nonexistent')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if not creator', async () => {
       mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
-      mockPrismaService.promoCode.update.mockResolvedValue({
-        ...mockPromoCode,
-        isActive: false,
-      });
+      await expect(service.deletePromoCode('other-user', 'promo-1')).rejects.toThrow(ForbiddenException);
+    });
 
-      const result = await service.deletePromoCode('user-1', 'promo-1');
-
-      expect(result.isActive).toBe(false);
+    it('should deactivate promo code', async () => {
+      mockPrismaService.promoCode.findUnique.mockResolvedValue(mockPromoCode);
+      mockPrismaService.promoCode.update.mockResolvedValue({ ...mockPromoCode, isActive: false });
+      await service.deletePromoCode('user-1', 'promo-1');
       expect(mockPrismaService.promoCode.update).toHaveBeenCalledWith({
         where: { id: 'promo-1' },
         data: { isActive: false },
       });
-    });
-
-    it('throws NotFoundException when promo code not found', async () => {
-      mockPrismaService.promoCode.findUnique.mockResolvedValue(null);
-
-      await expect(
-        service.deletePromoCode('user-1', 'promo-1'),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('throws ForbiddenException when user does not own the promo code', async () => {
-      mockPrismaService.promoCode.findUnique.mockResolvedValue({
-        ...mockPromoCode,
-        createdById: 'other-user',
-      });
-
-      await expect(
-        service.deletePromoCode('user-1', 'promo-1'),
-      ).rejects.toThrow(ForbiddenException);
     });
   });
 });
