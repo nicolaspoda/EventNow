@@ -132,4 +132,12 @@ export class EventsController {
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.eventsService.remove(id, user.id);
   }
+
+  @Patch(':id/suspend')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  suspendEvent(@Param('id') id: string) {
+    return this.eventsService.suspendEvent(id);
+  }
 }

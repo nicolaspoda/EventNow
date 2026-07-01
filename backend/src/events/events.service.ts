@@ -8,6 +8,7 @@ import {
   OrderStatus,
   BookingStatus,
   ParticipationRequestStatus,
+  EventStatus,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
@@ -171,6 +172,7 @@ export class EventsService {
     const now = new Date();
     const andConditions: Array<Record<string, unknown>> = [
       { eventDate: { gte: now } },
+      { status: EventStatus.ACTIVE },
     ];
 
     if (filters?.search?.trim()) {
@@ -909,6 +911,7 @@ export class EventsService {
 
     // Par défaut : uniquement les événements à venir dans le catalogue
     where.AND.push({ eventDate: { gte: new Date() } });
+    where.AND.push({ status: EventStatus.ACTIVE });
 
     if (query) {
       where.AND.push({
@@ -1446,5 +1449,23 @@ export class EventsService {
         name: c.city as string,
         count: c._count.city,
       }));
+  }
+
+  async suspendEvent(eventId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+    });
+    if (!event) {
+      throw new NotFoundException(`Événement avec l'ID ${eventId} introuvable`);
+    }
+    const newStatus =
+      event.status === EventStatus.SUSPENDED
+        ? EventStatus.ACTIVE
+        : EventStatus.SUSPENDED;
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: newStatus },
+      select: { id: true, title: true, status: true },
+    });
   }
 }

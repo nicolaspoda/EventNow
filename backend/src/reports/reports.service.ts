@@ -4,7 +4,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, ReportStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReportDto } from './dto/create-report.dto';
 
@@ -91,6 +91,31 @@ export class ReportsService {
         targetUser: { select: { id: true, username: true } },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getAllReports(status?: ReportStatus) {
+    return this.prisma.report.findMany({
+      where: status ? { status } : undefined,
+      include: {
+        reporter: { select: { id: true, username: true, email: true } },
+        targetEvent: { select: { id: true, title: true } },
+        targetUser: { select: { id: true, username: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateReportStatus(reportId: string, status: ReportStatus) {
+    const report = await this.prisma.report.findUnique({
+      where: { id: reportId },
+    });
+    if (!report) {
+      throw new NotFoundException('Signalement introuvable');
+    }
+    return this.prisma.report.update({
+      where: { id: reportId },
+      data: { status },
     });
   }
 }

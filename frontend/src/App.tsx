@@ -39,6 +39,7 @@ import { MessagesPage } from './pages/messages/MessagesPage';
 import { ConversationPage } from './pages/messages/ConversationPage';
 import { ConversationMembersPage } from './pages/messages/ConversationMembersPage';
 import { PromoCodesPage } from './pages/PromoCodesPage';
+import { AdminReportsPage } from './pages/AdminReportsPage';
 import { useSocket } from './hooks/useSocket';
 
 function AppContent() {
@@ -272,6 +273,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <ConversationMembersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute roles={['ADMIN']}>
+              <AdminReportsPage />
             </ProtectedRoute>
           }
         />

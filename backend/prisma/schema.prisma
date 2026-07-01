@@ -17,6 +17,12 @@ datasource db {
 enum Role {
   USER
   ORGANIZER
+  ADMIN
+}
+
+enum EventStatus {
+  ACTIVE
+  SUSPENDED
 }
 
 enum BookingStatus {
@@ -164,6 +170,7 @@ model Event {
   organizerId String        @map("organizer_id")
   type        EventType     @default(PROFESSIONAL)
   category    EventCategory @default(OTHER)
+  status      EventStatus   @default(ACTIVE)
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
