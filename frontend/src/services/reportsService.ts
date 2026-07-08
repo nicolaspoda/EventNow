@@ -29,9 +29,18 @@ export interface Report {
   targetUserId: string | null;
   targetEventId: string | null;
   targetEvent: { id: string; title: string } | null;
-  targetUser: { id: string; username: string | null; email: string } | null;
+  targetUser:
+    | { id: string; username: string | null; email: string; isBanned: boolean }
+    | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BannedUser {
+  id: string;
+  username: string | null;
+  email: string;
+  bannedAt: string | null;
 }
 
 export const reportsService = {
@@ -58,6 +67,16 @@ export const reportsService = {
 
   async suspendEvent(eventId: string): Promise<{ id: string; title: string; status: string }> {
     const response = await api.patch(`/events/${eventId}/suspend`);
+    return response.data;
+  },
+
+  async banUser(userId: string): Promise<{ id: string; username: string | null; email: string; isBanned: boolean }> {
+    const response = await api.patch(`/users/${userId}/ban`);
+    return response.data;
+  },
+
+  async getBannedUsers(): Promise<BannedUser[]> {
+    const response = await api.get<BannedUser[]>('/users/banned');
     return response.data;
   },
 };

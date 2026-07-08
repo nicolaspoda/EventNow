@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -152,6 +153,10 @@ export class AuthService {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
+    if (user.isBanned) {
+      throw new ForbiddenException('Votre compte a été suspendu');
+    }
+
     const tokens = await this.generateTokens(user.id, user.email, user.role);
 
     return {
@@ -200,7 +205,7 @@ export class AuthService {
         where: { id: payload.sub },
       });
 
-      if (!user) {
+      if (!user || user.isBanned) {
         throw new UnauthorizedException('Invalid token');
       }
 

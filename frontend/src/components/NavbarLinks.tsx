@@ -46,6 +46,7 @@ export function NavbarLinks() {
   const isPurchasesPage = location.pathname === '/my-tickets' || location.pathname === '/my-orders' || location.pathname === '/bookings';
   const isOrganizerPage = location.pathname.startsWith('/dashboard/organizer');
   const isStaffPage = location.pathname.startsWith('/staff');
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   const dropdownPanelClass =
     'absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50';
@@ -212,6 +213,17 @@ export function NavbarLinks() {
         {user?.role === 'USER' && (
           <Link to="/dashboard/user" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
             Mon tableau de bord
+          </Link>
+        )}
+
+        {user?.role === 'ADMIN' && (
+          <Link
+            to="/admin/reports"
+            className={`${navLinkClass} flex-shrink-0 flex items-center ${
+              isAdminPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
+            }`}
+          >
+            Admin
           </Link>
         )}
 

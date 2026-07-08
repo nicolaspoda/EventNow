@@ -100,7 +100,9 @@ export class ReportsService {
       include: {
         reporter: { select: { id: true, username: true, email: true } },
         targetEvent: { select: { id: true, title: true } },
-        targetUser: { select: { id: true, username: true, email: true } },
+        targetUser: {
+          select: { id: true, username: true, email: true, isBanned: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
