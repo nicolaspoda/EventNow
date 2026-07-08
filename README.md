@@ -142,12 +142,10 @@ Cela crée un compte organisateur et 4 événements à venir. Compte : `organize
 
 ### 5. Accéder à l’application
 
-- **Frontend** : https://localhost:5173 (certificat auto-signé : accepter l’avertissement du navigateur)
-- **Backend API** : https://localhost:3000
+- **Frontend** : http://localhost:5173
+- **Backend API** : http://localhost:3000
 
-**Certificats HTTPS (dev)** : avec **Docker**, ils sont générés au démarrage du conteneur backend (`openssl` est installé dans l’image). **Sans Docker**, au premier `npm run start:dev` dans `backend/`, le script `scripts/ensure-dev-certs.sh` crée `backend/certs/` (nécessite **OpenSSL** sur la machine). Ces fichiers sont ignorés par Git.
-
-**Google OAuth en Docker** : dans `backend/.env`, garde `GOOGLE_CALLBACK_URL=https://localhost:3000/api/v1/auth/google/callback` et les mêmes URI dans la console Google (l’hôte expose le port 3000 vers le conteneur).
+**Google OAuth en Docker** : dans `backend/.env`, garde `GOOGLE_CALLBACK_URL=http://localhost:3000/api/v1/auth/google/callback` et les mêmes URI dans la console Google (l’hôte expose le port 3000 vers le conteneur).
 
 ## Structure du projet
 ```

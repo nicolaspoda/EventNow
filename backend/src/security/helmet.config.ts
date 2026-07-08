@@ -29,6 +29,8 @@ export function configureHelmet(app: INestApplication) {
     ]),
   );
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -51,11 +53,17 @@ export function configureHelmet(app: INestApplication) {
           formAction: ["'self'", ...mergedHosts],
         },
       },
-      hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true,
-      },
+      // HSTS force le navigateur à mémoriser (jusqu'à 1 an, preload) que ce host ne doit
+      // être joint qu'en HTTPS. Le backend dev tourne en HTTP simple : n'envoyer ce header
+      // qu'en production évite de piéger le navigateur avec un HSTS qu'aucun serveur local
+      // ne pourra honorer ensuite.
+      hsts: isProduction
+        ? {
+            maxAge: 31536000,
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false,
       frameguard: { action: 'deny' },
       noSniff: true,
       xssFilter: true,

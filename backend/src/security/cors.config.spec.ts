@@ -31,7 +31,7 @@ describe('CORS Configuration', () => {
     delete process.env.CORS_ORIGINS;
 
     const origins = getAllowedOrigins();
-    expect(origins).toContain('https://localhost:5173');
+    expect(origins).toContain('http://localhost:5173');
     expect(origins).toContain('http://localhost:3000');
   });
 
@@ -45,7 +45,7 @@ describe('CORS Configuration', () => {
       'https://app.eventnow.com',
       'https://admin.eventnow.com',
     ]);
-    expect(origins).not.toContain('https://localhost:5173');
+    expect(origins).not.toContain('http://localhost:5173');
   });
 
   describe('origin callback', () => {
@@ -65,7 +65,7 @@ describe('CORS Configuration', () => {
       delete process.env.FRONTEND_URL;
       delete process.env.CORS_ORIGINS;
       const cb = jest.fn();
-      originFn('https://localhost:5173', cb);
+      originFn('http://localhost:5173', cb);
       expect(cb).toHaveBeenCalledWith(null, true);
     });
 

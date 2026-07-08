@@ -1,11 +1,7 @@
 import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
-/** Origines dev (HTTPS par défaut ; HTTP conservé pour outils / anciennes configs). */
+/** Origines dev (HTTP). */
 const defaultOrigins = [
-  'https://localhost:5173',
-  'https://127.0.0.1:5173',
-  'https://localhost:3000',
-  'https://127.0.0.1:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',

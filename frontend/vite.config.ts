@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 
 // https://vite.dev/config/
 // En prod, servir `dist/` (nginx/Caddy) — pas `npm run dev`. Sinon le client HMR
@@ -14,35 +13,29 @@ const hmrBehindProxy =
       }
     : undefined;
 
-// basicSsl uniquement pour `npm run dev` : en Docker (`npm run preview`) on reste en HTTP
-// pour que Nginx puisse faire `proxy_pass http://127.0.0.1:5173` sans TLS amont.
-const useDevHttps = process.env.npm_lifecycle_event === 'dev';
+// Proxy API uniquement en `npm run dev` : en Docker (`npm run preview`) on reste en HTTP
+// pour que Nginx puisse faire `proxy_pass http://127.0.0.1:5173`, et l'API passe par Nginx
+// (un proxy vers localhost:3000 dans le conteneur provoquerait ECONNREFUSED).
+const isDev = process.env.npm_lifecycle_event === 'dev';
 
 export default defineConfig({
-  plugins: [react(), ...(useDevHttps ? [basicSsl()] : [])],
+  plugins: [react()],
   optimizeDeps: {
     include: ['react-big-calendar', 'date-fns', 'socket.io-client'],
   },
   server: {
-    // HTTPS en local : @vitejs/plugin-basic-ssl (Vite 7 : plus de `https: true` booléen).
     host: true, // pour Docker : écoute sur 0.0.0.0
     ...(hmrBehindProxy ? { hmr: hmrBehindProxy } : {}),
-    /**
-     * Proxy API uniquement en `npm run dev` : en `vite preview` (Docker) l’API passe par Nginx,
-     * sinon le proxy vers localhost:3000 dans le conteneur provoque ECONNREFUSED.
-     */
-    ...(useDevHttps
+    ...(isDev
       ? {
           proxy: {
             '/api': {
-              target: process.env.VITE_API_PROXY_TARGET || 'https://localhost:3000',
+              target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',
               changeOrigin: true,
-              secure: false,
             },
             '/socket.io': {
-              target: process.env.VITE_API_PROXY_TARGET || 'https://localhost:3000',
+              target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',
               changeOrigin: true,
-              secure: false,
               ws: true,
             },
           },
