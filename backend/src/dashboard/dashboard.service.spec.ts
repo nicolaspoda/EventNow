@@ -349,6 +349,10 @@ describe('DashboardService', () => {
       organizer: { id: 'org-1', email: 'org@t.com', username: 'org' },
     };
 
+    beforeEach(() => {
+      mockPrismaService.event.findMany.mockResolvedValue([]);
+    });
+
     it('should return upcoming professional and community events', async () => {
       mockPrismaService.ticket.findMany.mockResolvedValue([{
         ticketCategory: {
@@ -395,6 +399,28 @@ describe('DashboardService', () => {
       mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
       const result = await service.getMyUpcomingEvents('user-1');
       expect(result.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should include events the user organizes', async () => {
+      mockPrismaService.ticket.findMany.mockResolvedValue([]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.event.findMany.mockResolvedValue([
+        { ...futureEvent, type: 'COMMUNITY' },
+      ]);
+      const result = await service.getMyUpcomingEvents('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].participationType).toBe('ORGANIZER');
+    });
+
+    it('should not duplicate an event the user both organizes and holds a ticket for', async () => {
+      mockPrismaService.ticket.findMany.mockResolvedValue([{
+        ticketCategory: { name: 'Standard', event: futureEvent },
+      }]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.event.findMany.mockResolvedValue([futureEvent]);
+      const result = await service.getMyUpcomingEvents('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].participationType).toBe('TICKET');
     });
   });
 

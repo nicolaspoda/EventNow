@@ -24,6 +24,7 @@ describe('FollowsService', () => {
 
   const mockNotificationsService = {
     create: jest.fn(),
+    notifyFollowsChanged: jest.fn(),
   };
 
   const mockFollow = {

@@ -256,7 +256,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
+        const socket = this.server.sockets.get(socketId);
         if (socket) {
           socket.join(`conversation:${conversationId}`);
         }
@@ -273,7 +273,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
+        const socket = this.server.sockets.get(socketId);
         if (socket) {
           socket.leave(`conversation:${conversationId}`);
         }
@@ -288,6 +288,10 @@ export class MessagesGateway
 
   emitNewNotificationToUser(userId: string) {
     this.server.to(`user:${userId}`).emit('newNotification', {});
+  }
+
+  emitFollowsChanged(userId: string) {
+    this.server.to(`user:${userId}`).emit('followsChanged', {});
   }
 
   notifyPollCreated(eventId: string, poll: any) {

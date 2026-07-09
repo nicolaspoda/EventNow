@@ -132,6 +132,10 @@ export class NotificationsService {
     return result;
   }
 
+  notifyFollowsChanged(userId: string) {
+    this.messagesGateway.emitFollowsChanged(userId);
+  }
+
   async deleteByTypeAndRelatedId(
     userId: string,
     type: string,

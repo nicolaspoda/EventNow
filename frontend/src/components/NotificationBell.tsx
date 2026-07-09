@@ -57,9 +57,13 @@ export function NotificationBell() {
         fetchNotifications();
       }
     };
+    // Resynchronise après une reconnexion socket (veille d'onglet, coupure réseau,
+    // redémarrage backend) pour ne pas rater une notification arrivée pendant la coupure.
     socketService.on('newNotification', handleNewNotification);
+    socketService.on('socketReconnected', handleNewNotification);
     return () => {
       socketService.off('newNotification', handleNewNotification);
+      socketService.off('socketReconnected', handleNewNotification);
     };
   }, [isOpen]);
 

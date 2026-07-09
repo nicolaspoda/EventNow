@@ -51,6 +51,8 @@ export class FollowsService {
       body: `${followerName} a commencé à vous suivre`,
       relatedId: followerId,
     });
+    this.notificationsService.notifyFollowsChanged(followingId);
+    this.notificationsService.notifyFollowsChanged(followerId);
 
     return created;
   }
@@ -67,6 +69,8 @@ export class FollowsService {
     await this.prisma.follow.delete({
       where: { id: follow.id },
     });
+    this.notificationsService.notifyFollowsChanged(followingId);
+    this.notificationsService.notifyFollowsChanged(followerId);
     return { success: true };
   }
 

@@ -33,9 +33,11 @@ interface SocketEvents {
   memberRemoved: (data: { conversationId: string; userId: string }) => void;
   userTyping: (data: { conversationId: string; userId: string; isTyping: boolean }) => void;
   newNotification: () => void;
+  followsChanged: () => void;
   pollCreated: (poll: Poll) => void;
   pollUpdated: (poll: Poll) => void;
   pollDeleted: (data: { pollId: string }) => void;
+  socketReconnected: () => void;
 }
 
 type EventName = keyof SocketEvents;
@@ -83,6 +85,10 @@ class SocketService {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         resolve();
+        // Resynchronise l'état (ex. notifications) après une reconnexion silencieuse
+        // (veille de l'onglet, coupure réseau, redémarrage du backend), pour éviter
+        // qu'un événement émis pendant la déconnexion soit manqué.
+        this.emit('socketReconnected');
       });
 
       this.socket.on('connect_error', (error) => {
@@ -121,6 +127,10 @@ class SocketService {
 
       this.socket.on('newNotification', () => {
         this.emit('newNotification');
+      });
+
+      this.socket.on('followsChanged', () => {
+        this.emit('followsChanged');
       });
 
       this.socket.on('pollCreated', (poll: Poll) => {

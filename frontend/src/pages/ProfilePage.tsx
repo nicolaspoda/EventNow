@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { profileService } from '../services/profile.service';
+import { socketService } from '../services/socketService';
 import type { PublicUserProfile } from '../services/profile.service';
 import Button from '../components/ui/Button';
 import { AvatarUpload } from '../components/upload/AvatarUpload';
@@ -63,6 +64,17 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    // Rafraîchit les compteurs abonnés/abonnements/amis en direct quand quelqu'un
+    // me suit/ne me suit plus (event émis uniquement vers ma propre room socket).
+    if (isViewMode) return;
+    const handleFollowsChanged = () => fetchProfile();
+    socketService.on('followsChanged', handleFollowsChanged);
+    return () => {
+      socketService.off('followsChanged', handleFollowsChanged);
+    };
+  }, [isViewMode]);
 
   useEffect(() => {
     if (success) {
