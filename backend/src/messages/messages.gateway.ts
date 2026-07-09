@@ -7,7 +7,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -35,7 +35,7 @@ export class MessagesGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server: Namespace;
 
   private readonly logger = new Logger(MessagesGateway.name);
   private userSockets: Map<string, Set<string>> = new Map();
@@ -256,7 +256,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
+        const socket = this.server.sockets.get(socketId);
         if (socket) {
           socket.join(`conversation:${conversationId}`);
         }
@@ -273,7 +273,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
+        const socket = this.server.sockets.get(socketId);
         if (socket) {
           socket.leave(`conversation:${conversationId}`);
         }
