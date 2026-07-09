@@ -4,6 +4,7 @@ import {
   type EventItem,
   type EventItemList,
 } from '../../services/eventItemsService';
+import { socketService } from '../../services/socketService';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
 import Button from '../ui/Button';
 import AddItemModal from './AddItemModal';
@@ -42,6 +43,44 @@ const EventItemListTab: React.FC<Props> = ({
   useEffect(() => {
     loadList();
   }, [loadList]);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    const joinRoom = async () => {
+      try {
+        if (!socketService.isConnected()) {
+          const token = sessionStorage.getItem('accessToken');
+          if (token) {
+            await socketService.connect(token);
+          }
+        }
+        await socketService.joinEventRoom(eventId);
+      } catch {
+        // Ignoré : les mises à jour temps réel ne fonctionneront pas mais le reste de la page reste utilisable.
+      }
+    };
+    joinRoom();
+
+    const handleItemListUpdated = (updated: EventItemList) => {
+      setList((prev) => {
+        if (!prev) return updated;
+        return {
+          ...updated,
+          items: updated.items.map((item) => {
+            const prevItem = prev.items.find((p) => p.id === item.id);
+            return prevItem ? { ...item, isClaimedByMe: prevItem.isClaimedByMe } : item;
+          }),
+        };
+      });
+    };
+
+    socketService.on('itemListUpdated', handleItemListUpdated);
+
+    return () => {
+      socketService.off('itemListUpdated', handleItemListUpdated);
+      socketService.leaveEventRoom(eventId);
+    };
+  }, [eventId]);
 
   const handleAdd = async (dto: Parameters<typeof eventItemsService.addItem>[1]) => {
     const updated = await eventItemsService.addItem(eventId, dto);
@@ -287,7 +326,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
           </p>
         )}
         {isClaimed && !isClaimedByMe && (
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
+          <p className="text-xs text-neutral-500 dark:text-neutral-300 mt-0.5">
             {claimerName} s'en charge
           </p>
         )}

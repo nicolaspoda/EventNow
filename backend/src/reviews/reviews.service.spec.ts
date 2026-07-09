@@ -1,11 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ReviewsService } from './reviews.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { EventType } from '@prisma/client';
 
 describe('ReviewsService', () => {
   let service: ReviewsService;
+
+  const mockGateway = {
+    notifyReviewsChanged: jest.fn(),
+  };
 
   const mockPrismaService = {
     event: { findUnique: jest.fn() },
@@ -54,6 +59,7 @@ describe('ReviewsService', () => {
       providers: [
         ReviewsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: MessagesGateway, useValue: mockGateway },
       ],
     }).compile();
 

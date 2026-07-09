@@ -7,10 +7,15 @@ import {
 } from '@nestjs/common';
 import { EventItemsService } from './event-items.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { EventType, ItemStatus, ParticipationRequestStatus } from '@prisma/client';
 
 describe('EventItemsService', () => {
   let service: EventItemsService;
+
+  const mockGateway = {
+    notifyItemListUpdated: jest.fn(),
+  };
 
   const mockPrismaService = {
     event: { findUnique: jest.fn() },
@@ -59,6 +64,7 @@ describe('EventItemsService', () => {
       providers: [
         EventItemsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: MessagesGateway, useValue: mockGateway },
       ],
     }).compile();
 

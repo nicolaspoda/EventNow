@@ -189,7 +189,8 @@ export class PollsService {
     });
 
     const formatted = this.formatPoll(poll, userId);
-    this.gateway.notifyPollCreated(eventId, formatted);
+    const broadcast = this.neutralizePoll(formatted);
+    this.gateway.notifyPollCreated(eventId, broadcast);
     return formatted;
   }
 

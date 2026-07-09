@@ -256,7 +256,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.get(socketId);
+        const socket = this.server.sockets.sockets.get(socketId);
         if (socket) {
           socket.join(`conversation:${conversationId}`);
         }
@@ -273,7 +273,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.get(socketId);
+        const socket = this.server.sockets.sockets.get(socketId);
         if (socket) {
           socket.leave(`conversation:${conversationId}`);
         }
@@ -304,5 +304,13 @@ export class MessagesGateway
 
   notifyPollDeleted(eventId: string, pollId: string) {
     this.server.to(`event-${eventId}`).emit('pollDeleted', { pollId });
+  }
+
+  notifyItemListUpdated(eventId: string, list: any) {
+    this.server.to(`event-${eventId}`).emit('itemListUpdated', list);
+  }
+
+  notifyReviewsChanged(eventId: string) {
+    this.server.to(`event-${eventId}`).emit('reviewsChanged', { eventId });
   }
 }

@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { Conversation, Message } from './messageService';
 import type { Poll } from './pollsService';
+import type { EventItemList } from './eventItemsService';
 
 function getSocketBaseUrl(): string {
   // Par défaut on utilise le same-origin (proxy Vite en dev, reverse proxy en prod).
@@ -37,6 +38,8 @@ interface SocketEvents {
   pollCreated: (poll: Poll) => void;
   pollUpdated: (poll: Poll) => void;
   pollDeleted: (data: { pollId: string }) => void;
+  itemListUpdated: (list: EventItemList) => void;
+  reviewsChanged: (data: { eventId: string }) => void;
   socketReconnected: () => void;
 }
 
@@ -143,6 +146,14 @@ class SocketService {
 
       this.socket.on('pollDeleted', (data: { pollId: string }) => {
         this.emit('pollDeleted', data);
+      });
+
+      this.socket.on('itemListUpdated', (list: EventItemList) => {
+        this.emit('itemListUpdated', list);
+      });
+
+      this.socket.on('reviewsChanged', (data: { eventId: string }) => {
+        this.emit('reviewsChanged', data);
       });
 
       setTimeout(() => {
