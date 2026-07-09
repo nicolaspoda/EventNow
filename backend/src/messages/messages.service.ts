@@ -1,5 +1,7 @@
 import {
   Injectable,
+  Inject,
+  forwardRef,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -19,6 +21,7 @@ import { ConversationType as PrismaConversationType } from '@prisma/client';
 export class MessagesService {
   constructor(
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
   ) {}
 

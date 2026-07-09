@@ -156,7 +156,6 @@ describe('StaffInvitationsService', () => {
       const result = await service.createInvitation('org-1', { eventId: 'event-1', email: 'invited@test.com' });
       expect(mockPrismaService.staffInvitation.create).toHaveBeenCalled();
       expect(mockNotificationsService.create).toHaveBeenCalled();
-      expect(mockMessagesGateway.emitNewNotificationToUser).toHaveBeenCalledWith('user-1');
     });
 
     it('should use invitedBy email as fallback in notification body', async () => {

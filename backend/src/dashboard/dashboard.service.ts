@@ -86,7 +86,7 @@ export class DashboardService {
         totalCapacity > 0 ? (totalSold / totalCapacity) * 100 : 0;
       const status = event.cancelledAt
         ? 'CANCELLED'
-        : this.getEventStatus(event.eventDate, fillRate);
+        : this.getEventStatus(event, fillRate);
 
       return {
         ...event,
@@ -252,7 +252,7 @@ export class DashboardService {
 
       const fillRate =
         totalCapacity > 0 ? (totalParticipants / totalCapacity) * 100 : 0;
-      const status = this.getEventStatus(event.eventDate, fillRate);
+      const status = this.getEventStatus(event, fillRate);
 
       return {
         ...event,
@@ -819,12 +819,20 @@ export class DashboardService {
     });
   }
 
-  private getEventStatus(eventDate: Date, fillRate: number): string {
+  private getEventStatus(
+    event: { eventDate: Date; endDate?: Date | null },
+    fillRate: number,
+  ): string {
     const now = new Date();
-    const eventDateObj = new Date(eventDate);
+    const eventDateObj = new Date(event.eventDate);
+    const endDateObj = this.getEventEndDate(event);
 
-    if (eventDateObj < now) {
+    if (endDateObj < now) {
       return 'COMPLETED';
+    }
+
+    if (eventDateObj <= now) {
+      return 'ONGOING';
     }
 
     if (fillRate >= 100) {

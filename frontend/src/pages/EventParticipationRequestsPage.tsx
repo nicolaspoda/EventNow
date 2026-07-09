@@ -8,6 +8,7 @@ import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
 import { Card } from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { socketService } from '../services/socketService';
 
 export default function EventParticipationRequestsPage() {
   const { eventId } = useParams<{ eventId: string }>();
@@ -18,6 +19,16 @@ export default function EventParticipationRequestsPage() {
 
   useEffect(() => {
     fetchRequests();
+  }, [eventId]);
+
+  useEffect(() => {
+    const handleNewNotification = () => {
+      fetchRequests();
+    };
+    socketService.on('newNotification', handleNewNotification);
+    return () => {
+      socketService.off('newNotification', handleNewNotification);
+    };
   }, [eventId]);
 
   const fetchRequests = async () => {

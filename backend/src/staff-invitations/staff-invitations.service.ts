@@ -181,8 +181,6 @@ export class StaffInvitationsService {
       relatedId: invitation.token,
     });
 
-    this.messagesGateway.emitNewNotificationToUser(existingUser.id);
-
     return invitation;
   }
 

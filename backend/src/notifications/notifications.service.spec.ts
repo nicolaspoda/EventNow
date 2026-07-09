@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsService } from './notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('NotificationsService', () => {
@@ -20,6 +21,10 @@ describe('NotificationsService', () => {
     },
   };
 
+  const mockMessagesGateway = {
+    emitNewNotificationToUser: jest.fn(),
+  };
+
   const mockNotif = {
     id: 'notif-1',
     userId: 'user-1',
@@ -36,6 +41,7 @@ describe('NotificationsService', () => {
       providers: [
         NotificationsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: MessagesGateway, useValue: mockMessagesGateway },
       ],
     }).compile();
 
@@ -147,6 +153,7 @@ describe('NotificationsService', () => {
       expect(mockPrismaService.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ relatedId: 'event-1' }) }),
       );
+      expect(mockMessagesGateway.emitNewNotificationToUser).toHaveBeenCalledWith('user-1');
     });
 
     it('should create notification with null relatedId when not provided', async () => {
@@ -184,6 +191,8 @@ describe('NotificationsService', () => {
           ]),
         }),
       );
+      expect(mockMessagesGateway.emitNewNotificationToUser).toHaveBeenCalledWith('user-1');
+      expect(mockMessagesGateway.emitNewNotificationToUser).toHaveBeenCalledWith('user-2');
     });
 
     it('should pass relatedId when provided', async () => {

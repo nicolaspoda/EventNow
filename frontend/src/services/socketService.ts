@@ -8,12 +8,7 @@ function getSocketBaseUrl(): string {
   const raw = import.meta.env.VITE_API_URL?.trim();
   if (!raw) return '';
 
-  let base = raw.replace(/\/+$/, '');
-
-  // Evite une config locale HTTP qui casse derrière un backend HTTPS.
-  if (/^http:\/\/(localhost|127\.0\.0\.1):3000$/i.test(base)) {
-    base = base.replace(/^http:/i, 'https:');
-  }
+  const base = raw.replace(/\/+$/, '');
 
   // Si VITE_API_URL inclut /api ou /api/v1, on garde seulement l'origine pour Socket.IO.
   try {

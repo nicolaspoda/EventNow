@@ -7,6 +7,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import { ConfigService } from '@nestjs/config';
 import { CustomLoggerService } from '../logger/logger.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 
@@ -53,6 +54,10 @@ describe('OrdersService', () => {
   const mockPromoCodesService = {
     validatePromoCodeById: jest.fn(),
     applyPromoCode: jest.fn(),
+  };
+
+  const mockMessagesGateway = {
+    emitNewNotificationToUser: jest.fn(),
   };
 
   const mockConfigService = {
@@ -125,6 +130,7 @@ describe('OrdersService', () => {
         { provide: MailService, useValue: mockMailService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: PromoCodesService, useValue: mockPromoCodesService },
+        { provide: MessagesGateway, useValue: mockMessagesGateway },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: CustomLoggerService, useValue: mockLogger },
       ],
@@ -136,9 +142,10 @@ describe('OrdersService', () => {
 
   describe('initiatePayment', () => {
     it('should delegate to paymentService when no promo code', async () => {
+      mockPrismaService.booking.findUnique.mockResolvedValue(mockBooking);
       mockPaymentService.createPaymentIntent.mockResolvedValue({ clientSecret: 'secret' });
       await service.initiatePayment('booking-1', 'user-1');
-      expect(mockPaymentService.createPaymentIntent).toHaveBeenCalledWith('booking-1', 'user-1');
+      expect(mockPaymentService.createPaymentIntent).toHaveBeenCalledWith('booking-1', 'user-1', 50);
     });
 
     it('should throw NotFoundException if booking not found with promo code', async () => {
@@ -157,6 +164,27 @@ describe('OrdersService', () => {
       mockPaymentService.createPaymentIntent.mockResolvedValue({ clientSecret: 'secret' });
       await service.initiatePayment('booking-1', 'user-1', 'promo-1');
       expect(mockPaymentService.createPaymentIntent).toHaveBeenCalledWith('booking-1', 'user-1', 40);
+    });
+
+    it('should confirm the order directly without Stripe when the amount is free', async () => {
+      mockPrismaService.booking.findUnique.mockResolvedValue(mockBooking);
+      mockPromoCodesService.validatePromoCodeById.mockResolvedValue({ finalAmount: 0 });
+      mockPromoCodesService.applyPromoCode.mockResolvedValue({});
+      mockPrismaService.$transaction.mockImplementation(async (fn) => fn(mockTx));
+      mockTx.booking.findUnique.mockResolvedValue(mockBooking);
+      mockTx.booking.update.mockResolvedValue({});
+      mockTx.order.create.mockResolvedValue({ id: 'order-1' });
+      mockTx.ticket.create.mockResolvedValue({ id: 'ticket-1' });
+      mockNotificationsService.create.mockResolvedValue({});
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'user@test.com', username: null });
+      mockMailService.sendOrderConfirmation.mockResolvedValue({});
+
+      const result = await service.initiatePayment('booking-1', 'user-1', 'promo-1');
+
+      expect(mockPaymentService.createPaymentIntent).not.toHaveBeenCalled();
+      expect(result).toEqual(
+        expect.objectContaining({ free: true, orderId: 'order-1', amount: 0 }),
+      );
     });
   });
 

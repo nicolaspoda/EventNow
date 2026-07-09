@@ -248,7 +248,7 @@ export function EventEditPage() {
     setSubmitLoading(true);
     try {
       await eventService.updateEvent(id, payload);
-      navigate(`/events/${id}`, { replace: true });
+      navigate(-1);
     } catch (err: unknown) {
       const msg =
         err instanceof Error && 'response' in err
@@ -572,12 +572,13 @@ export function EventEditPage() {
           <PrimaryButton type="submit" loading={submitLoading}>
             {submitLoading ? 'Enregistrement...' : 'Enregistrer les modifications'}
           </PrimaryButton>
-          <Link
-            to={`/events/${id}`}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
             className="inline-flex items-center justify-center px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             Annuler
-          </Link>
+          </button>
         </div>
       </form>
     </div>

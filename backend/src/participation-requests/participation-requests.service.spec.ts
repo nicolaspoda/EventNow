@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ParticipationRequestsService } from './participation-requests.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { EventType, ParticipationRequestStatus } from '@prisma/client';
 
@@ -24,6 +26,14 @@ describe('ParticipationRequestsService', () => {
     },
     notification: { create: jest.fn() },
     $transaction: jest.fn(),
+  };
+
+  const mockNotificationsService = {
+    create: jest.fn(),
+  };
+
+  const mockMessagesGateway = {
+    emitNewNotificationToUser: jest.fn(),
   };
 
   const mockCommunityEvent = {
@@ -51,6 +61,8 @@ describe('ParticipationRequestsService', () => {
       providers: [
         ParticipationRequestsService,
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: MessagesGateway, useValue: mockMessagesGateway },
       ],
     }).compile();
 
@@ -121,10 +133,10 @@ describe('ParticipationRequestsService', () => {
         user: { email: 'user@example.com', username: 'user1' },
         event: { title: 'Test Event' },
       });
-      mockPrismaService.notification.create.mockResolvedValue({});
+      mockNotificationsService.create.mockResolvedValue({});
       const result = await service.create('user-1', { eventId: 'event-1', message: 'Hi' });
       expect(mockPrismaService.participationRequest.create).toHaveBeenCalled();
-      expect(mockPrismaService.notification.create).toHaveBeenCalled();
+      expect(mockNotificationsService.create).toHaveBeenCalled();
     });
 
     it('should use email as requester label when username is null', async () => {
@@ -136,10 +148,10 @@ describe('ParticipationRequestsService', () => {
         user: { email: 'user@example.com', username: null },
         event: { title: 'Test Event' },
       });
-      mockPrismaService.notification.create.mockResolvedValue({});
+      mockNotificationsService.create.mockResolvedValue({});
       await service.create('user-1', { eventId: 'event-1', message: 'Hi' });
-      const notifCall = mockPrismaService.notification.create.mock.calls[0][0];
-      expect(notifCall.data.body).toContain('user@example.com');
+      const notifCall = mockNotificationsService.create.mock.calls[0][0];
+      expect(notifCall.body).toContain('user@example.com');
     });
 
     it('should allow request when no Participation category exists', async () => {
@@ -155,7 +167,7 @@ describe('ParticipationRequestsService', () => {
         user: { email: 'user@example.com', username: 'user1' },
         event: { title: 'Test Event' },
       });
-      mockPrismaService.notification.create.mockResolvedValue({});
+      mockNotificationsService.create.mockResolvedValue({});
       await service.create('user-1', { eventId: 'event-1', message: 'Hi' });
       expect(mockPrismaService.participationRequest.create).toHaveBeenCalled();
     });
