@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from './messages.gateway';
 import {
   CreateConversationDto,
   SendMessageDto,
@@ -23,6 +24,8 @@ export class MessagesService {
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => NotificationsService))
     private readonly notificationsService: NotificationsService,
+    @Inject(forwardRef(() => MessagesGateway))
+    private readonly messagesGateway: MessagesGateway,
   ) {}
 
   async createConversation(userId: string, dto: CreateConversationDto) {
@@ -106,6 +109,10 @@ export class MessagesService {
         },
       },
     });
+
+    for (const memberId of allMemberIds) {
+      await this.messagesGateway.notifyMemberAdded(conversation.id, memberId);
+    }
 
     return conversation;
   }
@@ -358,7 +365,9 @@ export class MessagesService {
       });
     }
 
-    return this.serializeMessage(message);
+    const serialized = this.serializeMessage(message);
+    await this.messagesGateway.notifyNewMessage(conversationId, serialized);
+    return serialized;
   }
 
   async addMembers(conversationId: string, userId: string, dto: AddMembersDto) {
@@ -580,7 +589,7 @@ export class MessagesService {
       },
     });
 
-    if (!conversation && isOrganizer) {
+    if (!conversation && (isOrganizer || isAcceptedParticipant)) {
       const acceptedParticipants =
         await this.prisma.participationRequest.findMany({
           where: {
@@ -637,6 +646,10 @@ export class MessagesService {
           },
         },
       });
+
+      for (const memberId of memberIds) {
+        await this.messagesGateway.notifyMemberAdded(conversation.id, memberId);
+      }
     }
 
     if (!conversation) {
@@ -653,6 +666,7 @@ export class MessagesService {
           userId,
         },
       });
+      await this.messagesGateway.notifyMemberAdded(conversation.id, userId);
 
       return this.getConversation(conversation.id, userId);
     }

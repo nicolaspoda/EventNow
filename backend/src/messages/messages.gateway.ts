@@ -8,7 +8,7 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesService } from './messages.service';
@@ -43,6 +43,7 @@ export class MessagesGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => MessagesService))
     private readonly messagesService: MessagesService,
   ) {}
 
@@ -205,11 +206,6 @@ export class MessagesGateway
         client.userId,
         dto,
       );
-
-      this.server.to(`conversation:${data.conversationId}`).emit('newMessage', {
-        conversationId: data.conversationId,
-        message,
-      });
 
       this.logger.log(
         `Message sent in conversation ${data.conversationId} by user ${client.userId}`,
