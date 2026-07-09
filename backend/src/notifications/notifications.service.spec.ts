@@ -91,7 +91,7 @@ describe('NotificationsService', () => {
     it('should mark notification as read', async () => {
       mockPrismaService.notification.findUnique.mockResolvedValue(mockNotif);
       mockPrismaService.notification.update.mockResolvedValue({ ...mockNotif, read: true });
-      const result = await service.markAsRead('notif-1', 'user-1');
+      await service.markAsRead('notif-1', 'user-1');
       expect(mockPrismaService.notification.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { read: true } }),
       );

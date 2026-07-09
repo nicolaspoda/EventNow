@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MessagesService } from './messages.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from './messages.gateway';
 import {
   NotFoundException,
   ForbiddenException,
@@ -43,6 +44,11 @@ describe('MessagesService', () => {
 
   const mockNotificationsService = {
     createNotification: jest.fn(),
+  };
+
+  const mockMessagesGateway = {
+    notifyMemberAdded: jest.fn(),
+    notifyNewMessage: jest.fn(),
   };
 
   const mockUser = { id: 'user-1', username: 'alice', email: 'alice@test.com', avatarUrl: null };
@@ -91,6 +97,7 @@ describe('MessagesService', () => {
         MessagesService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: MessagesGateway, useValue: mockMessagesGateway },
       ],
     }).compile();
 
@@ -558,14 +565,23 @@ describe('MessagesService', () => {
       expect(result.id).toBe('conv-3');
     });
 
-    it('should throw NotFoundException if non-organizer and no conversation', async () => {
+    it('should create conversation for accepted participant when none exists', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue({
         ...mockEvent,
         organizerId: 'other-user',
         participationRequests: [{ userId: 'user-1', status: 'ACCEPTED' }],
       });
       mockPrismaService.conversation.findFirst.mockResolvedValue(null);
-      await expect(service.getEventConversation('event-1', 'user-1')).rejects.toThrow(NotFoundException);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([
+        { userId: 'user-1' },
+      ]);
+      const createdConv = {
+        ...mockEventConversation,
+        members: [{ userId: 'user-1' }],
+      };
+      mockPrismaService.conversation.create.mockResolvedValue(createdConv);
+      const result = await service.getEventConversation('event-1', 'user-1');
+      expect(result.id).toBe('conv-3');
     });
 
     it('should add user as member if they are not yet in the conversation', async () => {

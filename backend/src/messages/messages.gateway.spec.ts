@@ -27,9 +27,7 @@ describe('MessagesGateway', () => {
     leave: jest.fn(),
     to: jest.fn().mockReturnThis(),
     emit: jest.fn(),
-    sockets: {
-      sockets: new Map(),
-    },
+    sockets: new Map(),
   };
 
   const makeClient = (overrides: Record<string, unknown> = {}) => ({
@@ -238,14 +236,13 @@ describe('MessagesGateway', () => {
       expect(result).toEqual({ error: 'Unauthorized' });
     });
 
-    it('should send message and emit to conversation', async () => {
+    it('should send message via MessagesService', async () => {
       const client = makeClient({ userId: 'user-1' }) as any;
       const mockMsg = { id: 'msg-1', content: 'hi' };
       mockMessagesService.sendMessage.mockResolvedValue(mockMsg);
 
       const result = await gateway.handleSendMessage(client, { conversationId: 'conv-1', content: 'hi' });
-      expect(mockServerSocket.to).toHaveBeenCalledWith('conversation:conv-1');
-      expect(mockServerSocket.emit).toHaveBeenCalledWith('newMessage', expect.any(Object));
+      expect(mockMessagesService.sendMessage).toHaveBeenCalledWith('conv-1', 'user-1', { content: 'hi' });
       expect(result).toEqual({ success: true, message: mockMsg });
     });
 
@@ -292,12 +289,12 @@ describe('MessagesGateway', () => {
 
     it('notifyMemberAdded should join socket to conversation if socket found', async () => {
       const mockSocket = { join: jest.fn() };
-      mockServerSocket.sockets.sockets.set('socket-1', mockSocket);
+      mockServerSocket.sockets.set('socket-1', mockSocket as any);
       (gateway as any).userSockets.set('user-1', new Set(['socket-1']));
 
       await gateway.notifyMemberAdded('conv-1', 'user-1');
       expect(mockSocket.join).toHaveBeenCalledWith('conversation:conv-1');
-      mockServerSocket.sockets.sockets.delete('socket-1');
+      mockServerSocket.sockets.delete('socket-1');
     });
 
     it('notifyMemberRemoved should emit memberRemoved', async () => {
@@ -307,12 +304,12 @@ describe('MessagesGateway', () => {
 
     it('notifyMemberRemoved should leave socket from conversation if socket found', async () => {
       const mockSocket = { leave: jest.fn() };
-      mockServerSocket.sockets.sockets.set('socket-2', mockSocket);
+      mockServerSocket.sockets.set('socket-2', mockSocket as any);
       (gateway as any).userSockets.set('user-2', new Set(['socket-2']));
 
       await gateway.notifyMemberRemoved('conv-1', 'user-2');
       expect(mockSocket.leave).toHaveBeenCalledWith('conversation:conv-1');
-      mockServerSocket.sockets.sockets.delete('socket-2');
+      mockServerSocket.sockets.delete('socket-2');
     });
 
     it('emitNewNotificationToUser should emit to user room', () => {

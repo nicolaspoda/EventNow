@@ -21,7 +21,6 @@ describe('EmailRemindersJob', () => {
   const now = new Date();
   const sevenDaysFromNow = new Date(now.getTime() + 7 * 86400000);
   const startOfDay = new Date(sevenDaysFromNow.setHours(0, 0, 0, 0));
-  const endOfDay = new Date(sevenDaysFromNow.setHours(23, 59, 59, 999));
 
   const mockEvent = {
     id: 'event-1',

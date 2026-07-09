@@ -104,7 +104,7 @@ describe('ParticipantReviewsService', () => {
       mockPrismaService.participationRequest.findUnique.mockResolvedValue({ status: ParticipationRequestStatus.ACCEPTED });
       mockPrismaService.participantReview.findUnique.mockResolvedValue(null);
       mockPrismaService.participantReview.create.mockResolvedValue(mockReview);
-      const result = await service.create('organizer-1', dto);
+      await service.create('organizer-1', dto);
       expect(mockPrismaService.participantReview.create).toHaveBeenCalled();
     });
 

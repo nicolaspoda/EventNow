@@ -41,7 +41,7 @@ describe('ReviewsController', () => {
 
   it('should return canReview for CLIENT user', async () => {
     mockReviewsService.canUserReview.mockResolvedValue({ canReview: true });
-    const result = await controller.canUserReview('event-1', mockClientUser as any);
+    await controller.canUserReview('event-1', mockClientUser as any);
     expect(mockReviewsService.canUserReview).toHaveBeenCalledWith('event-1', 'user-1');
   });
 

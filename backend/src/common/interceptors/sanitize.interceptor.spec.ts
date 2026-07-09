@@ -13,12 +13,6 @@ describe('SanitizeInterceptor', () => {
     interceptor = module.get<SanitizeInterceptor>(SanitizeInterceptor);
   });
 
-  const makeContext = (body: any) => ({
-    switchToHttp: () => ({
-      getRequest: () => ({ body }),
-    }),
-  }) as any;
-
   it('should sanitize HTML from string body', (done) => {
     const request = { body: '<script>alert("xss")</script>Hello' };
     const context = { switchToHttp: () => ({ getRequest: () => request }) } as any;

@@ -134,7 +134,7 @@ describe('ParticipationRequestsService', () => {
         event: { title: 'Test Event' },
       });
       mockNotificationsService.create.mockResolvedValue({});
-      const result = await service.create('user-1', { eventId: 'event-1', message: 'Hi' });
+      await service.create('user-1', { eventId: 'event-1', message: 'Hi' });
       expect(mockPrismaService.participationRequest.create).toHaveBeenCalled();
       expect(mockNotificationsService.create).toHaveBeenCalled();
     });
@@ -308,7 +308,7 @@ describe('ParticipationRequestsService', () => {
         user: { id: 'user-1', email: 'u@test.com', username: 'user1' },
       });
       mockTx.notification.create.mockResolvedValue({});
-      const result = await service.respond('req-1', 'organizer-1', { action: 'ACCEPT' });
+      await service.respond('req-1', 'organizer-1', { action: 'ACCEPT' });
       expect(mockTx.participationRequest.update).toHaveBeenCalled();
     });
 

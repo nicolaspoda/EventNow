@@ -86,13 +86,6 @@ describe('PollsService', () => {
     mockPrismaService.event.findUnique.mockResolvedValue(mockCommunityEvent);
   };
 
-  const setupParticipantAccess = () => {
-    mockPrismaService.event.findUnique.mockResolvedValue({ ...mockCommunityEvent, organizerId: 'other-user' });
-    mockPrismaService.participationRequest.findUnique.mockResolvedValue({
-      status: ParticipationRequestStatus.ACCEPTED,
-    });
-  };
-
   describe('checkAccess', () => {
     it('should throw NotFoundException if event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
@@ -293,7 +286,7 @@ describe('PollsService', () => {
         });
       mockPrismaService.pollVote.createMany.mockResolvedValue({});
 
-      const result = await service.vote('user-1', 'event-1', 'poll-1', voteDto);
+      await service.vote('user-1', 'event-1', 'poll-1', voteDto);
       expect(mockPrismaService.pollVote.createMany).toHaveBeenCalled();
       expect(mockGateway.notifyPollUpdated).toHaveBeenCalledWith(
         'event-1',

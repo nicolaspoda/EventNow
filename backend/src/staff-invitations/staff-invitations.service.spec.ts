@@ -153,7 +153,7 @@ describe('StaffInvitationsService', () => {
       mockPrismaService.staffInvitation.findFirst.mockResolvedValue(null);
       mockPrismaService.staffInvitation.create.mockResolvedValue(mockInvitation);
       mockNotificationsService.create.mockResolvedValue({});
-      const result = await service.createInvitation('org-1', { eventId: 'event-1', email: 'invited@test.com' });
+      await service.createInvitation('org-1', { eventId: 'event-1', email: 'invited@test.com' });
       expect(mockPrismaService.staffInvitation.create).toHaveBeenCalled();
       expect(mockNotificationsService.create).toHaveBeenCalled();
     });

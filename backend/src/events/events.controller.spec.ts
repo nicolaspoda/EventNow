@@ -118,7 +118,7 @@ describe('EventsController', () => {
       const result = await controller.findOne('event-1');
 
       expect(result).toEqual(mockEvent);
-      expect(service.findOne).toHaveBeenCalledWith('event-1');
+      expect(service.findOne).toHaveBeenCalledWith('event-1', undefined);
     });
   });
 

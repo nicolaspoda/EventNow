@@ -3,6 +3,10 @@ import { UploadService } from './upload.service';
 import { ConfigService } from '@nestjs/config';
 import { CustomLoggerService } from '../logger/logger.service';
 import { BadRequestException } from '@nestjs/common';
+import { v2 as cloudinary } from 'cloudinary';
+import * as streamifier from 'streamifier';
+
+type UploadCallback = (error: any, result: any) => void;
 
 jest.mock('cloudinary', () => ({
   v2: {
@@ -56,7 +60,6 @@ describe('UploadService', () => {
 
   describe('onModuleInit', () => {
     it('should configure cloudinary with valid credentials', () => {
-      const { v2: cloudinary } = require('cloudinary');
       mockConfigService.get.mockImplementation((key: string) => {
         if (key === 'CLOUDINARY_CLOUD_NAME') return 'mycloud';
         if (key === 'CLOUDINARY_API_KEY') return 'key';
@@ -91,15 +94,15 @@ describe('UploadService', () => {
     });
 
     it('should upload image successfully', async () => {
-      const { v2: cloudinary } = require('cloudinary');
-      const streamifier = require('streamifier');
       const mockUploadResult = { secure_url: 'http://test.com/img.jpg', public_id: 'test/img' };
 
-      cloudinary.uploader.upload_stream.mockImplementation((_opts: any, callback: Function) => {
-        callback(null, mockUploadResult);
-        return { on: jest.fn() };
-      });
-      streamifier.createReadStream.mockReturnValue({ pipe: jest.fn() });
+      (cloudinary.uploader.upload_stream as jest.Mock).mockImplementation(
+        (_opts: any, callback: UploadCallback) => {
+          callback(null, mockUploadResult);
+          return { on: jest.fn() };
+        },
+      );
+      (streamifier.createReadStream as jest.Mock).mockReturnValue({ pipe: jest.fn() });
 
       const file = { buffer: Buffer.from('test'), mimetype: 'image/jpeg', size: 100 } as any;
       const result = await service.uploadImage(file, 'events');
@@ -107,14 +110,13 @@ describe('UploadService', () => {
     });
 
     it('should reject on cloudinary error', async () => {
-      const { v2: cloudinary } = require('cloudinary');
-      const streamifier = require('streamifier');
-
-      cloudinary.uploader.upload_stream.mockImplementation((_opts: any, callback: Function) => {
-        callback({ message: 'Upload failed' }, null);
-        return { on: jest.fn() };
-      });
-      streamifier.createReadStream.mockReturnValue({ pipe: jest.fn() });
+      (cloudinary.uploader.upload_stream as jest.Mock).mockImplementation(
+        (_opts: any, callback: UploadCallback) => {
+          callback({ message: 'Upload failed' }, null);
+          return { on: jest.fn() };
+        },
+      );
+      (streamifier.createReadStream as jest.Mock).mockReturnValue({ pipe: jest.fn() });
 
       const file = { buffer: Buffer.from('test'), mimetype: 'image/jpeg', size: 100 } as any;
       await expect(service.uploadImage(file)).rejects.toThrow('Upload failed');
@@ -123,15 +125,15 @@ describe('UploadService', () => {
 
   describe('uploadMultipleImages', () => {
     it('should upload multiple images', async () => {
-      const { v2: cloudinary } = require('cloudinary');
-      const streamifier = require('streamifier');
       const mockResult = { secure_url: 'http://test.com/img.jpg', public_id: 'test/img' };
 
-      cloudinary.uploader.upload_stream.mockImplementation((_opts: any, callback: Function) => {
-        callback(null, mockResult);
-        return { on: jest.fn() };
-      });
-      streamifier.createReadStream.mockReturnValue({ pipe: jest.fn() });
+      (cloudinary.uploader.upload_stream as jest.Mock).mockImplementation(
+        (_opts: any, callback: UploadCallback) => {
+          callback(null, mockResult);
+          return { on: jest.fn() };
+        },
+      );
+      (streamifier.createReadStream as jest.Mock).mockReturnValue({ pipe: jest.fn() });
 
       const files = [
         { buffer: Buffer.from('test1'), mimetype: 'image/jpeg', size: 100 },
@@ -144,15 +146,13 @@ describe('UploadService', () => {
 
   describe('deleteImage', () => {
     it('should delete image successfully', async () => {
-      const { v2: cloudinary } = require('cloudinary');
-      cloudinary.uploader.destroy.mockResolvedValue({ result: 'ok' });
+      (cloudinary.uploader.destroy as jest.Mock).mockResolvedValue({ result: 'ok' });
       await service.deleteImage('test/img');
       expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('test/img');
     });
 
     it('should throw BadRequestException on delete error', async () => {
-      const { v2: cloudinary } = require('cloudinary');
-      cloudinary.uploader.destroy.mockRejectedValue(new Error('Delete failed'));
+      (cloudinary.uploader.destroy as jest.Mock).mockRejectedValue(new Error('Delete failed'));
       await expect(service.deleteImage('test/img')).rejects.toThrow(BadRequestException);
       expect(mockLogger.error).toHaveBeenCalled();
     });

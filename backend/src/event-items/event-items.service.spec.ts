@@ -72,11 +72,11 @@ describe('EventItemsService', () => {
     jest.clearAllMocks();
   });
 
-  const setupAccess = (userId = 'user-1') => {
+  const setupAccess = (_userId = 'user-1') => {
     mockPrismaService.event.findUnique.mockResolvedValue(mockCommunityEvent);
   };
 
-  const setupParticipantAccess = (userId = 'user-2') => {
+  const setupParticipantAccess = (_userId = 'user-2') => {
     mockPrismaService.event.findUnique.mockResolvedValue({ ...mockCommunityEvent, organizerId: 'other-user' });
     mockPrismaService.participationRequest.findUnique.mockResolvedValue({
       status: ParticipationRequestStatus.ACCEPTED,
@@ -129,7 +129,7 @@ describe('EventItemsService', () => {
       setupAccess();
       mockPrismaService.eventItemList.findUnique.mockResolvedValue(null);
       mockPrismaService.eventItemList.create.mockResolvedValue({ ...mockList, items: [] });
-      const result = await service.getList('user-1', 'event-1');
+      await service.getList('user-1', 'event-1');
       expect(mockPrismaService.eventItemList.create).toHaveBeenCalled();
     });
 
@@ -174,7 +174,7 @@ describe('EventItemsService', () => {
         .mockResolvedValueOnce(mockList)
         .mockResolvedValueOnce(mockList);
       mockPrismaService.eventItem.create.mockResolvedValue(mockItem);
-      const result = await service.addItem('user-1', 'event-1', { name: 'Wine', quantity: 2, unit: 'bottles' });
+      await service.addItem('user-1', 'event-1', { name: 'Wine', quantity: 2, unit: 'bottles' });
       expect(mockPrismaService.eventItem.create).toHaveBeenCalled();
     });
 
@@ -281,7 +281,7 @@ describe('EventItemsService', () => {
       mockPrismaService.eventItem.findUnique.mockResolvedValue(mockItem);
       mockPrismaService.eventItem.delete.mockResolvedValue({});
       mockPrismaService.eventItemList.findUnique.mockResolvedValue({ ...mockList, items: [] });
-      const result = await service.deleteItem('user-1', 'event-1', 'item-1');
+      await service.deleteItem('user-1', 'event-1', 'item-1');
       expect(mockPrismaService.eventItem.delete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
     });
   });

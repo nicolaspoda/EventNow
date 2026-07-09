@@ -246,7 +246,7 @@ describe('OrdersService', () => {
       mockNotificationsService.create.mockResolvedValue({});
       mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'user@test.com', username: 'user1' });
       mockMailService.sendOrderConfirmation.mockResolvedValue({});
-      const result = await service.confirmPayment('booking-1', 'pi_test', 'user-1');
+      await service.confirmPayment('booking-1', 'pi_test', 'user-1');
       expect(mockTx.order.create).toHaveBeenCalled();
     });
 
@@ -322,7 +322,7 @@ describe('OrdersService', () => {
       mockPrismaService.booking.updateMany.mockResolvedValue({ count: 1 });
       mockPrismaService.order.update.mockResolvedValue({ ...mockOrder, status: OrderStatus.REFUND_REQUESTED, tickets: [] });
       mockNotificationsService.create.mockResolvedValue({});
-      const result = await service.requestRefund('order-1', 'user-1');
+      await service.requestRefund('order-1', 'user-1');
       expect(mockNotificationsService.create).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'REFUND_REQUESTED' }),
       );
@@ -404,7 +404,7 @@ describe('OrdersService', () => {
       mockTx.booking.updateMany.mockResolvedValue({ count: 1 });
       mockTx.order.update.mockResolvedValue({ ...mockOrder, status: OrderStatus.REFUNDED, tickets: [] });
       mockTx.notification.create.mockResolvedValue({});
-      const result = await service.approveRefund('order-1', 'org-1');
+      await service.approveRefund('order-1', 'org-1');
       expect(mockTx.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ type: 'REFUND_APPROVED' }) }),
       );
@@ -440,7 +440,7 @@ describe('OrdersService', () => {
       mockPrismaService.$transaction.mockImplementation(async (fn) => fn(mockTx));
       mockTx.order.update.mockResolvedValue({ ...mockOrder, status: OrderStatus.PAID, tickets: [] });
       mockTx.notification.create.mockResolvedValue({});
-      const result = await service.rejectRefund('order-1', 'org-1');
+      await service.rejectRefund('order-1', 'org-1');
       expect(mockTx.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ type: 'REFUND_REJECTED' }) }),
       );

@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../../common/decorators/public.decorator';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
@@ -43,7 +42,7 @@ describe('JwtAuthGuard', () => {
     const superSpy = jest
       .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(guard)), 'canActivate')
       .mockReturnValue(true);
-    const result = guard.canActivate(makeContext());
+    guard.canActivate(makeContext());
     expect(superSpy).toHaveBeenCalled();
   });
 });
