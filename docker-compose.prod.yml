@@ -23,7 +23,8 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
+      target: prod
     container_name: eventnow-backend
     restart: unless-stopped
     ports:
@@ -59,7 +60,8 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
+      target: prod
       args:
         VITE_API_URL: https://eventnow.fr
     container_name: eventnow-frontend
