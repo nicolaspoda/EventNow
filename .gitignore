@@ -32,8 +32,6 @@ logs/
 *.sqlite
 *.db
 
-prisma/migrations/
-
 # Clés SSH locales pour le déploiement CI (ne jamais commiter)
 deploy_github_actions
 deploy_github_actions.pub
