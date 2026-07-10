@@ -29,7 +29,7 @@ describe('getGoogleStrategyOptions', () => {
     expect(options.clientID).toBe('');
     expect(options.clientSecret).toBe('secret');
     expect(options.callbackURL).toBe(
-      'https://localhost:3000/api/v1/auth/google/callback',
+      'http://localhost:3000/api/v1/auth/google/callback',
     );
   });
 
@@ -51,7 +51,7 @@ describe('getGoogleStrategyOptions', () => {
     const options = getGoogleStrategyOptions();
 
     expect(options.callbackURL).toBe(
-      'https://localhost:3000/api/v1/auth/google/callback',
+      'http://localhost:3000/api/v1/auth/google/callback',
     );
   });
 

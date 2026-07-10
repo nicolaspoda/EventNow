@@ -11,7 +11,7 @@ const mockPollsService = {
   deletePoll: jest.fn(),
 };
 
-const mockUser = { id: 'user-1', email: 'test@test.com', role: 'CLIENT' };
+const mockUser = { id: 'user-1', email: 'test@test.com', role: 'USER' };
 
 describe('PollsController', () => {
   let controller: PollsController;

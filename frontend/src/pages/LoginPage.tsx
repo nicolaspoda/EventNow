@@ -55,17 +55,13 @@ export function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    // Sans VITE_API_URL : même origine (ex. https://localhost:5173) → proxy Vite vers l’API.
+    // Sans VITE_API_URL : même origine (ex. http://localhost:5173) → proxy Vite vers l’API.
     const raw = import.meta.env.VITE_API_URL?.trim();
     if (!raw) {
       window.location.href = '/api/v1/auth/google';
       return;
     }
-    // Backend Nest en HTTPS sur :3000 : un http://localhost:3000 provoque ERR_EMPTY_RESPONSE.
-    let base = raw.replace(/\/$/, '');
-    if (/^http:\/\/(localhost|127\.0\.0\.1):3000$/i.test(base)) {
-      base = base.replace(/^http:/i, 'https:');
-    }
+    const base = raw.replace(/\/$/, '');
     window.location.href = `${base}/api/v1/auth/google`;
   };
 

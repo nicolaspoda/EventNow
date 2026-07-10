@@ -26,6 +26,11 @@ export const EventStatusBadge: React.FC<EventStatusBadgeProps> = ({
       color: 'bg-orange-100 text-orange-800',
       ariaLabel: 'Statut: Presque complet',
     },
+    ONGOING: {
+      label: 'En cours',
+      color: 'bg-green-100 text-green-800',
+      ariaLabel: 'Statut: En cours',
+    },
     SOLD_OUT: {
       label: 'Complet',
       color: 'bg-red-100 text-red-800',

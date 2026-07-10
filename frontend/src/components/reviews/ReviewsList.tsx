@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { reviewService } from '../../services/reviewService';
+import { socketService } from '../../services/socketService';
 import { ReviewCard } from './ReviewCard';
 import { AverageRating } from './AverageRating';
 import { getApiErrorMessage } from '../../utils/getApiErrorMessage';
@@ -34,6 +35,37 @@ export const ReviewsList: React.FC<ReviewsListProps> = ({ eventId, refreshTrigge
   useEffect(() => {
     fetchReviews();
   }, [eventId, sortBy, refreshTrigger]);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    const joinRoom = async () => {
+      try {
+        if (!socketService.isConnected()) {
+          const token = sessionStorage.getItem('accessToken');
+          if (token) {
+            await socketService.connect(token);
+          }
+        }
+        await socketService.joinEventRoom(eventId);
+      } catch {
+        // Ignoré : les mises à jour temps réel ne fonctionneront pas mais le reste de la page reste utilisable.
+      }
+    };
+    joinRoom();
+
+    const handleReviewsChanged = (data: { eventId: string }) => {
+      if (data.eventId === eventId) {
+        fetchReviews();
+      }
+    };
+
+    socketService.on('reviewsChanged', handleReviewsChanged);
+
+    return () => {
+      socketService.off('reviewsChanged', handleReviewsChanged);
+      socketService.leaveEventRoom(eventId);
+    };
+  }, [eventId, sortBy]);
 
   const fetchReviews = async () => {
     setLoading(true);

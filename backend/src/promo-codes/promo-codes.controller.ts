@@ -34,7 +34,7 @@ export class PromoCodesController {
   }
 
   @Post('validate')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   validatePromoCode(@Body() dto: ValidatePromoCodeDto) {
     return this.promoCodesService.validatePromoCode(dto);

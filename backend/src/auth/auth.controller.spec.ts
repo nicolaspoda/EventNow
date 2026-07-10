@@ -16,6 +16,11 @@ describe('AuthController', () => {
     refreshTokens: jest.fn(),
     logout: jest.fn(),
     generateTokens: jest.fn(),
+    getFullProfile: jest.fn(),
+    getUserPublicProfile: jest.fn(),
+    searchUsersByUsername: jest.fn(),
+    getAllUsers: jest.fn(),
+    updateProfile: jest.fn(),
   };
 
   const mockRedisService = {
@@ -59,7 +64,7 @@ describe('AuthController', () => {
           id: '1',
           username: 'testuser',
           email: registerDto.email,
-          role: Role.CLIENT,
+          role: Role.USER,
         },
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -71,7 +76,7 @@ describe('AuthController', () => {
 
       expect(result).toEqual(expectedResult);
       expect(authService.register).toHaveBeenCalledWith(registerDto);
-      expect(result.user.role).toBe(Role.CLIENT);
+      expect(result.user.role).toBe(Role.USER);
     });
   });
 
@@ -111,7 +116,7 @@ describe('AuthController', () => {
         user: {
           id: '1',
           email: loginDto.email,
-          role: Role.CLIENT,
+          role: Role.USER,
         },
         accessToken: 'access-token',
         refreshToken: 'refresh-token',
@@ -159,7 +164,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       const result = await controller.getProfile(mockUser);
@@ -173,7 +178,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockReq = { user: mockUser } as any;
       const mockRes = {
@@ -204,7 +209,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockReq = { user: mockUser } as any;
       const mockRes = { redirect: jest.fn() } as any;
@@ -229,7 +234,7 @@ describe('AuthController', () => {
       const mockUser = {
         id: 'user-1',
         email: 'user@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockReq = { user: mockUser } as any;
       const mockRes = { redirect: jest.fn() } as any;
@@ -259,7 +264,7 @@ describe('AuthController', () => {
       const validData = {
         accessToken: 'at',
         refreshToken: 'rt',
-        user: { id: '1', email: 'u@e.com', role: Role.CLIENT },
+        user: { id: '1', email: 'u@e.com', role: Role.USER },
       };
       mockRedisService.getAndDeleteOAuthCode.mockResolvedValue(validData);
 
@@ -289,6 +294,74 @@ describe('AuthController', () => {
       await expect(
         controller.googleExchange({ code: 'invalid' }),
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('getFullProfile', () => {
+    it('should return full profile for authenticated user', async () => {
+      const mockUser = { id: 'user-1', email: 'u@e.com', role: Role.USER } as any;
+      const profile = { id: 'user-1', followersCount: 5, followingCount: 2 };
+      mockAuthService.getFullProfile.mockResolvedValue(profile);
+      const result = await controller.getFullProfile(mockUser);
+      expect(result).toEqual(profile);
+      expect(authService.getFullProfile).toHaveBeenCalledWith('user-1');
+    });
+  });
+
+  describe('getUserPublicProfile', () => {
+    it('should return public profile', async () => {
+      const mockUser = { id: 'viewer-1' } as any;
+      const profile = { id: 'user-1', username: 'alice' };
+      mockAuthService.getUserPublicProfile.mockResolvedValue(profile);
+      const result = await controller.getUserPublicProfile('user-1', mockUser);
+      expect(result).toEqual(profile);
+      expect(authService.getUserPublicProfile).toHaveBeenCalledWith('user-1', 'viewer-1');
+    });
+  });
+
+  describe('searchUsers', () => {
+    it('should search users with query and default limit', async () => {
+      const users = [{ id: 'u-1', username: 'alice' }];
+      mockAuthService.searchUsersByUsername.mockResolvedValue(users);
+      const mockReq = { query: { q: 'ali' } } as any;
+      const result = await controller.searchUsers(mockReq);
+      expect(result).toEqual(users);
+      expect(authService.searchUsersByUsername).toHaveBeenCalledWith('ali', 15);
+    });
+
+    it('should use custom limit clamped to max 20', async () => {
+      mockAuthService.searchUsersByUsername.mockResolvedValue([]);
+      const mockReq = { query: { q: 'ali', limit: '50' } } as any;
+      await controller.searchUsers(mockReq);
+      expect(authService.searchUsersByUsername).toHaveBeenCalledWith('ali', 20);
+    });
+
+    it('should default to empty string when query is not a string', async () => {
+      mockAuthService.searchUsersByUsername.mockResolvedValue([]);
+      const mockReq = { query: {} } as any;
+      await controller.searchUsers(mockReq);
+      expect(authService.searchUsersByUsername).toHaveBeenCalledWith('', 15);
+    });
+  });
+
+  describe('getAllUsers', () => {
+    it('should return all users', async () => {
+      const users = [{ id: 'u-1' }];
+      mockAuthService.getAllUsers.mockResolvedValue(users);
+      const result = await controller.getAllUsers();
+      expect(result).toEqual(users);
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update profile and return result', async () => {
+      const mockUser = { id: 'user-1', email: 'u@e.com', role: Role.USER } as any;
+      const dto = { avatarUrl: 'https://cdn.example.com/avatar.jpg' } as any;
+      const updated = { id: 'user-1', avatarUrl: 'https://cdn.example.com/avatar.jpg' };
+      mockAuthService.updateProfile.mockResolvedValue(updated);
+      const result = await controller.updateProfile(mockUser, dto);
+      expect(result).toEqual(updated);
+      expect(authService.updateProfile).toHaveBeenCalledWith('user-1', dto);
     });
   });
 });

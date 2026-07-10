@@ -46,6 +46,7 @@ export function NavbarLinks() {
   const isPurchasesPage = location.pathname === '/my-tickets' || location.pathname === '/my-orders' || location.pathname === '/bookings';
   const isOrganizerPage = location.pathname.startsWith('/dashboard/organizer');
   const isStaffPage = location.pathname.startsWith('/staff');
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   const dropdownPanelClass =
     'absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50';
@@ -209,13 +210,24 @@ export function NavbarLinks() {
           )}
         </div>
 
-        {user?.role === 'CLIENT' && (
-          <Link to="/dashboard/client" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
+        {user?.role === 'USER' && (
+          <Link to="/dashboard/user" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
             Mon tableau de bord
           </Link>
         )}
 
-        {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (
+        {user?.role === 'ADMIN' && (
+          <Link
+            to="/admin/reports"
+            className={`${navLinkClass} flex-shrink-0 flex items-center ${
+              isAdminPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
+            }`}
+          >
+            Admin
+          </Link>
+        )}
+
+        {(user?.role === 'ORGANIZER' || user?.role === 'USER') && (
           <Link
             to="/events/create"
             className="flex-shrink-0 flex items-center px-3 py-2 rounded-lg text-sm font-medium text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30 hover:text-accent-700 dark:hover:text-accent-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"

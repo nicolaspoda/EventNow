@@ -28,7 +28,7 @@ export class MailService {
     try {
       await this.mailerService.sendMail({
         to: orderData.userEmail,
-        subject: '✅ Confirmation de votre commande EventNow',
+        subject: 'Confirmation de votre commande EventNow',
         template: 'order-confirmation',
         context: {
           userName: orderData.userName,
@@ -66,7 +66,7 @@ export class MailService {
     try {
       await this.mailerService.sendMail({
         to: reminderData.userEmail,
-        subject: `📅 J-7 : ${reminderData.eventTitle}`,
+        subject: `J-7 : ${reminderData.eventTitle}`,
         template: 'event-reminder-7days',
         context: {
           ...reminderData,
@@ -101,7 +101,7 @@ export class MailService {
     try {
       await this.mailerService.sendMail({
         to: reminderData.userEmail,
-        subject: `⏰ Demain : ${reminderData.eventTitle} !`,
+        subject: `Demain : ${reminderData.eventTitle} !`,
         template: 'event-reminder-1day',
         context: {
           ...reminderData,

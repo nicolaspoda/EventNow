@@ -46,22 +46,22 @@ export class DashboardController {
     return this.dashboardService.getEventStats(eventId, user.id);
   }
 
-  @Get('client/overview')
-  @Roles('CLIENT')
+  @Get('user/overview')
+  @Roles('USER')
   @HttpCode(HttpStatus.OK)
   async getClientOverview(@CurrentUser() user: AuthUser) {
     return this.dashboardService.getClientOverview(user.id);
   }
 
-  @Get('client/events')
-  @Roles('CLIENT')
+  @Get('user/events')
+  @Roles('USER')
   @HttpCode(HttpStatus.OK)
   async getClientEvents(@CurrentUser() user: AuthUser) {
     return this.dashboardService.getClientEvents(user.id);
   }
 
-  @Get('client/events/:id/participants')
-  @Roles('CLIENT')
+  @Get('user/events/:id/participants')
+  @Roles('USER')
   @HttpCode(HttpStatus.OK)
   async getEventParticipants(
     @Param('id') eventId: string,

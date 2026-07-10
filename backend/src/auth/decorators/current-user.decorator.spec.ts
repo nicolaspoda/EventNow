@@ -10,7 +10,7 @@ class TestController {
 
 describe('CurrentUser', () => {
   it('should return request.user from context', () => {
-    const mockUser = { id: '1', email: 'test@test.com', role: 'CLIENT' };
+    const mockUser = { id: '1', email: 'test@test.com', role: 'USER' };
     const mockRequest = { user: mockUser };
     const ctx = {
       switchToHttp: () => ({ getRequest: () => mockRequest }),

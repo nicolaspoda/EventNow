@@ -1,5 +1,7 @@
 import { api } from './api';
 
+export const MESSAGES_READ_EVENT = 'messages-read';
+
 export interface User {
   id: string;
   username?: string | null;
@@ -149,6 +151,7 @@ const messageService = {
 
   async markAsRead(conversationId: string): Promise<void> {
     await api.post(`/messages/conversations/${conversationId}/read`);
+    window.dispatchEvent(new CustomEvent(MESSAGES_READ_EVENT, { detail: { conversationId } }));
   },
 
   async getEventConversation(eventId: string): Promise<Conversation> {

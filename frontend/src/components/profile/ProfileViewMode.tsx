@@ -9,13 +9,13 @@ import { StarRating } from '../reviews/StarRating';
 import ReportModal from '../ReportModal';
 
 const roleLabels: Record<string, string> = {
-  CLIENT: 'Client',
+  USER: 'Utilisateur',
   ORGANIZER: 'Organisateur',
   STAFF: 'Staff',
 };
 
 const roleColors: Record<string, string> = {
-  CLIENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  USER: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   ORGANIZER: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   STAFF: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
 };

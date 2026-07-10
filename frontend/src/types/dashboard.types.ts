@@ -42,7 +42,7 @@ export interface OrganizerOverview {
   averageTicketPrice: number;
 }
 
-export interface ClientOverview {
+export interface UserOverview {
   totalEvents: number;
   upcomingEvents: number;
   totalParticipants: number;

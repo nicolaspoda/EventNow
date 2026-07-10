@@ -7,8 +7,8 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { Namespace, Socket } from 'socket.io';
+import { Logger, Inject, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesService } from './messages.service';
@@ -35,7 +35,7 @@ export class MessagesGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer()
-  server: Server;
+  server: Namespace;
 
   private readonly logger = new Logger(MessagesGateway.name);
   private userSockets: Map<string, Set<string>> = new Map();
@@ -43,6 +43,7 @@ export class MessagesGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => MessagesService))
     private readonly messagesService: MessagesService,
   ) {}
 
@@ -206,11 +207,6 @@ export class MessagesGateway
         dto,
       );
 
-      this.server.to(`conversation:${data.conversationId}`).emit('newMessage', {
-        conversationId: data.conversationId,
-        message,
-      });
-
       this.logger.log(
         `Message sent in conversation ${data.conversationId} by user ${client.userId}`,
       );
@@ -260,7 +256,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
+        const socket = this.server.sockets.get(socketId);
         if (socket) {
           socket.join(`conversation:${conversationId}`);
         }
@@ -277,7 +273,7 @@ export class MessagesGateway
     const userSocketIds = this.userSockets.get(userId);
     if (userSocketIds) {
       userSocketIds.forEach((socketId) => {
-        const socket = this.server.sockets.sockets.get(socketId);
+        const socket = this.server.sockets.get(socketId);
         if (socket) {
           socket.leave(`conversation:${conversationId}`);
         }
@@ -294,6 +290,10 @@ export class MessagesGateway
     this.server.to(`user:${userId}`).emit('newNotification', {});
   }
 
+  emitFollowsChanged(userId: string) {
+    this.server.to(`user:${userId}`).emit('followsChanged', {});
+  }
+
   notifyPollCreated(eventId: string, poll: any) {
     this.server.to(`event-${eventId}`).emit('pollCreated', poll);
   }
@@ -304,5 +304,13 @@ export class MessagesGateway
 
   notifyPollDeleted(eventId: string, pollId: string) {
     this.server.to(`event-${eventId}`).emit('pollDeleted', { pollId });
+  }
+
+  notifyItemListUpdated(eventId: string, list: any) {
+    this.server.to(`event-${eventId}`).emit('itemListUpdated', list);
+  }
+
+  notifyReviewsChanged(eventId: string) {
+    this.server.to(`event-${eventId}`).emit('reviewsChanged', { eventId });
   }
 }

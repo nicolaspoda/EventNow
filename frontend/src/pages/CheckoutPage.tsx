@@ -53,8 +53,14 @@ const CheckoutPage: React.FC = () => {
         }
 
         const data = await orderService.initiatePayment(bookingId);
-        setPaymentId(data.paymentId);
-        setClientSecret(data.clientSecret);
+
+        if (data.free && data.orderId) {
+          navigate(`/orders/${data.orderId}/success`);
+          return;
+        }
+
+        setPaymentId(data.paymentId ?? null);
+        setClientSecret(data.clientSecret ?? null);
         setOriginalAmount(data.originalAmount ?? data.amount);
         setEventId(data.eventId ?? null);
       } catch (err) {
@@ -86,8 +92,14 @@ const CheckoutPage: React.FC = () => {
 
       // Re-initiate payment with discounted amount
       const data = await orderService.initiatePayment(bookingId!, result.promoCode.id);
-      setPaymentId(data.paymentId);
-      setClientSecret(data.clientSecret);
+
+      if (data.free && data.orderId) {
+        navigate(`/orders/${data.orderId}/success`);
+        return;
+      }
+
+      setPaymentId(data.paymentId ?? null);
+      setClientSecret(data.clientSecret ?? null);
     } catch (err) {
       setPromoError(getApiErrorMessage(err, 'Code promo invalide'));
     } finally {
@@ -104,8 +116,8 @@ const CheckoutPage: React.FC = () => {
     // Re-initiate payment without promo code
     try {
       const data = await orderService.initiatePayment(bookingId!);
-      setPaymentId(data.paymentId);
-      setClientSecret(data.clientSecret);
+      setPaymentId(data.paymentId ?? null);
+      setClientSecret(data.clientSecret ?? null);
     } catch (err) {
       setError(getApiErrorMessage(err, "Impossible de réinitialiser le paiement"));
     }

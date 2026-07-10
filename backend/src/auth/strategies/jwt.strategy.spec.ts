@@ -34,7 +34,7 @@ describe('JwtStrategy', () => {
       const mockUser = {
         id: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
         passwordHash: 'hashed-password',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -43,7 +43,7 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
@@ -53,7 +53,7 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         id: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
         username: undefined,
         createdAt: mockUser.createdAt,
       });
@@ -66,7 +66,7 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(null);

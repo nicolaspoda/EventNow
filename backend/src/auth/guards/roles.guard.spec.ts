@@ -35,7 +35,7 @@ describe('RolesGuard', () => {
     it('should return true if no roles required', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
 
-      const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
+      const context = createMockContext({ id: 'user-123', role: 'USER' });
 
       expect(guard.canActivate(context)).toBe(true);
     });
@@ -43,15 +43,15 @@ describe('RolesGuard', () => {
     it('should return true when requiredRoles is null', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(null);
 
-      const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
+      const context = createMockContext({ id: 'user-123', role: 'USER' });
 
       expect(guard.canActivate(context)).toBe(true);
     });
 
     it('should return true if user has required role', () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['CLIENT']);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['USER']);
 
-      const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
+      const context = createMockContext({ id: 'user-123', role: 'USER' });
 
       expect(guard.canActivate(context)).toBe(true);
     });
@@ -59,7 +59,7 @@ describe('RolesGuard', () => {
     it('should throw ForbiddenException if user does not have required role', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ORGANIZER']);
 
-      const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
+      const context = createMockContext({ id: 'user-123', role: 'USER' });
 
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });
@@ -67,9 +67,9 @@ describe('RolesGuard', () => {
     it('should return true if user has one of multiple required roles', () => {
       jest
         .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['ORGANIZER', 'CLIENT']);
+        .mockReturnValue(['ORGANIZER', 'USER']);
 
-      const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
+      const context = createMockContext({ id: 'user-123', role: 'USER' });
 
       expect(guard.canActivate(context)).toBe(true);
     });
@@ -85,7 +85,7 @@ describe('RolesGuard', () => {
     it('should throw ForbiddenException for CLIENT when ORGANIZER required', () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ORGANIZER']);
 
-      const context = createMockContext({ id: 'user-123', role: 'CLIENT' });
+      const context = createMockContext({ id: 'user-123', role: 'USER' });
 
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
     });

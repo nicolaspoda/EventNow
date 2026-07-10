@@ -8,6 +8,7 @@ import {
   OrderStatus,
   BookingStatus,
   ParticipationRequestStatus,
+  EventStatus,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UploadService } from '../upload/upload.service';
@@ -41,7 +42,7 @@ export class EventsService {
       createEventDto.type === EventType.COMMUNITY
         ? EventType.COMMUNITY
         : EventType.PROFESSIONAL;
-    if (userRole === 'CLIENT' && requestedType === EventType.PROFESSIONAL) {
+    if (userRole === 'USER' && requestedType === EventType.PROFESSIONAL) {
       throw new ForbiddenException(
         'Seuls les organisateurs peuvent créer des événements professionnels.',
       );
@@ -171,6 +172,7 @@ export class EventsService {
     const now = new Date();
     const andConditions: Array<Record<string, unknown>> = [
       { eventDate: { gte: now } },
+      { status: EventStatus.ACTIVE },
     ];
 
     if (filters?.search?.trim()) {
@@ -246,8 +248,12 @@ export class EventsService {
             ) / 10
           : null;
 
+      const isCommunity = e.type === 'COMMUNITY';
       return {
         ...e,
+        address: isCommunity ? null : e.address,
+        latitude: isCommunity ? null : e.latitude,
+        longitude: isCommunity ? null : e.longitude,
         averageRating,
         totalReviews: e.reviews.length,
         reviews: undefined,
@@ -259,7 +265,7 @@ export class EventsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     const event = await this.prisma.event.findUnique({
       where: { id },
       include: {
@@ -316,17 +322,19 @@ export class EventsService {
           ? event.endDate
           : null;
 
+    const showAddress = await this.canSeeAddress(event, userId);
+
     return {
       id: event.id,
       title: event.title,
       description: event.description,
       location: event.location,
-      address: event.address,
+      address: showAddress ? event.address : null,
       city: event.city,
       postalCode: event.postalCode,
       country: event.country,
-      latitude: event.latitude,
-      longitude: event.longitude,
+      latitude: showAddress ? event.latitude : null,
+      longitude: showAddress ? event.longitude : null,
       imageUrl: event.imageUrl,
       imagePublicId: event.imagePublicId,
       eventDate: eventDate ?? undefined,
@@ -355,6 +363,25 @@ export class EventsService {
         price: Number(c.price),
       })),
     };
+  }
+
+  private async canSeeAddress(
+    event: { type: string; organizerId: string; id: string },
+    userId?: string,
+  ): Promise<boolean> {
+    if (event.type !== 'COMMUNITY') return true;
+    if (!userId) return false;
+    if (userId === event.organizerId) return true;
+
+    const accepted = await this.prisma.participationRequest.findFirst({
+      where: {
+        eventId: event.id,
+        userId,
+        status: ParticipationRequestStatus.ACCEPTED,
+      },
+      select: { id: true },
+    });
+    return accepted !== null;
   }
 
   async update(id: string, userId: string, updateEventDto: UpdateEventDto) {
@@ -884,6 +911,7 @@ export class EventsService {
 
     // Par défaut : uniquement les événements à venir dans le catalogue
     where.AND.push({ eventDate: { gte: new Date() } });
+    where.AND.push({ status: EventStatus.ACTIVE });
 
     if (query) {
       where.AND.push({
@@ -1087,17 +1115,18 @@ export class EventsService {
               ? ev.eventDate
               : null;
 
+        const isCommunity = ev.type === 'COMMUNITY';
         return {
           id: ev.id,
           title: ev.title,
           description: ev.description,
           location: ev.location,
-          address: ev.address,
+          address: isCommunity ? null : ev.address,
           city: ev.city,
           postalCode: ev.postalCode,
           country: ev.country,
-          latitude: ev.latitude,
-          longitude: ev.longitude,
+          latitude: isCommunity ? null : ev.latitude,
+          longitude: isCommunity ? null : ev.longitude,
           imageUrl: ev.imageUrl,
           imagePublicId: ev.imagePublicId,
           eventDate: eventDate ?? undefined,
@@ -1209,17 +1238,18 @@ export class EventsService {
             ) / 10
           : undefined;
 
+      const isCommunity = ev.type === 'COMMUNITY';
       return {
         id: ev.id,
         title: ev.title,
         description: ev.description,
         location: ev.location,
-        address: ev.address,
+        address: isCommunity ? null : ev.address,
         city: ev.city,
         postalCode: ev.postalCode,
         country: ev.country,
-        latitude: ev.latitude,
-        longitude: ev.longitude,
+        latitude: isCommunity ? null : ev.latitude,
+        longitude: isCommunity ? null : ev.longitude,
         imageUrl: ev.imageUrl,
         imagePublicId: ev.imagePublicId,
         eventDate: eventDate ?? undefined,
@@ -1419,5 +1449,23 @@ export class EventsService {
         name: c.city as string,
         count: c._count.city,
       }));
+  }
+
+  async suspendEvent(eventId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+    });
+    if (!event) {
+      throw new NotFoundException(`Événement avec l'ID ${eventId} introuvable`);
+    }
+    const newStatus =
+      event.status === EventStatus.SUSPENDED
+        ? EventStatus.ACTIVE
+        : EventStatus.SUSPENDED;
+    return this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: newStatus },
+      select: { id: true, title: true, status: true },
+    });
   }
 }

@@ -6,12 +6,16 @@ import {
 } from '@nestjs/common';
 import { EventType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
 
 @Injectable()
 export class ReviewsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly gateway: MessagesGateway,
+  ) {}
 
   /**
    * Retourne true si l'utilisateur a assisté à l'événement (billet validé ou participation acceptée pour événement communautaire).
@@ -87,7 +91,7 @@ export class ReviewsService {
       );
     }
 
-    return this.prisma.review.create({
+    const review = await this.prisma.review.create({
       data: {
         eventId: eventId,
         userId: userId,
@@ -103,6 +107,9 @@ export class ReviewsService {
         },
       },
     });
+
+    this.gateway.notifyReviewsChanged(eventId);
+    return review;
   }
 
   async findAllByEvent(
@@ -235,10 +242,13 @@ export class ReviewsService {
       );
     }
 
-    return this.prisma.review.update({
+    const updated = await this.prisma.review.update({
       where: { id: reviewId },
       data: dto,
     });
+
+    this.gateway.notifyReviewsChanged(review.eventId);
+    return updated;
   }
 
   async delete(reviewId: string, userId: string) {
@@ -256,9 +266,12 @@ export class ReviewsService {
       );
     }
 
-    return this.prisma.review.delete({
+    const deleted = await this.prisma.review.delete({
       where: { id: reviewId },
     });
+
+    this.gateway.notifyReviewsChanged(review.eventId);
+    return deleted;
   }
 
   private maskEmail(email: string): string {

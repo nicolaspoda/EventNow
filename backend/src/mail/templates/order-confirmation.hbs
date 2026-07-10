@@ -57,7 +57,7 @@
 </head>
 <body>
   <div class="header">
-    <h1>🎉 Commande confirmée !</h1>
+    <h1>Commande confirmée !</h1>
   </div>
 
   <div class="content">
@@ -67,14 +67,14 @@
 
     <p><strong>Numéro de commande :</strong> {{orderId}}</p>
 
-    <h2>📋 Détails de votre commande</h2>
+    <h2>Détails de votre commande</h2>
     
     {{#each tickets}}
     <div class="ticket-item">
       <h3>{{this.eventTitle}}</h3>
       <p>
-        📅 {{this.eventDate}}<br>
-        🎫 {{this.category}} - Quantité : {{this.quantity}}
+        {{this.eventDate}}<br>
+        {{this.category}} - Quantité : {{this.quantity}}
       </p>
     </div>
     {{/each}}
@@ -90,7 +90,7 @@
     </p>
 
     <p style="margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 5px;">
-      💡 <strong>Astuce :</strong> Vos billets sont disponibles dans votre espace client. 
+      <strong>Astuce :</strong> Vos billets sont disponibles dans votre espace client.
       Vous pouvez les télécharger et les imprimer dès maintenant.
     </p>
   </div>

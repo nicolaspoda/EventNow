@@ -19,6 +19,7 @@ describe('AuthService', () => {
     user: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
@@ -89,7 +90,7 @@ describe('AuthService', () => {
         username: registerDto.username,
         email: registerDto.email,
         passwordHash: hashedPassword,
-        role: Role.CLIENT,
+        role: Role.USER,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -150,7 +151,7 @@ describe('AuthService', () => {
         username: 'testuser',
         email: loginDto.email,
         passwordHash: 'hashedPassword',
-        role: Role.CLIENT,
+        role: Role.USER,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -194,7 +195,7 @@ describe('AuthService', () => {
         id: '1',
         email: loginDto.email,
         passwordHash: 'hashedPassword',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
@@ -212,12 +213,12 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
       const mockUser = {
         id: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         passwordHash: 'hash',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -262,7 +263,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockRedisService.isTokenBlacklisted.mockResolvedValue(false);
@@ -281,7 +282,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         exp: Math.floor(Date.now() / 1000) + 3600,
       };
 
@@ -308,7 +309,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         // no exp
       };
 
@@ -325,7 +326,7 @@ describe('AuthService', () => {
       const mockPayload = {
         sub: '1',
         email: 'test@example.com',
-        role: Role.CLIENT,
+        role: Role.USER,
         exp: Math.floor(Date.now() / 1000) - 3600, // 1h in the past
       };
 
@@ -343,7 +344,7 @@ describe('AuthService', () => {
         id: 'user-123',
         email: 'test@gmail.com',
         googleId: 'google-123',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(mockUser);
@@ -364,7 +365,7 @@ describe('AuthService', () => {
         id: 'user-123',
         email: 'test@gmail.com',
         googleId: null,
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       const updatedUser = {
@@ -396,7 +397,7 @@ describe('AuthService', () => {
         email: 'new@gmail.com',
         googleId: 'google-789',
         username: 'newuser',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
@@ -414,7 +415,7 @@ describe('AuthService', () => {
         data: expect.objectContaining({
           email: 'new@gmail.com',
           googleId: 'google-789',
-          role: 'CLIENT',
+          role: 'USER',
           username: expect.any(String),
         }),
       });
@@ -426,7 +427,7 @@ describe('AuthService', () => {
         email: 'test3@gmail.com',
         googleId: 'google-999',
         username: 'test3',
-        role: Role.CLIENT,
+        role: Role.USER,
       };
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
@@ -444,10 +445,188 @@ describe('AuthService', () => {
         data: expect.objectContaining({
           email: 'test3@gmail.com',
           googleId: 'google-999',
-          role: 'CLIENT',
+          role: 'USER',
           username: expect.any(String),
         }),
       });
+    });
+
+    it('should generate username with suffix when base username is taken', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // no googleId match
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // no email match
+      mockPrismaService.user.findFirst
+        .mockResolvedValueOnce({ id: 'existing-1' }) // 'test' taken
+        .mockResolvedValueOnce(null); // 'test_1' available
+      const newUser = { id: 'user-new', email: 'test@gmail.com', googleId: 'gid', username: 'test_1', role: Role.USER };
+      mockPrismaService.user.create.mockResolvedValue(newUser);
+      const result = await service.validateGoogleUser({ googleId: 'gid', email: 'test@gmail.com' });
+      expect(result.username).toBe('test_1');
+    });
+  });
+
+  describe('register (username conflict)', () => {
+    it('should throw ConflictException if username already exists', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null); // email available
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'other-user', username: 'testuser' }); // username taken
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hash');
+      await expect(service.register({ username: 'testuser', email: 'new@test.com', password: 'pass' }))
+        .rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('registerOrganizer', () => {
+    const orgDto = {
+      username: 'orguser',
+      email: 'org@test.com',
+      password: 'pass123',
+      confirmOrganizer: true,
+      organizationName: 'Test Org',
+    };
+
+    it('should throw ConflictException if email exists', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'existing' });
+      await expect(service.registerOrganizer(orgDto)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException if username taken', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findFirst.mockResolvedValue({ id: 'other', username: 'orguser' });
+      await expect(service.registerOrganizer(orgDto)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw BadRequestException if confirmOrganizer is false', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+      await expect(service.registerOrganizer({ ...orgDto, confirmOrganizer: false }))
+        .rejects.toThrow();
+    });
+
+    it('should register organizer successfully', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed');
+      const mockOrg = { id: 'org-1', username: 'orguser', email: 'org@test.com', role: 'ORGANIZER', organizationName: 'Test Org' };
+      mockPrismaService.user.create.mockResolvedValue(mockOrg);
+      mockJwtService.signAsync.mockResolvedValue('token');
+      const result = await service.registerOrganizer(orgDto);
+      expect(result.user.role).toBe('ORGANIZER');
+    });
+  });
+
+  describe('getFullProfile', () => {
+    const mockUser = {
+      id: 'user-1',
+      username: 'testuser',
+      email: 'test@test.com',
+      role: 'USER',
+      avatarUrl: null,
+      createdAt: new Date('2024-01-01'),
+      _count: { orders: 2, reviews: 1, organizedEvents: 0 },
+    };
+
+    it('should throw UnauthorizedException if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      await expect(service.getFullProfile('user-1')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should return full profile with stats', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      (prisma as any).participantReview = {
+        aggregate: jest.fn().mockResolvedValue({ _avg: { rating: 4.5 }, _count: { rating: 3 } }),
+      };
+      (prisma as any).review = {
+        aggregate: jest.fn().mockResolvedValue({ _avg: { rating: null }, _count: { rating: 0 } }),
+      };
+      const result = await service.getFullProfile('user-1');
+      expect(result.id).toBe('user-1');
+      expect(result.createdAt).toBe('2024-01-01T00:00:00.000Z');
+    });
+  });
+
+  describe('getUserPublicProfile', () => {
+    const mockUser = {
+      id: 'user-1',
+      username: 'testuser',
+      email: 'test@test.com',
+      role: 'USER',
+      avatarUrl: null,
+      createdAt: new Date('2024-01-01'),
+    };
+
+    it('should throw UnauthorizedException if user not found', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      await expect(service.getUserPublicProfile('user-1')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should return public profile without currentUserId', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      (prisma as any).participationRequest = {
+        findMany: jest.fn().mockResolvedValue([]),
+      };
+      (prisma as any).participantReview = {
+        findMany: jest.fn().mockResolvedValue([]),
+        aggregate: jest.fn().mockResolvedValue({ _avg: { rating: null }, _count: { rating: 0 } }),
+      };
+      (prisma as any).review = {
+        aggregate: jest.fn().mockResolvedValue({ _avg: { rating: null }, _count: { rating: 0 } }),
+      };
+      const result = await service.getUserPublicProfile('user-1');
+      expect(result.id).toBe('user-1');
+      expect(result).not.toHaveProperty('isFollowing');
+    });
+
+    it('should include follow info when currentUserId provided', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      (prisma as any).participationRequest = {
+        findMany: jest.fn().mockResolvedValue([]),
+      };
+      (prisma as any).participantReview = {
+        findMany: jest.fn().mockResolvedValue([]),
+        aggregate: jest.fn().mockResolvedValue({ _avg: { rating: null }, _count: { rating: 0 } }),
+      };
+      (prisma as any).review = {
+        aggregate: jest.fn().mockResolvedValue({ _avg: { rating: null }, _count: { rating: 0 } }),
+      };
+      mockFollowsService.getFollowRecord.mockResolvedValue({ id: 'f-1', notificationsEnabled: true });
+      mockFollowsService.isFriend.mockResolvedValue(true);
+      const result = await service.getUserPublicProfile('user-1', 'other-user');
+      expect(result).toHaveProperty('isFollowing');
+      expect(result).toHaveProperty('isFriend');
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update avatar url', async () => {
+      const updated = { id: 'user-1', username: 'u', email: 'e@t.com', role: 'USER', avatarUrl: 'http://img', createdAt: new Date('2024-01-01') };
+      mockPrismaService.user.update.mockResolvedValue(updated);
+      const result = await service.updateProfile('user-1', { avatarUrl: 'http://img' });
+      expect(result.avatarUrl).toBe('http://img');
+      expect(result.createdAt).toBe('2024-01-01T00:00:00.000Z');
+    });
+  });
+
+  describe('getAllUsers', () => {
+    it('should return all users', async () => {
+      mockPrismaService.user.findMany.mockResolvedValue([
+        { id: 'u-1', username: 'alice', email: 'alice@test.com', avatarUrl: null },
+      ]);
+      const result = await service.getAllUsers();
+      expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('searchUsersByUsername', () => {
+    it('should return empty array for empty query', async () => {
+      const result = await service.searchUsersByUsername('');
+      expect(result).toEqual([]);
+    });
+
+    it('should return users matching username prefix', async () => {
+      mockPrismaService.user.findMany.mockResolvedValue([
+        { id: 'u-1', username: 'alice', email: 'alice@test.com', avatarUrl: null },
+      ]);
+      const result = await service.searchUsersByUsername('ali');
+      expect(result).toHaveLength(1);
     });
   });
 });

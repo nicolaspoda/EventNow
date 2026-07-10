@@ -6,6 +6,7 @@ import { PaymentModule } from '../payment/payment.module';
 import { MailModule } from '../mail/mail.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PromoCodesModule } from '../promo-codes/promo-codes.module';
+import { MessagesModule } from '../messages/messages.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PromoCodesModule } from '../promo-codes/promo-codes.module';
     MailModule,
     NotificationsModule,
     PromoCodesModule,
+    MessagesModule,
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

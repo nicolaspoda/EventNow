@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
-import messageService, { type Conversation, ConversationType } from '../services/messageService';
+import messageService, { type Conversation, ConversationType, MESSAGES_READ_EVENT } from '../services/messageService';
+import { socketService } from '../services/socketService';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -53,6 +54,38 @@ export function MessageBell() {
     const interval = setInterval(fetchUnreadCount, 30000);
     return () => clearInterval(interval);
   }, [apiError]);
+
+  useEffect(() => {
+    const handleIncomingMessage = () => {
+      if (isOpen) {
+        fetchConversations();
+      } else {
+        fetchUnreadCount();
+      }
+    };
+    socketService.on('newMessage', handleIncomingMessage);
+    socketService.on('memberAdded', handleIncomingMessage);
+    socketService.on('newNotification', handleIncomingMessage);
+    return () => {
+      socketService.off('newMessage', handleIncomingMessage);
+      socketService.off('newNotification', handleIncomingMessage);
+      socketService.off('memberAdded', handleIncomingMessage);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleMessagesRead = () => {
+      if (isOpen) {
+        fetchConversations();
+      } else {
+        fetchUnreadCount();
+      }
+    };
+    window.addEventListener(MESSAGES_READ_EVENT, handleMessagesRead);
+    return () => {
+      window.removeEventListener(MESSAGES_READ_EVENT, handleMessagesRead);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

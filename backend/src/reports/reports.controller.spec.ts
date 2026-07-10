@@ -11,7 +11,7 @@ describe('ReportsController', () => {
     getMyReports: jest.fn(),
   };
 
-  const mockUser = { id: 'user-1', email: 'alice@example.com', role: 'CLIENT' };
+  const mockUser = { id: 'user-1', email: 'alice@example.com', role: 'USER' };
 
   const mockReport = {
     id: 'report-1',
