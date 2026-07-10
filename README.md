@@ -58,7 +58,7 @@ N'importe quel Utilisateur ou Organisateur peut être invité comme staff sur un
 
 **Frontend** - React 19 + TypeScript sur Vite, Tailwind pour le design system et le thème sombre, React Router. Stripe.js pour le paiement côté client, Leaflet pour la carte, Chart.js pour les stats des tableaux de bord, html5-qrcode pour le scan des billets à l'entrée. Tests avec Vitest et Testing Library, accessibilité vérifiée avec jest-axe.
 
-**Infrastructure** - tout tourne en Docker Compose (frontend, backend, PostgreSQL, Redis), CI/CD sur GitHub Actions.
+**Infrastructure** - tout tourne en Docker Compose (frontend, backend, PostgreSQL, Redis), CI/CD sur GitHub Actions. En production, reverse-proxy Nginx devant le frontend et l'API (configs dans [`deploy/`](deploy)).
 
 ## Prérequis
 
