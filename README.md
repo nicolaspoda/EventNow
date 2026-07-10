@@ -40,25 +40,25 @@ N'importe quel Utilisateur ou Organisateur peut être invité comme staff sur un
 
 **Billetterie** - QR code unique par place, PDF téléchargeable, validation à l'entrée par le staff, statistiques de validation, codes promo.
 
-**Communautaire** — demandes de participation, sondages et liste d'objets à apporter par événement.
+**Communautaire** - demandes de participation, sondages et liste d'objets à apporter par événement.
 
-**Social** — abonnements, amis (suivi mutuel), messagerie temps réel, avis sur les événements et entre participants, profils publics, notifications in-app.
+**Social** - abonnements, amis (suivi mutuel), messagerie temps réel, avis sur les événements et entre participants, profils publics, notifications in-app.
 
-**Modération** — signalements d'événements ou d'utilisateurs, suspension d'événement, bannissement de compte (rôle Admin).
+**Modération** - signalements d'événements ou d'utilisateurs, suspension d'événement, bannissement de compte (rôle Admin).
 
-**Emails & tâches planifiées** — confirmation de commande, rappels J-7/J-1, nettoyage automatique du staff après un événement.
+**Emails et tâches planifiées** - confirmation de commande, rappels J-7/J-1, nettoyage automatique du staff après un événement.
 
-**Sécurité** — rate limiting (renforcé sur le paiement), Helmet, sanitization anti-XSS, CORS, CSRF, validation des DTO, logs Winston, accessibilité (tests axe), mode sombre.
+**Sécurité** - rate limiting (renforcé sur le paiement), Helmet, sanitization anti-XSS, CORS, CSRF, validation des DTO, logs Winston, accessibilité (tests axe), mode sombre.
 
 ---
 
 ## Stack technique
 
-**Backend** — NestJS (TypeScript), PostgreSQL via Prisma, Redis pour les locks de réservation et les codes OAuth. Auth par JWT (email/mot de passe ou Google), paiement Stripe, upload d'images Cloudinary, emails via Nodemailer/Handlebars, PDF des billets avec PDFKit, messagerie temps réel en Socket.io. Sécurité standard (Helmet, rate limiting, validation des DTO, sanitization) et logs Winston.
+**Backend** - NestJS (TypeScript), PostgreSQL via Prisma, Redis pour les locks de réservation et les codes OAuth. Auth par JWT (email/mot de passe ou Google), paiement Stripe, upload d'images Cloudinary, emails via Nodemailer/Handlebars, PDF des billets avec PDFKit, messagerie temps réel en Socket.io. Sécurité standard (Helmet, rate limiting, validation des DTO, sanitization) et logs Winston.
 
-**Frontend** — React 19 + TypeScript sur Vite, Tailwind pour le design system et le thème sombre, React Router. Stripe.js pour le paiement côté client, Leaflet pour la carte, Chart.js pour les stats des tableaux de bord, html5-qrcode pour le scan des billets à l'entrée. Tests avec Vitest et Testing Library, accessibilité vérifiée avec jest-axe.
+**Frontend** - React 19 + TypeScript sur Vite, Tailwind pour le design system et le thème sombre, React Router. Stripe.js pour le paiement côté client, Leaflet pour la carte, Chart.js pour les stats des tableaux de bord, html5-qrcode pour le scan des billets à l'entrée. Tests avec Vitest et Testing Library, accessibilité vérifiée avec jest-axe.
 
-**Infrastructure** — tout tourne en Docker Compose (frontend, backend, PostgreSQL, Redis), CI/CD sur GitHub Actions. En production, reverse-proxy Nginx devant le frontend et l'API (configs dans [`deploy/`](deploy)).
+**Infrastructure** - tout tourne en Docker Compose (frontend, backend, PostgreSQL, Redis), CI/CD sur GitHub Actions. En production, reverse-proxy Nginx devant le frontend et l'API (configs dans [`deploy/`](deploy)).
 
 ## Prérequis
 
@@ -106,7 +106,7 @@ La suite est identique dans les deux cas.
 cp backend/.env.example backend/.env
 ```
 
-À éditer si besoin : `GOOGLE_CLIENT_ID`/`SECRET` pour l'auth Google, `STRIPE_SECRET_KEY`/`STRIPE_PUBLISHABLE_KEY` pour le paiement, `CLOUDINARY_*` pour l'upload. Les variables de base (`DATABASE_URL`, `REDIS_HOST`, `CORS_ORIGINS`) sont redéfinies dans `docker-compose.yml` — inutile d'y toucher pour un usage Docker.
+À éditer si besoin : `GOOGLE_CLIENT_ID`/`SECRET` pour l'auth Google, `STRIPE_SECRET_KEY`/`STRIPE_PUBLISHABLE_KEY` pour le paiement, `CLOUDINARY_*` pour l'upload. Les variables de base (`DATABASE_URL`, `REDIS_HOST`, `CORS_ORIGINS`) sont redéfinies dans `docker-compose.yml` - inutile d'y toucher pour un usage Docker.
 
 ### 3. Démarrer l'application
 
