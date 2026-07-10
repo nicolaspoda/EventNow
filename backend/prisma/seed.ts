@@ -28,7 +28,7 @@ async function main() {
   const hash = (pwd: string) => bcrypt.hash(pwd, 10);
 
   // --- Users ---
-  const [admin, organizer, user] = await Promise.all([
+  const [admin, organizer, user, staff] = await Promise.all([
     prisma.user.create({
       data: {
         email: 'admin@eventnow.fr',
@@ -55,6 +55,15 @@ async function main() {
         passwordHash: await hash('User1234!'),
         role: Role.USER,
         avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=User',
+      },
+    }),
+    prisma.user.create({
+      data: {
+        email: 'staff@eventnow.fr',
+        username: 'staffuser',
+        passwordHash: await hash('Staff1234!'),
+        role: Role.USER,
+        avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Staff',
       },
     }),
   ]);
@@ -233,11 +242,22 @@ async function main() {
 
   console.log(`✅ ${events.length} événements créés`);
 
+  // --- Staff ---
+  await prisma.eventStaff.create({
+    data: {
+      eventId: events[0].id,
+      userId: staff.id,
+    },
+  });
+
+  console.log('✅ Affectation staff créée (Daft Punk Tribute Night)');
+
   console.log('\n🎉 Seed terminé avec succès !\n');
   console.log('Comptes de connexion :');
   console.log('  👑 Admin      : admin@eventnow.fr      / Admin1234!');
   console.log('  🎪 Organisateur: organizer@eventnow.fr / Organizer1234!');
   console.log('  👤 Utilisateur : user@eventnow.fr      / User1234!');
+  console.log('  🎫 Staff       : staff@eventnow.fr     / Staff1234! (staff sur "Daft Punk Tribute Night")');
 }
 
 main()
