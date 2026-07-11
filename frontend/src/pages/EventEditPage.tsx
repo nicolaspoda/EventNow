@@ -184,13 +184,31 @@ export function EventEditPage() {
     e.preventDefault();
     if (!id) return;
 
-    if (!title.trim()) return;
-    if (!address.trim()) return;
-    if (!city.trim()) return;
-    if (!eventDate) return;
+    if (!title.trim()) {
+      setLoadError('Le titre est obligatoire');
+      return;
+    }
+    if (!address.trim()) {
+      setLoadError('L\'adresse est obligatoire');
+      return;
+    }
+    if (!city.trim()) {
+      setLoadError('La ville est obligatoire');
+      return;
+    }
+    if (!eventDate) {
+      setLoadError('La date de l\'événement est obligatoire');
+      return;
+    }
 
-    if (event?.type === 'PROFESSIONAL' && !eventEndDate) return;
-    if (eventEndDate && new Date(eventEndDate) <= new Date(eventDate)) return;
+    if (event?.type === 'PROFESSIONAL' && !eventEndDate) {
+      setLoadError('La date et heure de fin sont obligatoires pour un événement professionnel');
+      return;
+    }
+    if (eventEndDate && new Date(eventEndDate) <= new Date(eventDate)) {
+      setLoadError('La date de fin doit être postérieure à la date de début');
+      return;
+    }
 
     const isCommunity = event?.type === 'COMMUNITY';
     let ticketCategoriesPayload: UpdateEventPayload['ticket_categories'];
@@ -219,7 +237,12 @@ export function EventEditPage() {
         (c) =>
           c.name.trim() && c.initial_stock >= 1 && Number(c.price) >= minTicketPrice,
       );
-      if (validCategories.length === 0) return;
+      if (validCategories.length === 0) {
+        setLoadError(
+          `Ajoutez au moins une catégorie de billets avec un nom, un stock et un prix ≥ ${minTicketPrice.toFixed(2)} €`,
+        );
+        return;
+      }
 
       ticketCategoriesPayload = validCategories.map((c) => ({
         name: c.name.trim(),
