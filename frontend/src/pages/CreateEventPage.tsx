@@ -73,6 +73,12 @@ export function CreateEventPage() {
     );
   };
 
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    setLatitude(undefined);
+    setLongitude(undefined);
+  };
+
   const handleAddressSelect = (suggestion: AddressSuggestion) => {
     setAddress(suggestion.label);
     setCity(suggestion.city);
@@ -96,6 +102,12 @@ export function CreateEventPage() {
     }
     if (!city.trim()) {
       setError('La ville est obligatoire');
+      return;
+    }
+    if (latitude === undefined || longitude === undefined) {
+      setError(
+        'Veuillez sélectionner une adresse dans la liste de suggestions pour localiser l\'événement',
+      );
       return;
     }
     if (!eventDate) {
@@ -242,7 +254,7 @@ export function CreateEventPage() {
             <AddressAutocomplete
               id="event-address"
               value={address}
-              onChange={setAddress}
+              onChange={handleAddressChange}
               onAddressSelect={handleAddressSelect}
               label="Adresse de l'événement"
               placeholder=""
