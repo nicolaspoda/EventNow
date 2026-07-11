@@ -7,7 +7,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
 import { ImageUpload } from '../components/upload/ImageUpload';
 import { AddressAutocomplete } from '../components/location/AddressAutocomplete';
-import type { AddressSuggestion } from '../services/geocodingService';
+import { geocodingService, type AddressSuggestion } from '../services/geocodingService';
 import type {
   CreateEventPayload,
   CreateTicketCategoryPayload,
@@ -104,12 +104,6 @@ export function CreateEventPage() {
       setError('La ville est obligatoire');
       return;
     }
-    if (latitude === undefined || longitude === undefined) {
-      setError(
-        'Veuillez sélectionner une adresse dans la liste de suggestions pour localiser l\'événement',
-      );
-      return;
-    }
     if (!eventDate) {
       setError('La date de l\'événement est obligatoire');
       return;
@@ -162,26 +156,44 @@ export function CreateEventPage() {
       }));
     }
 
-    const payload: CreateEventPayload = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      location: location.trim() || `${city}, ${postalCode}`,
-      address: address.trim(),
-      city: city.trim(),
-      postal_code: postalCode.trim(),
-      country: country.trim(),
-      latitude,
-      longitude,
-      image_url: imageUrl.trim() || undefined,
-      image_public_id: imagePublicId.trim() || undefined,
-      event_date: toISOString(eventDate),
-      ...(isCommunity ? {} : { end_date: toISOString(eventEndDate) }),
-      type: eventType,
-      ticket_categories: ticketCategories,
-    };
-
     setLoading(true);
     try {
+      let eventLatitude = latitude;
+      let eventLongitude = longitude;
+      if (eventLatitude === undefined || eventLongitude === undefined) {
+        const fullAddress = `${address.trim()} ${postalCode.trim()} ${city.trim()}`.trim();
+        const geocoded = await geocodingService.searchAddress(fullAddress);
+        if (geocoded.length > 0) {
+          eventLatitude = geocoded[0].coordinates.lat;
+          eventLongitude = geocoded[0].coordinates.lon;
+          setLatitude(eventLatitude);
+          setLongitude(eventLongitude);
+        } else {
+          setError(
+            'Impossible de localiser cette adresse automatiquement. Vérifiez son orthographe ou sélectionnez une suggestion dans la liste qui s\'affiche pendant la saisie.',
+          );
+          return;
+        }
+      }
+
+      const payload: CreateEventPayload = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        location: location.trim() || `${city}, ${postalCode}`,
+        address: address.trim(),
+        city: city.trim(),
+        postal_code: postalCode.trim(),
+        country: country.trim(),
+        latitude: eventLatitude,
+        longitude: eventLongitude,
+        image_url: imageUrl.trim() || undefined,
+        image_public_id: imagePublicId.trim() || undefined,
+        event_date: toISOString(eventDate),
+        ...(isCommunity ? {} : { end_date: toISOString(eventEndDate) }),
+        type: eventType,
+        ticket_categories: ticketCategories,
+      };
+
       const created = await eventService.createEvent(payload);
       const eventId = created?.id ?? (created as { id?: string } | undefined)?.id;
       if (eventId) {
