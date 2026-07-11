@@ -163,6 +163,12 @@ export function EventEditPage() {
     );
   };
 
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    setLatitude(undefined);
+    setLongitude(undefined);
+  };
+
   const handleAddressSelect = (suggestion: AddressSuggestion) => {
     setAddress(suggestion.label);
     setCity(suggestion.city);
@@ -181,6 +187,12 @@ export function EventEditPage() {
     if (!title.trim()) return;
     if (!address.trim()) return;
     if (!city.trim()) return;
+    if (latitude === undefined || longitude === undefined) {
+      setLoadError(
+        'Veuillez sélectionner une adresse dans la liste de suggestions pour localiser l\'événement',
+      );
+      return;
+    }
     if (!eventDate) return;
 
     if (event?.type === 'PROFESSIONAL') {
@@ -356,7 +368,7 @@ export function EventEditPage() {
             <AddressAutocomplete
               id="event-address"
               value={address}
-              onChange={setAddress}
+              onChange={handleAddressChange}
               onAddressSelect={handleAddressSelect}
               label="Adresse de l'événement"
               placeholder="Commencez à taper une adresse (ex: Tou...)"
