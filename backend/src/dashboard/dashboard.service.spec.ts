@@ -11,6 +11,7 @@ describe('DashboardService', () => {
     booking: { findMany: jest.fn() },
     ticket: { findMany: jest.fn() },
     participationRequest: { findMany: jest.fn() },
+    eventStaff: { findMany: jest.fn() },
   };
 
   const now = new Date();
@@ -48,6 +49,7 @@ describe('DashboardService', () => {
 
     service = module.get<DashboardService>(DashboardService);
     jest.clearAllMocks();
+    mockPrismaService.eventStaff.findMany.mockResolvedValue([]);
   });
 
   describe('getOrganizerOverview', () => {
@@ -422,6 +424,17 @@ describe('DashboardService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].participationType).toBe('TICKET');
     });
+
+    it('should include events the user is only staff on', async () => {
+      mockPrismaService.ticket.findMany.mockResolvedValue([]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([
+        { event: futureEvent },
+      ]);
+      const result = await service.getMyUpcomingEvents('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].participationType).toBe('STAFF');
+    });
   });
 
   describe('getMyParticipatedEvents', () => {
@@ -462,6 +475,20 @@ describe('DashboardService', () => {
       const result = await service.getMyParticipatedEvents('user-1');
       const ids = result.filter((e: any) => e.id === 'event-1');
       expect(ids).toHaveLength(1);
+    });
+
+    it('should include events the user is only staff on', async () => {
+      const event = {
+        id: 'event-1', title: 'E', description: 'D', eventDate: pastDate,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      mockPrismaService.ticket.findMany.mockResolvedValue([]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([{ event }]);
+      const result = await service.getMyParticipatedEvents('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].participationType).toBe('STAFF');
     });
   });
 });

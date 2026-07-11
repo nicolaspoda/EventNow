@@ -625,16 +625,65 @@ export class DashboardService {
         participationType: 'ORGANIZER' as const,
       }));
 
+    const staffAssignments = await this.prisma.eventStaff.findMany({
+      where: {
+        userId,
+        event: { eventDate: { gte: oneDayAgo } },
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventDate: true,
+            endDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+            organizer: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { event: { eventDate: 'asc' } },
+    });
+
+    const staffEvents = staffAssignments
+      .filter((assignment) => this.getEventEndDate(assignment.event) > now)
+      .map((assignment) => ({
+        id: assignment.event.id,
+        title: assignment.event.title,
+        description: assignment.event.description,
+        eventDate:
+          assignment.event.eventDate instanceof Date
+            ? assignment.event.eventDate.toISOString()
+            : assignment.event.eventDate,
+        location: assignment.event.location,
+        imageUrl: assignment.event.imageUrl,
+        type: assignment.event.type,
+        category: assignment.event.category,
+        organizer: (assignment.event as any).organizer,
+        participationType: 'STAFF' as const,
+      }));
+
     const byId = new Map<
       string,
       | (typeof professionalEvents)[number]
       | (typeof communityEvents)[number]
       | (typeof organizerEvents)[number]
+      | (typeof staffEvents)[number]
     >();
     for (const event of [...professionalEvents, ...communityEvents]) {
       byId.set(event.id, event);
     }
-    for (const event of organizerEvents) {
+    for (const event of [...organizerEvents, ...staffEvents]) {
       if (!byId.has(event.id)) {
         byId.set(event.id, event);
       }
@@ -798,13 +847,72 @@ export class DashboardService {
       };
     });
 
-    const allEvents = [...professionalEvents, ...communityEvents].sort(
-      (a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateB.getTime() - dateA.getTime();
+    const staffAssignments = await this.prisma.eventStaff.findMany({
+      where: { userId },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+            organizer: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
+          },
+        },
       },
-    );
+      orderBy: { event: { eventDate: 'desc' } },
+    });
+
+    const staffEvents = staffAssignments.map((assignment) => {
+      const eventDate =
+        assignment.event.eventDate instanceof Date
+          ? assignment.event.eventDate.toISOString()
+          : assignment.event.eventDate;
+      return {
+        id: assignment.event.id,
+        title: assignment.event.title,
+        description: assignment.event.description,
+        eventDate,
+        location: assignment.event.location,
+        imageUrl: assignment.event.imageUrl,
+        type: assignment.event.type,
+        category: assignment.event.category,
+        organizer: (assignment.event as any).organizer,
+        participationType: 'STAFF' as const,
+        isPast: new Date(eventDate) < now,
+      };
+    });
+
+    const byId = new Map<
+      string,
+      | (typeof professionalEvents)[number]
+      | (typeof communityEvents)[number]
+      | (typeof staffEvents)[number]
+    >();
+    for (const event of [...professionalEvents, ...communityEvents]) {
+      byId.set(event.id, event);
+    }
+    for (const event of staffEvents) {
+      if (!byId.has(event.id)) {
+        byId.set(event.id, event);
+      }
+    }
+
+    const allEvents = Array.from(byId.values()).sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime();
+    });
 
     return allEvents;
   }
