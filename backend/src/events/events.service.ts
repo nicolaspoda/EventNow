@@ -59,17 +59,15 @@ export class EventsService {
       );
     }
 
-    if (requestedType === EventType.PROFESSIONAL) {
-      if (!endDate) {
-        throw new BadRequestException(
-          "L'heure de fin est obligatoire pour les événements professionnels",
-        );
-      }
-      if (endDate <= eventDate) {
-        throw new BadRequestException(
-          "L'heure de fin doit être postérieure à l'heure de début",
-        );
-      }
+    if (requestedType === EventType.PROFESSIONAL && !endDate) {
+      throw new BadRequestException(
+        "L'heure de fin est obligatoire pour les événements professionnels",
+      );
+    }
+    if (endDate && endDate <= eventDate) {
+      throw new BadRequestException(
+        "L'heure de fin doit être postérieure à l'heure de début",
+      );
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
@@ -414,17 +412,15 @@ export class EventsService {
         );
       }
 
-      if (event.type === 'PROFESSIONAL') {
-        if (!newEnd) {
-          throw new BadRequestException(
-            "L'heure de fin est obligatoire pour les événements professionnels",
-          );
-        }
-        if (newEnd <= newStart) {
-          throw new BadRequestException(
-            "L'heure de fin doit être postérieure à l'heure de début",
-          );
-        }
+      if (event.type === 'PROFESSIONAL' && !newEnd) {
+        throw new BadRequestException(
+          "L'heure de fin est obligatoire pour les événements professionnels",
+        );
+      }
+      if (newEnd && newEnd <= newStart) {
+        throw new BadRequestException(
+          "L'heure de fin doit être postérieure à l'heure de début",
+        );
       }
     }
 
@@ -465,28 +461,18 @@ export class EventsService {
       }
 
       if (updateEventDto.ticket_categories && !hasPaidTickets) {
+        // "Déjà pris" = initialStock - currentStock de la catégorie existante.
+        // Couvre aussi bien les billets payés que les participations communautaires
+        // acceptées (qui décrémentent currentStock sans créer de Ticket).
         const existingCategories = await tx.ticketCategory.findMany({
           where: { eventId: id },
           orderBy: { createdAt: 'asc' },
-          select: { id: true },
+          select: { initialStock: true, currentStock: true },
         });
 
-        const categoryIds = existingCategories.map((c) => c.id);
-        const soldCounts =
-          categoryIds.length > 0
-            ? await tx.ticket.groupBy({
-                by: ['ticketCategoryId'],
-                where: {
-                  ticketCategoryId: { in: categoryIds },
-                },
-                _count: { id: true },
-              })
-            : [];
-
-        const soldMap = new Map(
-          soldCounts.map((s) => [s.ticketCategoryId, s._count.id]),
+        soldByCategoryIndex = existingCategories.map(
+          (c) => c.initialStock - c.currentStock,
         );
-        soldByCategoryIndex = categoryIds.map((id) => soldMap.get(id) ?? 0);
       }
 
       if (updateEventDto.ticket_categories && !hasPaidTickets) {

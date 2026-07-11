@@ -427,8 +427,9 @@ describe('EventsService', () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
       mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
       mockPrismaService.ticket.count.mockResolvedValue(0);
-      mockPrismaService.ticketCategory.findMany.mockResolvedValue([{ id: 'cat-1' }]);
-      mockPrismaService.ticket.groupBy.mockResolvedValue([]);
+      mockPrismaService.ticketCategory.findMany.mockResolvedValue([
+        { initialStock: 20, currentStock: 20 },
+      ]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({});
       mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: [] });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
@@ -466,13 +467,12 @@ describe('EventsService', () => {
       expect(mockNotificationsService.createForManyUsers).toHaveBeenCalled();
     });
 
-    it('should apply sold count to initial stock for categories', async () => {
+    it('should apply already-sold count to initial stock for categories', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
       mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
       mockPrismaService.ticket.count.mockResolvedValue(0);
-      mockPrismaService.ticketCategory.findMany.mockResolvedValue([{ id: 'cat-1' }]);
-      mockPrismaService.ticket.groupBy.mockResolvedValue([
-        { ticketCategoryId: 'cat-1', _count: { id: 5 } },
+      mockPrismaService.ticketCategory.findMany.mockResolvedValue([
+        { initialStock: 100, currentStock: 95 },
       ]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({});
       mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: [] });
@@ -481,7 +481,29 @@ describe('EventsService', () => {
       await service.update('event-1', 'user-1', {
         ticket_categories: [{ name: 'Standard', price: 20, initial_stock: 100 }],
       });
-      expect(mockPrismaService.ticketCategory.deleteMany).toHaveBeenCalled();
+      const call = mockPrismaService.event.update.mock.calls[0][0];
+      expect(call.data.ticketCategories.create[0].currentStock).toBe(95);
+    });
+
+    it('should preserve accepted community participation stock (no Ticket rows) on update', async () => {
+      const communityEvent = { ...mockEvent, type: 'COMMUNITY' };
+      mockPrismaService.event.findUnique.mockResolvedValue(communityEvent);
+      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.ticket.count.mockResolvedValue(0);
+      // 5 accepted participation requests already decremented currentStock from 20 to 15,
+      // with no Ticket rows created at all.
+      mockPrismaService.ticketCategory.findMany.mockResolvedValue([
+        { initialStock: 20, currentStock: 15 },
+      ]);
+      mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({});
+      mockPrismaService.event.update.mockResolvedValue({ ...communityEvent, ticketCategories: [] });
+      mockPrismaService.ticket.findMany.mockResolvedValue([]);
+
+      await service.update('event-1', 'user-1', {
+        ticket_categories: [{ name: 'Participation', price: 0.5, initial_stock: 20 }],
+      });
+      const call = mockPrismaService.event.update.mock.calls[0][0];
+      expect(call.data.ticketCategories.create[0].currentStock).toBe(15);
     });
   });
 

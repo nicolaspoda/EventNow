@@ -189,10 +189,8 @@ export function EventEditPage() {
     if (!city.trim()) return;
     if (!eventDate) return;
 
-    if (event?.type === 'PROFESSIONAL') {
-      if (!eventEndDate) return;
-      if (new Date(eventEndDate) <= new Date(eventDate)) return;
-    }
+    if (event?.type === 'PROFESSIONAL' && !eventEndDate) return;
+    if (eventEndDate && new Date(eventEndDate) <= new Date(eventDate)) return;
 
     const isCommunity = event?.type === 'COMMUNITY';
     let ticketCategoriesPayload: UpdateEventPayload['ticket_categories'];
@@ -265,9 +263,7 @@ export function EventEditPage() {
         image_url: imageUrl.trim() || undefined,
         ...(imagePublicId && { image_public_id: imagePublicId }),
         event_date: toISOString(eventDate),
-        ...(event?.type === 'PROFESSIONAL' && eventEndDate
-          ? { end_date: toISOString(eventEndDate) }
-          : {}),
+        ...(eventEndDate ? { end_date: toISOString(eventEndDate) } : {}),
         ticket_categories: ticketCategoriesPayload,
       };
 
@@ -443,17 +439,19 @@ export function EventEditPage() {
               required
               compact
             />
-            {event?.type === 'PROFESSIONAL' && (
-              <FormField
-                id="event-end-date"
-                label="Date et heure de fin"
-                type="datetime-local"
-                value={eventEndDate}
-                onChange={(e) => setEventEndDate(e.target.value)}
-                required
-                compact
-              />
-            )}
+            <FormField
+              id="event-end-date"
+              label={
+                event?.type === 'COMMUNITY'
+                  ? 'Date et heure de fin (optionnel)'
+                  : 'Date et heure de fin'
+              }
+              type="datetime-local"
+              value={eventEndDate}
+              onChange={(e) => setEventEndDate(e.target.value)}
+              required={event?.type === 'PROFESSIONAL'}
+              compact
+            />
 
             {event?.type === 'COMMUNITY' ? (
               <>
