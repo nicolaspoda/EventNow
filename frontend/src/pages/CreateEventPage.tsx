@@ -80,7 +80,7 @@ export function CreateEventPage() {
   };
 
   const handleAddressSelect = (suggestion: AddressSuggestion) => {
-    setAddress(suggestion.label);
+    setAddress(suggestion.name);
     setCity(suggestion.city);
     setPostalCode(suggestion.postcode);
     setLatitude(suggestion.coordinates.lat);
