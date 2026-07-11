@@ -6,7 +6,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
 import { ImageUpload } from '../components/upload/ImageUpload';
 import { AddressAutocomplete } from '../components/location/AddressAutocomplete';
-import type { AddressSuggestion } from '../services/geocodingService';
+import { geocodingService, type AddressSuggestion } from '../services/geocodingService';
 import type {
   Event,
   EventTypeCreate,
@@ -187,12 +187,6 @@ export function EventEditPage() {
     if (!title.trim()) return;
     if (!address.trim()) return;
     if (!city.trim()) return;
-    if (latitude === undefined || longitude === undefined) {
-      setLoadError(
-        'Veuillez sélectionner une adresse dans la liste de suggestions pour localiser l\'événement',
-      );
-      return;
-    }
     if (!eventDate) return;
 
     if (event?.type === 'PROFESSIONAL') {
@@ -238,27 +232,45 @@ export function EventEditPage() {
       }));
     }
 
-    const payload: UpdateEventPayload = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      location: location.trim() || `${city}, ${postalCode}`,
-      address: address.trim(),
-      city: city.trim(),
-      postal_code: postalCode.trim(),
-      country: country.trim(),
-      latitude,
-      longitude,
-      image_url: imageUrl.trim() || undefined,
-      ...(imagePublicId && { image_public_id: imagePublicId }),
-      event_date: toISOString(eventDate),
-      ...(event?.type === 'PROFESSIONAL' && eventEndDate
-        ? { end_date: toISOString(eventEndDate) }
-        : {}),
-      ticket_categories: ticketCategoriesPayload,
-    };
-
     setSubmitLoading(true);
     try {
+      let eventLatitude = latitude;
+      let eventLongitude = longitude;
+      if (eventLatitude === undefined || eventLongitude === undefined) {
+        const fullAddress = `${address.trim()} ${postalCode.trim()} ${city.trim()}`.trim();
+        const geocoded = await geocodingService.searchAddress(fullAddress);
+        if (geocoded.length > 0) {
+          eventLatitude = geocoded[0].coordinates.lat;
+          eventLongitude = geocoded[0].coordinates.lon;
+          setLatitude(eventLatitude);
+          setLongitude(eventLongitude);
+        } else {
+          setLoadError(
+            'Impossible de localiser cette adresse automatiquement. Vérifiez son orthographe ou sélectionnez une suggestion dans la liste qui s\'affiche pendant la saisie.',
+          );
+          return;
+        }
+      }
+
+      const payload: UpdateEventPayload = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        location: location.trim() || `${city}, ${postalCode}`,
+        address: address.trim(),
+        city: city.trim(),
+        postal_code: postalCode.trim(),
+        country: country.trim(),
+        latitude: eventLatitude,
+        longitude: eventLongitude,
+        image_url: imageUrl.trim() || undefined,
+        ...(imagePublicId && { image_public_id: imagePublicId }),
+        event_date: toISOString(eventDate),
+        ...(event?.type === 'PROFESSIONAL' && eventEndDate
+          ? { end_date: toISOString(eventEndDate) }
+          : {}),
+        ticket_categories: ticketCategoriesPayload,
+      };
+
       await eventService.updateEvent(id, payload);
       navigate(-1);
     } catch (err: unknown) {
