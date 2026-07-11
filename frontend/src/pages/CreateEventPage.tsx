@@ -109,15 +109,13 @@ export function CreateEventPage() {
       return;
     }
 
-    if (!isCommunity) {
-      if (!eventEndDate) {
-        setError('La date et heure de fin sont obligatoires pour un événement professionnel');
-        return;
-      }
-      if (new Date(eventEndDate) <= new Date(eventDate)) {
-        setError('La date de fin doit être postérieure à la date de début');
-        return;
-      }
+    if (!isCommunity && !eventEndDate) {
+      setError('La date et heure de fin sont obligatoires pour un événement professionnel');
+      return;
+    }
+    if (eventEndDate && new Date(eventEndDate) <= new Date(eventDate)) {
+      setError('La date de fin doit être postérieure à la date de début');
+      return;
     }
 
     const eventType: EventTypeCreate = isCommunity ? 'COMMUNITY' : 'PROFESSIONAL';
@@ -189,7 +187,7 @@ export function CreateEventPage() {
         image_url: imageUrl.trim() || undefined,
         image_public_id: imagePublicId.trim() || undefined,
         event_date: toISOString(eventDate),
-        ...(isCommunity ? {} : { end_date: toISOString(eventEndDate) }),
+        ...(eventEndDate ? { end_date: toISOString(eventEndDate) } : {}),
         type: eventType,
         ticket_categories: ticketCategories,
       };
@@ -327,17 +325,15 @@ export function CreateEventPage() {
               required
               compact
             />
-            {!isCommunity && (
-              <FormField
-                id="event-end-date"
-                label="Date et heure de fin"
-                type="datetime-local"
-                value={eventEndDate}
-                onChange={(e) => setEventEndDate(e.target.value)}
-                required
-                compact
-              />
-            )}
+            <FormField
+              id="event-end-date"
+              label={isCommunity ? 'Date et heure de fin (optionnel)' : 'Date et heure de fin'}
+              type="datetime-local"
+              value={eventEndDate}
+              onChange={(e) => setEventEndDate(e.target.value)}
+              required={!isCommunity}
+              compact
+            />
 
             {isCommunity ? (
               <FormField

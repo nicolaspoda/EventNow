@@ -45,13 +45,32 @@ export class ReviewsService {
   }
 
   /**
-   * Retourne true si l'événement est considéré comme passé (ou date absente/invalide).
+   * Fin réelle de l'événement : endDate si renseignée, sinon eventDate + 6h
+   * (même repli que dans DashboardService.getEventEndDate).
    */
-  private isEventPast(eventDate: Date | string | null): boolean {
-    if (eventDate == null) return true;
-    const d = new Date(eventDate);
-    if (Number.isNaN(d.getTime())) return true;
-    return d <= new Date();
+  private getEventEndDate(event: {
+    eventDate: Date | string;
+    endDate?: Date | string | null;
+  }): Date {
+    if (event.endDate) return new Date(event.endDate);
+    const end = new Date(event.eventDate);
+    end.setHours(end.getHours() + 6);
+    return end;
+  }
+
+  /**
+   * Retourne true si l'événement est considéré comme terminé (ou date absente/invalide).
+   */
+  private isEventPast(event: {
+    eventDate: Date | string | null;
+    endDate?: Date | string | null;
+  }): boolean {
+    if (event.eventDate == null) return true;
+    const end = this.getEventEndDate(
+      event as { eventDate: Date | string; endDate?: Date | string | null },
+    );
+    if (Number.isNaN(end.getTime())) return true;
+    return end <= new Date();
   }
 
   async create(eventId: string, userId: string, dto: CreateReviewDto) {
@@ -63,9 +82,9 @@ export class ReviewsService {
       throw new NotFoundException('Événement introuvable');
     }
 
-    if (!this.isEventPast(event.eventDate)) {
+    if (!this.isEventPast(event)) {
       throw new BadRequestException(
-        "Vous ne pouvez laisser un avis qu'après la date de l'événement",
+        "Vous ne pouvez laisser un avis qu'après la fin de l'événement",
       );
     }
 
@@ -199,8 +218,8 @@ export class ReviewsService {
       return { canReview: false, reason: 'Événement introuvable' };
     }
 
-    if (!this.isEventPast(event.eventDate)) {
-      return { canReview: false, reason: 'Événement pas encore passé' };
+    if (!this.isEventPast(event)) {
+      return { canReview: false, reason: 'Événement pas encore terminé' };
     }
 
     const attended = await this.hasAttended(eventId, userId, event.type);
