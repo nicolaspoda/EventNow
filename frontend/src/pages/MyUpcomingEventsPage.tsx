@@ -15,7 +15,7 @@ const MyUpcomingEventsPage: React.FC = () => {
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'ticket' | 'participation' | 'organizer'>('all');
+  const [filter, setFilter] = useState<'all' | 'ticket' | 'participation' | 'organizer' | 'staff'>('all');
 
   useEffect(() => {
     fetchUpcomingEvents();
@@ -39,12 +39,14 @@ const MyUpcomingEventsPage: React.FC = () => {
     if (filter === 'ticket') return event.participationType === 'TICKET';
     if (filter === 'participation') return event.participationType === 'PARTICIPATION';
     if (filter === 'organizer') return event.participationType === 'ORGANIZER';
+    if (filter === 'staff') return event.participationType === 'STAFF';
     return true;
   });
 
   const ticketCount = events.filter((e) => e.participationType === 'TICKET').length;
   const participationCount = events.filter((e) => e.participationType === 'PARTICIPATION').length;
   const organizerCount = events.filter((e) => e.participationType === 'ORGANIZER').length;
+  const staffCount = events.filter((e) => e.participationType === 'STAFF').length;
 
   if (loading) {
     return (
@@ -190,6 +192,21 @@ const MyUpcomingEventsPage: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               Organisés ({organizerCount})
+            </span>
+          </button>
+          <button
+            onClick={() => setFilter('staff')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              filter === 'staff'
+                ? 'bg-primary-600 text-white'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Staff ({staffCount})
             </span>
           </button>
         </div>
