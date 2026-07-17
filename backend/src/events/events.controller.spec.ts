@@ -49,7 +49,9 @@ describe('EventsController', () => {
     id: 'user-1',
     email: 'organizer@test.com',
     role: 'ORGANIZER',
-  };
+    username: 'johndoe',
+    createdAt: new Date(),
+  } as any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

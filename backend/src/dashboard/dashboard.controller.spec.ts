@@ -39,7 +39,7 @@ describe('DashboardController', () => {
 
   describe('getOrganizerOverview', () => {
     it('should call service with user id', async () => {
-      const mockUser = { id: 'user-1', role: 'ORGANIZER' };
+      const mockUser = { id: 'user-1', role: 'ORGANIZER' } as any;
       const mockOverview = {
         totalEvents: 5,
         upcomingEvents: 3,
@@ -60,7 +60,7 @@ describe('DashboardController', () => {
 
   describe('getClientOverview', () => {
     it('should call service with user id', async () => {
-      const mockUser = { id: 'user-2', role: 'USER' };
+      const mockUser = { id: 'user-2', role: 'USER' } as any;
       const mockOverview = {
         totalEvents: 3,
         upcomingEvents: 2,
@@ -79,7 +79,7 @@ describe('DashboardController', () => {
 
   describe('getEventStats', () => {
     it('should call service with event id and user id', async () => {
-      const mockUser = { id: 'user-1', role: 'ORGANIZER' };
+      const mockUser = { id: 'user-1', role: 'ORGANIZER' } as any;
       const mockStats = {
         event: { id: 'event-1', title: 'Test Event' },
         categoriesStats: [],

@@ -18,7 +18,9 @@ describe('BookingsController', () => {
     id: 'user-1',
     email: 'test@test.com',
     role: 'USER',
-  };
+    username: 'testuser',
+    createdAt: new Date(),
+  } as any;
 
   const mockBooking = {
     id: 'booking-1',

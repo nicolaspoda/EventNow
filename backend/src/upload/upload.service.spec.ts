@@ -28,13 +28,13 @@ describe('UploadService', () => {
   let service: UploadService;
 
   const mockConfigService = {
-    get: jest.fn((key: string) => {
+    get: jest.fn((key: string): string | null => {
       const config: Record<string, string> = {
         CLOUDINARY_CLOUD_NAME: 'testcloud',
         CLOUDINARY_API_KEY: 'test-key',
         CLOUDINARY_API_SECRET: 'test-secret',
       };
-      return config[key];
+      return config[key] ?? null;
     }),
   };
 

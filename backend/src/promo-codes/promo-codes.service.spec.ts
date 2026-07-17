@@ -149,7 +149,7 @@ describe('PromoCodesService', () => {
     it('should return discount for FIXED type', async () => {
       mockPrismaService.promoCode.findUnique.mockResolvedValue({
         ...mockPromoCode,
-        discountType: DiscountType.FIXED,
+        discountType: DiscountType.FIXED_AMOUNT,
         discountValue: 15,
       });
       const result = await service.validatePromoCode(validateDto);
@@ -160,7 +160,7 @@ describe('PromoCodesService', () => {
     it('should cap FIXED discount at order amount', async () => {
       mockPrismaService.promoCode.findUnique.mockResolvedValue({
         ...mockPromoCode,
-        discountType: DiscountType.FIXED,
+        discountType: DiscountType.FIXED_AMOUNT,
         discountValue: 200,
       });
       const result = await service.validatePromoCode({ ...validateDto, orderAmount: 50 });

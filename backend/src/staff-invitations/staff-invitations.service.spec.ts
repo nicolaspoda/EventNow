@@ -237,7 +237,7 @@ describe('StaffInvitationsService', () => {
       mockAuthService.generateTokens.mockResolvedValue({ accessToken: 'at', refreshToken: 'rt' });
       const result = await service.acceptInvitation('user-1', 'token-abc');
       expect(result.message).toContain('acceptée');
-      expect(result.accessToken).toBe('at');
+      expect((result as { accessToken: string }).accessToken).toBe('at');
     });
 
     it('should return simple message if updated user not found', async () => {

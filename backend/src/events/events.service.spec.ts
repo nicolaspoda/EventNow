@@ -13,7 +13,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { SortBy, PriceRange } from './dto/search-events.dto';
-import { EventType } from './dto/create-event.dto';
+import { EventType, EventCategory } from './dto/create-event.dto';
 
 describe('EventsService', () => {
   let service: EventsService;
@@ -90,12 +90,12 @@ describe('EventsService', () => {
     country: 'France',
     latitude: 48.87,
     longitude: 2.33,
-    image_url: null,
-    image_public_id: null,
+    image_url: undefined,
+    image_public_id: undefined,
     event_date: futureDate.toISOString(),
     end_date: futureEndDate.toISOString(),
     type: EventType.PROFESSIONAL,
-    category: 'MUSIC',
+    category: EventCategory.CONCERT,
     ticket_categories: [
       { name: 'Standard', description: '', price: 20, initial_stock: 100 },
     ],
@@ -120,7 +120,7 @@ describe('EventsService', () => {
     cancelReason: null,
     organizerId: 'user-1',
     type: 'PROFESSIONAL',
-    category: 'MUSIC',
+    category: EventCategory.CONCERT,
     createdAt: new Date(),
     updatedAt: new Date(),
     organizer: mockOrganizer,

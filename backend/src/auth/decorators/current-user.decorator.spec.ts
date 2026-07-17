@@ -21,6 +21,9 @@ describe('CurrentUser', () => {
       'getUser',
     );
     const key = Object.keys(args).find((k) => k.includes('custom'));
+    if (!key) {
+      throw new Error('custom param metadata not found');
+    }
     const { factory } = args[key];
     const result = factory(undefined, ctx);
     expect(result).toBe(mockUser);
