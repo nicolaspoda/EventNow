@@ -165,6 +165,8 @@ describe('AuthController', () => {
         id: '1',
         email: 'test@example.com',
         role: Role.USER,
+        username: 'testuser',
+        createdAt: new Date(),
       };
 
       const result = await controller.getProfile(mockUser);

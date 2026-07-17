@@ -387,7 +387,7 @@ describe('DashboardService', () => {
       ]);
       mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
       const result = await service.getMyUpcomingEvents('user-1');
-      expect(result[0].ticketCount).toBe(2);
+      expect((result[0] as any).ticketCount).toBe(2);
     });
 
     it('should use endDate for event end calculation when set', async () => {

@@ -290,7 +290,7 @@ describe('OrdersService', () => {
     it('should return order', async () => {
       mockPrismaService.order.findUnique.mockResolvedValue({ ...mockOrder, tickets: [] });
       const result = await service.getOrderById('order-1', 'user-1');
-      expect(result.id).toBe('order-1');
+      expect((result as unknown as { id: string }).id).toBe('order-1');
     });
   });
 
