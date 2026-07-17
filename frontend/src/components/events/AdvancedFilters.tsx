@@ -236,7 +236,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
             <p className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Période
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <label htmlFor="dateFrom" className="text-xs text-neutral-600 dark:text-neutral-400">
                   Du
