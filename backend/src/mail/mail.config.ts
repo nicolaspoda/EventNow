@@ -1,5 +1,5 @@
 import { MailerOptions } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/adapters/handlebars.adapter';
 import { join } from 'path';
 
 // En dev Docker le volume monte le source ; en prod le build copie les assets dans dist
