@@ -28,4 +28,43 @@ describe('CurrentUser', () => {
     const result = factory(undefined, ctx);
     expect(result).toBe(mockUser);
   });
+
+  it('should return a single property of request.user when data is provided', () => {
+    const mockUser = { id: '1', email: 'test@test.com', role: 'USER' };
+    const mockRequest = { user: mockUser };
+    const ctx = {
+      switchToHttp: () => ({ getRequest: () => mockRequest }),
+    } as ExecutionContext;
+    const args = Reflect.getMetadata(
+      ROUTE_ARGS_METADATA,
+      TestController,
+      'getUser',
+    );
+    const key = Object.keys(args).find((k) => k.includes('custom'));
+    if (!key) {
+      throw new Error('custom param metadata not found');
+    }
+    const { factory } = args[key];
+    const result = factory('email', ctx);
+    expect(result).toBe(mockUser.email);
+  });
+
+  it('should return undefined when data is provided but request.user is missing', () => {
+    const mockRequest = {};
+    const ctx = {
+      switchToHttp: () => ({ getRequest: () => mockRequest }),
+    } as ExecutionContext;
+    const args = Reflect.getMetadata(
+      ROUTE_ARGS_METADATA,
+      TestController,
+      'getUser',
+    );
+    const key = Object.keys(args).find((k) => k.includes('custom'));
+    if (!key) {
+      throw new Error('custom param metadata not found');
+    }
+    const { factory } = args[key];
+    const result = factory('email', ctx);
+    expect(result).toBeUndefined();
+  });
 });
