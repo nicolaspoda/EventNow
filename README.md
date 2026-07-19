@@ -154,6 +154,14 @@ Le compte staff est un compte Utilisateur classique, affecté comme staff sur l'
 
 Inscription en tant qu'Utilisateur ou en tant qu'Organisateur (formulaire séparé, avec nom d'organisation), connexion par email/mot de passe (JWT) ou via Google OAuth.
 
+## Documentation
+
+Trois manuels plus détaillés vivent dans [`docs/`](docs) :
+
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — déploiement local et production, variables d'environnement, ce qui a posé problème en pratique (CORS, CSP Stripe)
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — parcours concrets par profil (participant, organisateur, staff, admin)
+- [`docs/UPDATING.md`](docs/UPDATING.md) — ajouter une fonctionnalité, migrations Prisma, flux de branches et CI/CD
+
 ## Auteur
 
 **Nicolas Poda**
