@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RedisService } from '../redis/redis.service';
+import { CustomLoggerService } from '../logger/logger.service';
 import { Role } from '@prisma/client';
 
 describe('AuthController', () => {
@@ -28,6 +29,12 @@ describe('AuthController', () => {
     getAndDeleteOAuthCode: jest.fn(),
   };
 
+  const mockSecurityLogger = {
+    logSecurityEvent: jest.fn(),
+  };
+
+  const mockRequest = { ip: '127.0.0.1', url: '/auth/login' } as any;
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -39,6 +46,10 @@ describe('AuthController', () => {
         {
           provide: RedisService,
           useValue: mockRedisService,
+        },
+        {
+          provide: CustomLoggerService,
+          useValue: mockSecurityLogger,
         },
       ],
     }).compile();
@@ -124,10 +135,31 @@ describe('AuthController', () => {
 
       mockAuthService.login.mockResolvedValue(expectedResult);
 
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockRequest);
 
       expect(result).toEqual(expectedResult);
       expect(authService.login).toHaveBeenCalledWith(loginDto);
+    });
+
+    it('should log an AUTH_FAILED security event and rethrow on invalid credentials', async () => {
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'wrong-password',
+      };
+      const authError = new UnauthorizedException(
+        'Email ou mot de passe incorrect',
+      );
+      mockAuthService.login.mockRejectedValue(authError);
+
+      await expect(
+        controller.login(loginDto, mockRequest),
+      ).rejects.toThrow(authError);
+
+      expect(mockSecurityLogger.logSecurityEvent).toHaveBeenCalledWith({
+        type: 'AUTH_FAILED',
+        ip: mockRequest.ip,
+        details: { email: loginDto.email, path: mockRequest.url },
+      });
     });
   });
 

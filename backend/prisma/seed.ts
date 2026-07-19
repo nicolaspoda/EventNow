@@ -104,7 +104,7 @@ async function main() {
       data: {
         title: 'Tech Summit Paris 2026',
         description:
-          'La conférence tech incontournable de l\'année. IA, Web3, DevOps — 40 speakers, 3 tracks, 1 journée pour tout comprendre.',
+          'La conférence tech incontournable de l\'année. IA, Web3, DevOps, 40 speakers, 3 tracks, 1 journée pour tout comprendre.',
         location: 'Palais des Congrès, Paris',
         address: '2 Place de la Porte Maillot',
         city: 'Paris',

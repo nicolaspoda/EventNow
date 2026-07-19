@@ -36,6 +36,6 @@ logs/
 deploy_github_actions
 deploy_github_actions.pub
 
-# Documentation locale
-docs/
+# Documentation locale (schémas, brouillons RNCP...) — les manuels de docs/ sont versionnés
+docs-archive/
 bugs_report.md
