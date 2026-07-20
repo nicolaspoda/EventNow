@@ -59,9 +59,18 @@ afterEach(() => {
 
 describe('socketService.connect', () => {
   it('connects to the /messages namespace with the token and resolves on "connect"', async () => {
-    const promise = socketService.connect('my-token');
-    fakeSocket.connected = true;
-    fakeSocket.trigger('connect');
+    // VITE_API_URL is only present locally via .env, so it's stubbed explicitly
+    // here to keep this test deterministic regardless of the ambient environment.
+    vi.stubEnv('VITE_API_URL', 'http://localhost:3000');
+    vi.resetModules();
+    const freshSocket = createFakeSocket();
+    ioMock.mockReset();
+    ioMock.mockReturnValue(freshSocket);
+    const { socketService: freshService } = await import('../services/socketService');
+
+    const promise = freshService.connect('my-token');
+    freshSocket.connected = true;
+    freshSocket.trigger('connect');
 
     await expect(promise).resolves.toBeUndefined();
     expect(ioMock).toHaveBeenCalledWith(
