@@ -54,6 +54,7 @@ beforeEach(async () => {
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 describe('socketService.connect', () => {
@@ -111,6 +112,34 @@ describe('socketService.connect', () => {
     await expect(promise).resolves.toBeUndefined();
   });
 
+  it('reuses the in-flight connection attempt instead of opening a second socket', async () => {
+    vi.useFakeTimers();
+    const first = socketService.connect('my-token');
+    const second = socketService.connect('my-token');
+
+    await vi.advanceTimersByTimeAsync(100);
+    expect(fakeSocket.connected).toBe(false);
+
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await first;
+
+    await vi.advanceTimersByTimeAsync(100);
+    await expect(second).resolves.toBeUndefined();
+
+    expect(ioMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not reject once the connection timeout fires after an already-successful connect', async () => {
+    vi.useFakeTimers();
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    await vi.advanceTimersByTimeAsync(10_000);
+  });
+
   it('emits a socketReconnected event to registered listeners once connected', async () => {
     const handler = vi.fn();
     socketService.on('socketReconnected', handler);
@@ -139,6 +168,57 @@ describe('socketService.disconnect', () => {
 
   it('does nothing when there is no active socket', () => {
     expect(() => socketService.disconnect()).not.toThrow();
+  });
+
+  it('resets the connecting state when the socket emits its own "disconnect" event, allowing a fresh connect', async () => {
+    const first = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await first;
+
+    fakeSocket.connected = false;
+    fakeSocket.trigger('disconnect');
+
+    const second = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await second;
+
+    expect(ioMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('socketService base URL fallback', () => {
+  it('connects to a relative /messages path when VITE_API_URL is unset', async () => {
+    vi.stubEnv('VITE_API_URL', '');
+    vi.resetModules();
+    const freshSocket = createFakeSocket();
+    ioMock.mockReset();
+    ioMock.mockReturnValue(freshSocket);
+
+    const { socketService: freshService } = await import('../services/socketService');
+    const promise = freshService.connect('my-token');
+    freshSocket.connected = true;
+    freshSocket.trigger('connect');
+    await promise;
+
+    expect(ioMock).toHaveBeenCalledWith('/messages', expect.anything());
+  });
+
+  it('strips a trailing /api/vN path via regex when VITE_API_URL is not a parseable absolute URL', async () => {
+    vi.stubEnv('VITE_API_URL', 'myhost.local/api/v1');
+    vi.resetModules();
+    const freshSocket = createFakeSocket();
+    ioMock.mockReset();
+    ioMock.mockReturnValue(freshSocket);
+
+    const { socketService: freshService } = await import('../services/socketService');
+    const promise = freshService.connect('my-token');
+    freshSocket.connected = true;
+    freshSocket.trigger('connect');
+    await promise;
+
+    expect(ioMock).toHaveBeenCalledWith('myhost.local/messages', expect.anything());
   });
 });
 
@@ -268,6 +348,159 @@ describe('socketService room/message actions when not connected', () => {
 });
 
 describe('socketService.on / off', () => {
+  it('off does nothing when no handler was ever registered for the event', () => {
+    expect(() => socketService.off('newMessage', vi.fn())).not.toThrow();
+  });
+
+  it('forwards conversationUpdated events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('conversationUpdated', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const data = { conversationId: 'c1', conversation: { id: 'c1' } };
+    fakeSocket.trigger('conversationUpdated', data);
+
+    expect(handler).toHaveBeenCalledWith(data);
+  });
+
+  it('forwards memberAdded events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('memberAdded', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const data = { conversationId: 'c1', userId: 'u1' };
+    fakeSocket.trigger('memberAdded', data);
+
+    expect(handler).toHaveBeenCalledWith(data);
+  });
+
+  it('forwards memberRemoved events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('memberRemoved', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const data = { conversationId: 'c1', userId: 'u1' };
+    fakeSocket.trigger('memberRemoved', data);
+
+    expect(handler).toHaveBeenCalledWith(data);
+  });
+
+  it('forwards userTyping events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('userTyping', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const data = { conversationId: 'c1', userId: 'u1', isTyping: true };
+    fakeSocket.trigger('userTyping', data);
+
+    expect(handler).toHaveBeenCalledWith(data);
+  });
+
+  it('forwards followsChanged events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('followsChanged', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    fakeSocket.trigger('followsChanged');
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards pollCreated events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('pollCreated', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const poll = { id: 'p1' };
+    fakeSocket.trigger('pollCreated', poll);
+
+    expect(handler).toHaveBeenCalledWith(poll);
+  });
+
+  it('forwards pollUpdated events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('pollUpdated', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const poll = { id: 'p1' };
+    fakeSocket.trigger('pollUpdated', poll);
+
+    expect(handler).toHaveBeenCalledWith(poll);
+  });
+
+  it('forwards pollDeleted events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('pollDeleted', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const data = { pollId: 'p1' };
+    fakeSocket.trigger('pollDeleted', data);
+
+    expect(handler).toHaveBeenCalledWith(data);
+  });
+
+  it('forwards itemListUpdated events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('itemListUpdated', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const list = { id: 'l1' };
+    fakeSocket.trigger('itemListUpdated', list);
+
+    expect(handler).toHaveBeenCalledWith(list);
+  });
+
+  it('forwards reviewsChanged events to registered handlers', async () => {
+    const handler = vi.fn();
+    socketService.on('reviewsChanged', handler);
+
+    const promise = socketService.connect('my-token');
+    fakeSocket.connected = true;
+    fakeSocket.trigger('connect');
+    await promise;
+
+    const data = { eventId: 'e1' };
+    fakeSocket.trigger('reviewsChanged', data);
+
+    expect(handler).toHaveBeenCalledWith(data);
+  });
+
   it('forwards server events to registered handlers', async () => {
     const handler = vi.fn();
     socketService.on('newMessage', handler);

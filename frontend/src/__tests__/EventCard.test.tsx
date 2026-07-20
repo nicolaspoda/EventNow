@@ -184,4 +184,41 @@ describe('EventCard', () => {
     renderCard(event as unknown as Event);
     expect(screen.getByText('15')).toBeInTheDocument();
   });
+
+  it('renders an <img> using the Cloudinary srcset when imageUrl is a Cloudinary URL', () => {
+    renderCard({
+      ...baseEvent,
+      imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/photo.jpg',
+    });
+    const img = screen.getByRole('img', { name: /Affiche de l'événement/ });
+    expect(img).toHaveAttribute(
+      'src',
+      'https://res.cloudinary.com/demo/image/upload/w_600,h_400,c_fill/v1/photo.jpg',
+    );
+    expect(img.getAttribute('srcset')).toContain('w_300,h_200,c_fill');
+    expect(
+      screen.queryByLabelText('Aucune image disponible pour cet événement'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders an <img> using the raw URL when imageUrl is not a Cloudinary URL', () => {
+    renderCard({ ...baseEvent, imageUrl: 'https://example.com/photo.jpg' });
+    const img = screen.getByRole('img', { name: /Affiche de l'événement/ });
+    expect(img).toHaveAttribute('src', 'https://example.com/photo.jpg');
+  });
+
+  it('computes a price of 0 when there are no ticket categories', () => {
+    renderCard({ ...baseEvent, ticketCategories: [] });
+    expect(screen.getByText('Gratuit')).toBeInTheDocument();
+  });
+
+  it('renders a fallback date and an empty dateTime when the event has no date information', () => {
+    const event = { ...baseEvent } as unknown as Record<string, unknown>;
+    delete event.eventDate;
+    renderCard(event as unknown as Event);
+
+    expect(screen.getByText('Date non renseignée')).toBeInTheDocument();
+    const time = document.querySelector('time');
+    expect(time).toHaveAttribute('datetime', '');
+  });
 });

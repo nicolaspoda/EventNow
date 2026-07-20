@@ -68,4 +68,14 @@ describe('getApiErrorMessage', () => {
     const err = { response: { status: 500 } };
     expect(getApiErrorMessage(err, DEFAULT)).toBe(DEFAULT);
   });
+
+  it('falls back to the default when the first array message is a technical message', () => {
+    const err = { response: { status: 400, data: { message: ['Internal Server Error', 'Autre'] } } };
+    expect(getApiErrorMessage(err, DEFAULT)).toBe(DEFAULT);
+  });
+
+  it('falls back to the default when the first array message is blank', () => {
+    const err = { response: { status: 400, data: { message: ['   ', 'Autre'] } } };
+    expect(getApiErrorMessage(err, DEFAULT)).toBe(DEFAULT);
+  });
 });

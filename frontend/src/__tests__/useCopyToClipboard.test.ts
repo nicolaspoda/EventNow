@@ -76,4 +76,22 @@ describe('useCopyToClipboard', () => {
     expect(document.execCommand).toHaveBeenCalledWith('copy');
     expect(result.current.copied).toBe(true);
   });
+
+  it('returns false and leaves copied unset when the clipboard write throws', async () => {
+    const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    });
+
+    const { result } = renderHook(() => useCopyToClipboard());
+
+    await act(async () => {
+      const success = await result.current.copy('https://example.com');
+      expect(success).toBe(false);
+    });
+
+    expect(result.current.copied).toBe(false);
+  });
 });
