@@ -96,6 +96,27 @@ describe('analyticsService.calculateParticipantsByMonth', () => {
       { month: '2026-03', participants: 0 },
     ]);
   });
+
+  it('accumulates participants for events sharing the same month', () => {
+    const events = [
+      makeEvent({ eventDate: '2026-03-05T00:00:00Z', stats: { totalCapacity: 100, fillRate: 0, status: 'PUBLISHED', totalSold: 10 } }),
+      makeEvent({ eventDate: '2026-03-20T00:00:00Z', stats: { totalCapacity: 100, fillRate: 0, status: 'PUBLISHED', totalSold: 5 } }),
+    ];
+    expect(analyticsService.calculateParticipantsByMonth(events)).toEqual([
+      { month: '2026-03', participants: 15 },
+    ]);
+  });
+
+  it('sorts multiple distinct months ascending', () => {
+    const events = [
+      makeEvent({ eventDate: '2026-03-01T00:00:00Z', stats: { totalCapacity: 100, fillRate: 0, status: 'PUBLISHED', totalSold: 3 } }),
+      makeEvent({ eventDate: '2026-01-01T00:00:00Z', stats: { totalCapacity: 100, fillRate: 0, status: 'PUBLISHED', totalSold: 1 } }),
+    ];
+    expect(analyticsService.calculateParticipantsByMonth(events)).toEqual([
+      { month: '2026-01', participants: 1 },
+      { month: '2026-03', participants: 3 },
+    ]);
+  });
 });
 
 describe('analyticsService.calculateFillRateDistribution', () => {
