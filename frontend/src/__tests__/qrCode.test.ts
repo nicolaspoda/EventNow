@@ -14,7 +14,7 @@ beforeEach(() => {
 
 describe('generateQRCodeDataUrl', () => {
   it('generates a data URL using the given text and default options', async () => {
-    vi.mocked(QRCode.toDataURL).mockResolvedValue('data:image/png;base64,fake');
+    vi.mocked(QRCode.toDataURL).mockResolvedValue('data:image/png;base64,fake' as never);
 
     const result = await generateQRCodeDataUrl('ticket-123');
 

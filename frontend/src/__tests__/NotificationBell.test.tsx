@@ -133,7 +133,10 @@ describe('NotificationBell - dropdown menu', () => {
 
   it('marks a single notification as read when clicked', async () => {
     vi.mocked(notificationService.getForUser).mockResolvedValue([followerNotification]);
-    vi.mocked(notificationService.markAsRead).mockResolvedValue(undefined);
+    vi.mocked(notificationService.markAsRead).mockResolvedValue({
+      ...followerNotification,
+      read: true,
+    });
     renderBell();
 
     fireEvent.click(screen.getByRole('button', { name: 'Notifications' }));
@@ -168,9 +171,10 @@ describe('NotificationBell - staff invitations', () => {
   it('accepts a staff invitation, saves the returned session and dispatches the staff-status event', async () => {
     vi.mocked(notificationService.getForUser).mockResolvedValue([staffInvitationNotification]);
     vi.mocked(staffInvitationsService.accept).mockResolvedValue({
+      message: 'ok',
       accessToken: 'new-token',
       refreshToken: 'new-refresh',
-      user: { id: 'u1', username: 'alice', email: 'a@a.com', role: 'USER' },
+      user: { id: 'u1', username: 'alice', email: 'a@a.com', role: 'USER' as const },
     });
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
 
@@ -190,7 +194,7 @@ describe('NotificationBell - staff invitations', () => {
 
   it('declines a staff invitation after confirmation and removes it from the list', async () => {
     vi.mocked(notificationService.getForUser).mockResolvedValue([staffInvitationNotification]);
-    vi.mocked(staffInvitationsService.decline).mockResolvedValue(undefined);
+    vi.mocked(staffInvitationsService.decline).mockResolvedValue({ message: 'ok' });
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderBell();

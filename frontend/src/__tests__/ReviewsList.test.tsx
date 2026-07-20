@@ -23,11 +23,16 @@ vi.mock('../services/socketService', () => ({
 
 const review = {
   id: 'r1',
+  eventId: 'e1',
+  userId: 'u1',
   rating: 5,
   comment: 'Génial',
   createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
   user: { email: 'alice@example.com' },
 };
+
+const pagination = { page: 1, limit: 10, total: 1, totalPages: 1 };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,6 +52,7 @@ describe('ReviewsList', () => {
   it('renders the review list, average rating and total count once loaded', async () => {
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [review],
+      pagination,
       stats: { averageRating: 5, totalReviews: 1 },
     });
 
@@ -60,6 +66,7 @@ describe('ReviewsList', () => {
   it('shows an empty-state message when there are no reviews', async () => {
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [],
+      pagination,
       stats: { averageRating: null, totalReviews: 0 },
     });
 
@@ -74,6 +81,7 @@ describe('ReviewsList', () => {
   it('notifies onReviewsLoaded with the fetched stats', async () => {
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [review],
+      pagination,
       stats: { averageRating: 5, totalReviews: 1 },
     });
     const onReviewsLoaded = vi.fn();
@@ -88,6 +96,7 @@ describe('ReviewsList', () => {
   it('refetches with the new sort order when the sort select changes', async () => {
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [review],
+      pagination,
       stats: { averageRating: 5, totalReviews: 1 },
     });
 
@@ -104,6 +113,7 @@ describe('ReviewsList', () => {
   it('refetches when refreshTrigger changes', async () => {
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [],
+      pagination,
       stats: { averageRating: null, totalReviews: 0 },
     });
 
@@ -120,6 +130,7 @@ describe('ReviewsList', () => {
     vi.mocked(socketService.connect).mockResolvedValue(undefined);
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [],
+      pagination,
       stats: { averageRating: null, totalReviews: 0 },
     });
 
@@ -134,6 +145,7 @@ describe('ReviewsList', () => {
   it('leaves the event room and unsubscribes on unmount', async () => {
     vi.mocked(reviewService.getEventReviews).mockResolvedValue({
       reviews: [],
+      pagination,
       stats: { averageRating: null, totalReviews: 0 },
     });
 

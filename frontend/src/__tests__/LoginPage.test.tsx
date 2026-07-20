@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LoginPage } from '../pages/LoginPage';
 import { authService } from '../services/auth.service';
 import { useAuth } from '../utils/useAuth';
+import type { AuthResponse } from '../types/auth';
 
 const mockNavigate = vi.fn();
 let mockLocationState: unknown = null;
@@ -85,7 +86,7 @@ describe('LoginPage - rendering', () => {
 });
 
 describe('LoginPage - successful login', () => {
-  const user = { id: 'u1', username: 'alice', email: 'alice@example.com', role: 'USER' };
+  const user = { id: 'u1', username: 'alice', email: 'alice@example.com', role: 'USER' as const };
 
   it('logs in, updates the auth context and redirects to /dashboard by default', async () => {
     vi.mocked(authService.login).mockResolvedValue({
@@ -130,7 +131,7 @@ describe('LoginPage - successful login', () => {
   });
 
   it('shows a loading state while the request is in flight', async () => {
-    let resolveLogin: (value: unknown) => void = () => {};
+    let resolveLogin: (value: AuthResponse) => void = () => {};
     vi.mocked(authService.login).mockReturnValue(new Promise((resolve) => { resolveLogin = resolve; }));
 
     renderPage();
