@@ -39,7 +39,7 @@ Le point de vigilance, ce n'est pas la mécanique, elle est fiable, mais le cont
 ## Ce que déclenche un merge
 
 - **Push sur une branche de ticket** : rien d'automatique. Tests et lint sont à la charge du développeur en local.
-- **Pull request ou push vers `main`** (que ce soit directement, ou via le merge périodique de `develop`) : la pipeline complète se déclenche, lint backend, tests backend, build backend, lint frontend, build frontend, chacun comme job séparé avec ses dépendances (`test-backend` attend `lint-backend`, etc.).
+- **Pull request ou push vers `main`** (que ce soit directement, ou via le merge périodique de `develop`) : la pipeline complète se déclenche, lint backend, tests backend, build backend, lint frontend, tests frontend, build frontend, chacun comme job séparé avec ses dépendances (`test-backend` attend `lint-backend`, `test-frontend` attend `lint-frontend`, `build-frontend` attend `test-frontend`, etc.).
 - **Si tous les jobs passent et que c'est bien un push sur `main`** (pas juste une PR) : le job `deploy` s'exécute, se connecte en SSH au VPS et relance `docker compose -f docker-compose.prod.yml up -d --build --remove-orphans`, ce qui rebuild les images, republie les conteneurs, et rejoue les migrations Prisma en attente comme décrit plus haut.
 - Un `concurrency group` (`deploy-production`) empêche deux déploiements de se chevaucher si deux push arrivent rapprochés ; un déclenchement manuel reste possible depuis l'onglet Actions de GitHub (`workflow_dispatch`), utile pour relancer un déploiement sans nouveau commit.
 
