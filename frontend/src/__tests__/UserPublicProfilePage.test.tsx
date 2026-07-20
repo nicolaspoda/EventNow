@@ -4,7 +4,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import UserPublicProfilePage from '../pages/UserPublicProfilePage';
 import { profileService } from '../services/profile.service';
 import { followService } from '../services/followService';
-import { socketService } from '../services/socketService';
 import { useAuth } from '../utils/useAuth';
 import type { PublicUserProfile } from '../services/profile.service';
 
