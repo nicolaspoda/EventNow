@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { UserSearchAutocomplete } from '../components/user/UserSearchAutocomplete';
 import { authService } from '../services/auth.service';
+import type { SearchUserResult } from '../types/auth';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -45,7 +46,7 @@ describe('UserSearchAutocomplete', () => {
 
   it('searches and shows matching suggestions after the debounce delay', async () => {
     vi.mocked(authService.searchUsersByUsername).mockResolvedValue([
-      { id: 'u1', username: 'bob', email: 'bob@example.com' },
+      { id: 'u1', username: 'bob', avatarUrl: null },
     ]);
 
     render(<UserSearchAutocomplete />);
@@ -58,8 +59,8 @@ describe('UserSearchAutocomplete', () => {
 
   it('excludes the given user ids from the suggestions', async () => {
     vi.mocked(authService.searchUsersByUsername).mockResolvedValue([
-      { id: 'u1', username: 'bob', email: 'bob@example.com' },
-      { id: 'u2', username: 'carol', email: 'carol@example.com' },
+      { id: 'u1', username: 'bob', avatarUrl: null },
+      { id: 'u2', username: 'carol', avatarUrl: null },
     ]);
 
     render(<UserSearchAutocomplete excludeIds={['u1']} />);
@@ -89,7 +90,7 @@ describe('UserSearchAutocomplete', () => {
 
   it('selects a user, calls onSelect and navigates to their profile by default', async () => {
     vi.mocked(authService.searchUsersByUsername).mockResolvedValue([
-      { id: 'u1', username: 'bob', email: 'bob@example.com' },
+      { id: 'u1', username: 'bob', avatarUrl: null },
     ]);
     const onSelect = vi.fn();
 
@@ -97,14 +98,14 @@ describe('UserSearchAutocomplete', () => {
     await typeAndDebounce(screen.getByRole('combobox'), 'bo');
     fireEvent.click(screen.getByText('@bob'));
 
-    expect(onSelect).toHaveBeenCalledWith({ id: 'u1', username: 'bob', email: 'bob@example.com' });
+    expect(onSelect).toHaveBeenCalledWith({ id: 'u1', username: 'bob', avatarUrl: null });
     expect(mockNavigate).toHaveBeenCalledWith('/user/u1/profile');
     expect(screen.getByRole('combobox')).toHaveValue('');
   });
 
   it('does not navigate when navigateOnSelect is false', async () => {
     vi.mocked(authService.searchUsersByUsername).mockResolvedValue([
-      { id: 'u1', username: 'bob', email: 'bob@example.com' },
+      { id: 'u1', username: 'bob', avatarUrl: null },
     ]);
 
     render(<UserSearchAutocomplete navigateOnSelect={false} onSelect={vi.fn()} />);
@@ -116,7 +117,7 @@ describe('UserSearchAutocomplete', () => {
 
   it('closes the suggestion list when clicking outside', async () => {
     vi.mocked(authService.searchUsersByUsername).mockResolvedValue([
-      { id: 'u1', username: 'bob', email: 'bob@example.com' },
+      { id: 'u1', username: 'bob', avatarUrl: null },
     ]);
 
     render(
@@ -134,7 +135,7 @@ describe('UserSearchAutocomplete', () => {
   });
 
   it('shows a loading spinner while the search is in flight', async () => {
-    let resolveSearch: (value: unknown) => void = () => {};
+    let resolveSearch: (value: SearchUserResult[]) => void = () => {};
     vi.mocked(authService.searchUsersByUsername).mockReturnValue(
       new Promise((resolve) => { resolveSearch = resolve; }),
     );

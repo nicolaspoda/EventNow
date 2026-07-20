@@ -3,12 +3,13 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 import { DashboardRedirectPage } from '../pages/DashboardRedirectPage';
 import { useAuth } from '../utils/useAuth';
+import type { Role } from '../types/auth';
 
 vi.mock('../utils/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
-function mockAuthUser(role: string | null) {
+function mockAuthUser(role: Role | null) {
   vi.mocked(useAuth).mockReturnValue({
     user: role ? { id: 'u1', username: 'me', email: 'me@example.com', role } : null,
     isAuthenticated: !!role,

@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { RegisterOrganizerPage } from '../pages/RegisterOrganizerPage';
 import { authService } from '../services/auth.service';
+import type { AuthResponse } from '../types/auth';
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -188,7 +189,7 @@ describe('RegisterOrganizerPage - submission', () => {
   });
 
   it('shows a loading state while the request is in flight', async () => {
-    let resolveRegister: (value: unknown) => void = () => {};
+    let resolveRegister: (value: AuthResponse) => void = () => {};
     vi.mocked(authService.registerOrganizer).mockReturnValue(
       new Promise((resolve) => { resolveRegister = resolve; }),
     );
@@ -199,6 +200,10 @@ describe('RegisterOrganizerPage - submission', () => {
 
     expect(await screen.findByRole('button', { name: 'Inscription...' })).toBeDisabled();
 
-    resolveRegister({ user: {}, accessToken: 'a', refreshToken: 'r' });
+    resolveRegister({
+      user: { id: 'u1', email: 'a@a.com', role: 'ORGANIZER' },
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
   });
 });

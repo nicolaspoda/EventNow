@@ -130,7 +130,7 @@ describe('AcceptStaffInvitationPage - logged in with a different email', () => {
 });
 
 describe('AcceptStaffInvitationPage - logged in with the matching email', () => {
-  const matchingUser = { id: 'u1', email: 'staff@example.com', username: 'staffuser', role: 'USER' };
+  const matchingUser = { id: 'u1', email: 'staff@example.com', username: 'staffuser', role: 'USER' as const };
 
   it('shows accept/decline buttons', async () => {
     mockAuth({ isAuthenticated: true, user: matchingUser });

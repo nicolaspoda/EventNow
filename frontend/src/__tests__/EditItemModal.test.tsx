@@ -14,6 +14,10 @@ const item: EventItem = {
   claimedById: null,
   claimedBy: null,
   addedById: 'u1',
+  addedBy: { id: 'u1', username: 'alice' },
+  isClaimedByMe: false,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
 describe('EditItemModal', () => {

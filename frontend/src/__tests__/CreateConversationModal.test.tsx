@@ -9,7 +9,7 @@ vi.mock('../components/user/UserSearchAutocomplete', () => ({
   UserSearchAutocomplete: ({ onSelect }: { onSelect?: (u: SearchUserResult) => void }) => {
     currentOnSelect = onSelect;
     return (
-      <button onClick={() => onSelect?.({ id: 'u2', username: 'carol', email: 'carol@example.com' })}>
+      <button onClick={() => onSelect?.({ id: 'u2', username: 'carol', avatarUrl: null })}>
         Sélectionner carol
       </button>
     );
@@ -132,7 +132,7 @@ describe('CreateConversationModal', () => {
     fireEvent.click(screen.getByText('Groupe'));
     fireEvent.click(screen.getByText('Sélectionner carol'));
     act(() => {
-      currentOnSelect?.({ id: 'u3', username: 'dan', email: 'dan@example.com' });
+      currentOnSelect?.({ id: 'u3', username: 'dan', avatarUrl: null });
     });
 
     expect(screen.getByText('2 membre(s) sélectionné(s)')).toBeInTheDocument();

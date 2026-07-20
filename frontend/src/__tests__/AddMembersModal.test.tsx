@@ -5,7 +5,7 @@ import type { SearchUserResult } from '../types/auth';
 
 vi.mock('../components/user/UserSearchAutocomplete', () => ({
   UserSearchAutocomplete: ({ onSelect }: { onSelect?: (u: SearchUserResult) => void }) => (
-    <button onClick={() => onSelect?.({ id: 'u2', username: 'carol', email: 'carol@example.com' })}>
+    <button onClick={() => onSelect?.({ id: 'u2', username: 'carol', avatarUrl: null })}>
       Sélectionner carol
     </button>
   ),
