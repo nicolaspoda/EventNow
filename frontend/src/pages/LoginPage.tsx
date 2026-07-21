@@ -91,6 +91,7 @@ export function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
         />
 
         <PrimaryButton loading={loading}>

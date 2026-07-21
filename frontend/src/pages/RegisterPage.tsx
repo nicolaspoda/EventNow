@@ -81,6 +81,7 @@ export function RegisterPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
 
         <FormField
@@ -90,6 +91,7 @@ export function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="new-password"
         />
 
         <FormField
@@ -99,6 +101,7 @@ export function RegisterPage() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
+          autoComplete="new-password"
         />
 
         <PrimaryButton loading={loading}>

@@ -104,6 +104,7 @@ export function RegisterOrganizerPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
 
         <FormField
@@ -122,6 +123,7 @@ export function RegisterOrganizerPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="new-password"
         />
 
         <FormField
@@ -131,6 +133,7 @@ export function RegisterOrganizerPage() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
+          autoComplete="new-password"
         />
 
         <div className="flex items-start">
