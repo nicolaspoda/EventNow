@@ -113,7 +113,7 @@ const OrderSuccessPage: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="text-sm font-medium text-primary-900 dark:text-primary-200 mb-1">Prochaines étapes</h3>
+              <h2 className="text-sm font-medium text-primary-900 dark:text-primary-200 mb-1">Prochaines étapes</h2>
               <p className="text-sm text-primary-800 dark:text-primary-300">
                 Vos billets avec QR codes sont maintenant disponibles dans votre espace "Mes billets".
                 Présentez-les à l'entrée de l'événement pour validation.
