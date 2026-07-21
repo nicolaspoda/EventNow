@@ -90,6 +90,7 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <h1 className="sr-only">Profil de {displayName}</h1>
       <div className="mb-4">
         <Button variant="ghost" onClick={() => navigate(-1)}>← Retour</Button>
       </div>
