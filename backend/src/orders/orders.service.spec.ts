@@ -250,6 +250,28 @@ describe('OrdersService', () => {
       expect(mockTx.order.create).toHaveBeenCalled();
     });
 
+    it('should generate a distinct qrCode for each ticket in the same order', async () => {
+      mockPrismaService.$transaction.mockImplementation(async (fn) => fn(mockTx));
+      mockTx.booking.findUnique.mockResolvedValue(mockBooking);
+      mockTx.booking.update.mockResolvedValue({});
+      mockTx.order.create.mockResolvedValue(mockOrder);
+      const createdTickets: any[] = [];
+      mockTx.ticket.create.mockImplementation(({ data }: any) => {
+        createdTickets.push(data);
+        return Promise.resolve({ id: `ticket-${createdTickets.length}`, ...data });
+      });
+      mockNotificationsService.create.mockResolvedValue({});
+      mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-1', email: 'user@test.com', username: 'user1' });
+      mockMailService.sendOrderConfirmation.mockResolvedValue({});
+
+      await service.confirmPayment('booking-1', 'pi_test', 'user-1');
+
+      expect(createdTickets).toHaveLength(mockBooking.quantity);
+      const qrCodes = createdTickets.map((ticket) => ticket.qrCode);
+      expect(new Set(qrCodes).size).toBe(mockBooking.quantity);
+      qrCodes.forEach((qrCode) => expect(qrCode).toMatch(/^TICKET-[0-9A-F]{16}-\d+$/));
+    });
+
     it('should apply promo code during confirmation', async () => {
       mockPrismaService.$transaction.mockImplementation(async (fn) => fn(mockTx));
       mockTx.booking.findUnique.mockResolvedValue(mockBooking);
