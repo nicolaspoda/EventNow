@@ -188,6 +188,7 @@ export default function EventParticipantReviewsPage() {
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             placeholder="Partagez votre expérience avec ce participant..."
+                            aria-label="Commentaire (optionnel)"
                             rows={3}
                             maxLength={1000}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"

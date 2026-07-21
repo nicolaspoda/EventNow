@@ -213,6 +213,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Écrivez votre message..."
+            aria-label="Écrivez votre message"
             className="flex-1 px-4 py-2 border border-neutral-300 dark:border-neutral-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 resize-none"
             rows={1}
             style={{
