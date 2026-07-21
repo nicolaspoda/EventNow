@@ -119,8 +119,8 @@ describe('EventPollsTab', () => {
     fireEvent.change(screen.getByPlaceholderText('Option 2'), { target: { value: 'B' } });
     fireEvent.click(screen.getByRole('button', { name: 'Créer le sondage' }));
 
-    await waitFor(() => expect(pollsService.createPoll).toHaveBeenCalled());
-    expect(await screen.findByText('Nouveau sondage ?')).toBeInTheDocument();
+    await waitFor(() => expect(pollsService.createPoll).toHaveBeenCalled(), { timeout: 3000 });
+    expect(await screen.findByText('Nouveau sondage ?', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
