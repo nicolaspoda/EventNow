@@ -18,6 +18,7 @@ describe('EventsController', () => {
     getAvailableLocations: jest.fn(),
     getAvailableCities: jest.fn(),
     cancelEvent: jest.fn(),
+    suspendEvent: jest.fn(),
   };
 
   const mockEvent = {
@@ -217,6 +218,18 @@ describe('EventsController', () => {
       const result = await controller.cancelEvent('event-1', mockUser, { reason: 'Venue issue' } as any);
       expect(result).toEqual(cancelResult);
       expect(service.cancelEvent).toHaveBeenCalledWith('user-1', 'event-1', 'Venue issue');
+    });
+  });
+
+  describe('suspendEvent', () => {
+    it('should suspend an event', async () => {
+      const suspendResult = { id: 'event-1', status: 'SUSPENDED' };
+      mockEventsService.suspendEvent.mockResolvedValue(suspendResult);
+
+      const result = await controller.suspendEvent('event-1');
+
+      expect(result).toEqual(suspendResult);
+      expect(service.suspendEvent).toHaveBeenCalledWith('event-1');
     });
   });
 });

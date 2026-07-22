@@ -187,6 +187,81 @@ describe('TicketsService', () => {
       expect(result.valid).toBe(false);
       expect(result.reason).toBe('QR_CODE_INVALID');
     });
+
+    it('should not log a dev warning when ticket not found in production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      mockPrismaService.ticket.findUnique.mockResolvedValue(null);
+      const result = await service.validateTicket('INVALID-QR', 'staff-1');
+      process.env.NODE_ENV = originalEnv;
+      expect(result.reason).toBe('QR_CODE_INVALID');
+      expect(mockPrismaService.ticket.findFirst).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('should truncate long qr codes in the dev warning message', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+      const longQrCode = 'A'.repeat(40);
+      mockPrismaService.ticket.findUnique.mockResolvedValue(null);
+      mockPrismaService.ticket.findFirst.mockResolvedValue({
+        qrCode: 'B'.repeat(40),
+      });
+      const result = await service.validateTicket(longQrCode, 'staff-1');
+      process.env.NODE_ENV = originalEnv;
+      expect(result.reason).toBe('QR_CODE_INVALID');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('…'),
+        'TicketsService',
+      );
+    });
+
+    it('should fall back to the timestamp when validatedAt has no toISOString', async () => {
+      mockPrismaService.ticket.findUnique.mockResolvedValue({
+        ...mockTicket,
+        validatedAt: 'not-a-date-object',
+      });
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue({ eventId: 'event-1', userId: 'staff-1' });
+      const result = await service.validateTicket('TICKET-ABC123', 'staff-1');
+      expect(result.reason).toBe('ALREADY_VALIDATED');
+      expect(typeof (result as any).ticket.validated_at).toBe('string');
+    });
+
+    it('should default validatedAt to a new Date when update returns none', async () => {
+      const startedEvent = { ...mockTicket.ticketCategory.event, eventDate: new Date(Date.now() - 1800000) };
+      mockPrismaService.ticket.findUnique.mockResolvedValue({
+        ...mockTicket,
+        ticketCategory: { ...mockTicket.ticketCategory, event: startedEvent },
+      });
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue({ eventId: 'event-1', userId: 'staff-1' });
+      mockPrismaService.ticket.update.mockResolvedValue({
+        ...mockTicket,
+        ticketCategory: { ...mockTicket.ticketCategory, event: startedEvent },
+        validatedAt: null,
+        order: { ...mockTicket.order, user: { email: 'user@test.com' } },
+      });
+      const result = await service.validateTicket('TICKET-ABC123', 'staff-1');
+      expect(result.reason).toBe('SUCCESS');
+      expect(typeof (result as any).ticket.validated_at).toBe('string');
+    });
+
+    it('should stringify a non-Date validatedAt returned by update', async () => {
+      const startedEvent = { ...mockTicket.ticketCategory.event, eventDate: new Date(Date.now() - 1800000) };
+      mockPrismaService.ticket.findUnique.mockResolvedValue({
+        ...mockTicket,
+        ticketCategory: { ...mockTicket.ticketCategory, event: startedEvent },
+      });
+      mockPrismaService.eventStaff.findUnique.mockResolvedValue({ eventId: 'event-1', userId: 'staff-1' });
+      mockPrismaService.ticket.update.mockResolvedValue({
+        ...mockTicket,
+        ticketCategory: { ...mockTicket.ticketCategory, event: startedEvent },
+        validatedAt: '2025-01-01T00:00:00.000Z',
+        order: { ...mockTicket.order, user: { email: 'user@test.com' } },
+      });
+      const result = await service.validateTicket('TICKET-ABC123', 'staff-1');
+      expect(result.reason).toBe('SUCCESS');
+      expect((result as any).ticket.validated_at).toBe('2025-01-01T00:00:00.000Z');
+    });
   });
 
   describe('getStaffValidations', () => {
@@ -342,6 +417,25 @@ describe('TicketsService', () => {
       const result = await service.getUserTickets('user-1');
       expect(result[0]).toEqual(ticketNoCat);
     });
+
+    it('should leave already-serialized (non-Date) event dates untouched', async () => {
+      const ticketWithStringDates = {
+        ...mockTicket,
+        ticketCategory: {
+          ...mockTicket.ticketCategory,
+          event: {
+            ...mockTicket.ticketCategory.event,
+            eventDate: '2025-06-01T00:00:00.000Z',
+            endDate: '2025-06-01T06:00:00.000Z',
+          },
+        },
+        order: { status: 'PAID' },
+      };
+      mockPrismaService.ticket.findMany.mockResolvedValue([ticketWithStringDates]);
+      const result = await service.getUserTickets('user-1');
+      expect(result[0].ticketCategory.event.eventDate).toBe('2025-06-01T00:00:00.000Z');
+      expect(result[0].ticketCategory.event.endDate).toBe('2025-06-01T06:00:00.000Z');
+    });
   });
 
   describe('getTicketByQRCode', () => {
@@ -386,6 +480,29 @@ describe('TicketsService', () => {
       });
       const result = await service.getTicketById('ticket-1', 'user-1');
       expect(result.id).toBe('ticket-1');
+    });
+  });
+
+  describe('generateTicketPDF', () => {
+    it('should generate a valid PDF buffer for the ticket', async () => {
+      mockPrismaService.ticket.findUnique.mockResolvedValue({
+        ...mockTicket,
+        order: { ...mockTicket.order, userId: 'user-1', status: 'PAID' },
+      });
+
+      const buffer = await service.generateTicketPDF('ticket-1', 'user-1');
+
+      expect(Buffer.isBuffer(buffer)).toBe(true);
+      expect(buffer.length).toBeGreaterThan(0);
+      expect(buffer.subarray(0, 5).toString()).toBe('%PDF-');
+    }, 15000);
+
+    it('should propagate NotFoundException when the ticket cannot be resolved', async () => {
+      mockPrismaService.ticket.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.generateTicketPDF('ticket-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
