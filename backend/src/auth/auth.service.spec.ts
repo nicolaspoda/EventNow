@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -204,6 +208,25 @@ describe('AuthService', () => {
       await expect(service.login(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+
+    it('should throw ForbiddenException if user is banned', async () => {
+      const mockUser = {
+        id: '1',
+        username: 'testuser',
+        email: loginDto.email,
+        passwordHash: 'hashedPassword',
+        role: Role.USER,
+        isBanned: true,
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      await expect(service.login(loginDto)).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(mockJwtService.signAsync).not.toHaveBeenCalled();
     });
   });
 

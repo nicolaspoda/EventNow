@@ -52,6 +52,7 @@ describe('EventsService', () => {
     },
     participationRequest: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -335,6 +336,30 @@ describe('EventsService', () => {
       });
       const result = await service.findOne('event-1');
       expect(result.cancelledAt).toBe('2025-01-01T00:00:00.000Z');
+    });
+
+    it('should hide address from an anonymous visitor on a COMMUNITY event', async () => {
+      const communityEvent = { ...mockEvent, type: 'COMMUNITY' };
+      mockPrismaService.event.findUnique.mockResolvedValue(communityEvent);
+
+      const result = await service.findOne('event-1');
+
+      expect(result.address).toBeNull();
+      expect(result.latitude).toBeNull();
+      expect(result.longitude).toBeNull();
+      expect(mockPrismaService.participationRequest.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('should reveal address to the organizer on their own COMMUNITY event', async () => {
+      const communityEvent = { ...mockEvent, type: 'COMMUNITY', organizerId: 'user-1' };
+      mockPrismaService.event.findUnique.mockResolvedValue(communityEvent);
+
+      const result = await service.findOne('event-1', 'user-1');
+
+      expect(result.address).toBe(communityEvent.address);
+      expect(result.latitude).toBe(communityEvent.latitude);
+      expect(result.longitude).toBe(communityEvent.longitude);
+      expect(mockPrismaService.participationRequest.findFirst).not.toHaveBeenCalled();
     });
   });
 
