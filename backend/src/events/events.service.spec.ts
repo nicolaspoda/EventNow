@@ -76,7 +76,11 @@ describe('EventsService', () => {
     debug: jest.fn(),
   };
 
-  const mockOrganizer = { id: 'user-1', email: 'org@test.com', username: 'organizer' };
+  const mockOrganizer = {
+    id: 'user-1',
+    email: 'org@test.com',
+    username: 'organizer',
+  };
 
   const futureDate = new Date(Date.now() + 86400000 * 30);
   const futureEndDate = new Date(Date.now() + 86400000 * 30 + 3600000);
@@ -126,7 +130,14 @@ describe('EventsService', () => {
     updatedAt: new Date(),
     organizer: mockOrganizer,
     ticketCategories: [
-      { id: 'cat-1', name: 'Standard', description: '', price: 20, initialStock: 100, currentStock: 100 },
+      {
+        id: 'cat-1',
+        name: 'Standard',
+        description: '',
+        price: 20,
+        initialStock: 100,
+        currentStock: 100,
+      },
     ],
     reviews: [],
   };
@@ -158,17 +169,25 @@ describe('EventsService', () => {
 
     it('should throw BadRequestException for PROFESSIONAL event without end_date', async () => {
       await expect(
-        service.create('user-1', { ...mockCreateDto, end_date: undefined }, 'ORGANIZER'),
+        service.create(
+          'user-1',
+          { ...mockCreateDto, end_date: undefined },
+          'ORGANIZER',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException when end_date <= event_date', async () => {
       await expect(
-        service.create('user-1', {
-          ...mockCreateDto,
-          event_date: futureDate.toISOString(),
-          end_date: new Date(futureDate.getTime() - 1000).toISOString(),
-        }, 'ORGANIZER'),
+        service.create(
+          'user-1',
+          {
+            ...mockCreateDto,
+            event_date: futureDate.toISOString(),
+            end_date: new Date(futureDate.getTime() - 1000).toISOString(),
+          },
+          'ORGANIZER',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -177,22 +196,29 @@ describe('EventsService', () => {
       process.env.NODE_ENV = 'production';
       const pastEventDate = new Date(Date.now() - 3600000);
       await expect(
-        service.create('user-1', {
-          ...mockCreateDto,
-          event_date: pastEventDate.toISOString(),
-          end_date: new Date(pastEventDate.getTime() + 3600000).toISOString(),
-        }, 'ORGANIZER'),
+        service.create(
+          'user-1',
+          {
+            ...mockCreateDto,
+            event_date: pastEventDate.toISOString(),
+            end_date: new Date(pastEventDate.getTime() + 3600000).toISOString(),
+          },
+          'ORGANIZER',
+        ),
       ).rejects.toThrow(BadRequestException);
       process.env.NODE_ENV = originalEnv;
     });
 
     it('should default category to OTHER when not provided', async () => {
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.event.create.mockResolvedValue(mockEvent);
       mockFollowsService.getFollowerIds.mockResolvedValue([]);
       mockFollowsService.getFriendIds.mockResolvedValue([]);
 
-      const { category, ...dtoWithoutCategory } = mockCreateDto;
+      const { category: _category, ...dtoWithoutCategory } = mockCreateDto;
       await service.create('user-1', dtoWithoutCategory as any, 'ORGANIZER');
 
       expect(mockPrismaService.event.create).toHaveBeenCalledWith(
@@ -203,7 +229,10 @@ describe('EventsService', () => {
     });
 
     it('should create event and notify followers/friends', async () => {
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.event.create.mockResolvedValue(mockEvent);
       mockFollowsService.getFollowerIds.mockResolvedValue(['follower-1']);
       mockFollowsService.getFriendIds.mockResolvedValue(['friend-1']);
@@ -215,9 +244,19 @@ describe('EventsService', () => {
     });
 
     it('should create COMMUNITY event for CLIENT', async () => {
-      const communityDto = { ...mockCreateDto, type: EventType.COMMUNITY, end_date: undefined };
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
-      mockPrismaService.event.create.mockResolvedValue({ ...mockEvent, type: 'COMMUNITY' });
+      const communityDto = {
+        ...mockCreateDto,
+        type: EventType.COMMUNITY,
+        end_date: undefined,
+      };
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
+      mockPrismaService.event.create.mockResolvedValue({
+        ...mockEvent,
+        type: 'COMMUNITY',
+      });
       mockFollowsService.getFollowerIds.mockResolvedValue([]);
       mockFollowsService.getFriendIds.mockResolvedValue([]);
 
@@ -226,24 +265,34 @@ describe('EventsService', () => {
     });
 
     it('should notify friends differently from followers', async () => {
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.event.create.mockResolvedValue(mockEvent);
       mockFollowsService.getFollowerIds.mockResolvedValue(['user-2', 'user-3']);
       mockFollowsService.getFriendIds.mockResolvedValue(['user-2']);
       mockNotificationsService.createForManyUsers.mockResolvedValue({});
 
       await service.create('user-1', mockCreateDto, 'ORGANIZER');
-      expect(mockNotificationsService.createForManyUsers).toHaveBeenCalledTimes(2);
+      expect(mockNotificationsService.createForManyUsers).toHaveBeenCalledTimes(
+        2,
+      );
     });
 
     it('should not notify if no followers or friends', async () => {
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.event.create.mockResolvedValue(mockEvent);
       mockFollowsService.getFollowerIds.mockResolvedValue([]);
       mockFollowsService.getFriendIds.mockResolvedValue([]);
 
       await service.create('user-1', mockCreateDto, 'ORGANIZER');
-      expect(mockNotificationsService.createForManyUsers).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.createForManyUsers,
+      ).not.toHaveBeenCalled();
     });
 
     it('should use email split as organizer name fallback', async () => {
@@ -251,7 +300,10 @@ describe('EventsService', () => {
         ...mockEvent,
         organizer: { id: 'user-1', email: 'org@test.com', username: null },
       };
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.event.create.mockResolvedValue(eventNoUsername);
       mockFollowsService.getFollowerIds.mockResolvedValue(['follower-1']);
       mockFollowsService.getFriendIds.mockResolvedValue([]);
@@ -303,7 +355,9 @@ describe('EventsService', () => {
 
     it('should apply dateTo filter', async () => {
       mockPrismaService.event.findMany.mockResolvedValue([]);
-      await service.findAll({ dateTo: new Date(Date.now() + 86400000).toISOString() });
+      await service.findAll({
+        dateTo: new Date(Date.now() + 86400000).toISOString(),
+      });
       expect(mockPrismaService.event.findMany).toHaveBeenCalled();
     });
 
@@ -324,7 +378,9 @@ describe('EventsService', () => {
 
     it('should throw NotFoundException if event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should format eventDate as ISO string when it is a Date', async () => {
@@ -354,7 +410,10 @@ describe('EventsService', () => {
     });
 
     it('should handle null endDate', async () => {
-      mockPrismaService.event.findUnique.mockResolvedValue({ ...mockEvent, endDate: null });
+      mockPrismaService.event.findUnique.mockResolvedValue({
+        ...mockEvent,
+        endDate: null,
+      });
       const result = await service.findOne('event-1');
       expect(result.endDate).toBeUndefined();
     });
@@ -377,11 +436,17 @@ describe('EventsService', () => {
       expect(result.address).toBeNull();
       expect(result.latitude).toBeNull();
       expect(result.longitude).toBeNull();
-      expect(mockPrismaService.participationRequest.findFirst).not.toHaveBeenCalled();
+      expect(
+        mockPrismaService.participationRequest.findFirst,
+      ).not.toHaveBeenCalled();
     });
 
     it('should reveal address to the organizer on their own COMMUNITY event', async () => {
-      const communityEvent = { ...mockEvent, type: 'COMMUNITY', organizerId: 'user-1' };
+      const communityEvent = {
+        ...mockEvent,
+        type: 'COMMUNITY',
+        organizerId: 'user-1',
+      };
       mockPrismaService.event.findUnique.mockResolvedValue(communityEvent);
 
       const result = await service.findOne('event-1', 'user-1');
@@ -389,24 +454,33 @@ describe('EventsService', () => {
       expect(result.address).toBe(communityEvent.address);
       expect(result.latitude).toBe(communityEvent.latitude);
       expect(result.longitude).toBe(communityEvent.longitude);
-      expect(mockPrismaService.participationRequest.findFirst).not.toHaveBeenCalled();
+      expect(
+        mockPrismaService.participationRequest.findFirst,
+      ).not.toHaveBeenCalled();
     });
   });
 
   describe('update', () => {
     it('should throw NotFoundException if event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
-      await expect(service.update('nonexistent', 'user-1', {})).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', 'user-1', {})).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException if not organizer', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      await expect(service.update('event-1', 'other-user', {})).rejects.toThrow(ForbiddenException);
+      await expect(service.update('event-1', 'other-user', {})).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should update event successfully', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.event.update.mockResolvedValue({
         ...mockEvent,
@@ -415,7 +489,9 @@ describe('EventsService', () => {
       });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
-      const result = await service.update('event-1', 'user-1', { title: 'Updated Title' });
+      const result = await service.update('event-1', 'user-1', {
+        title: 'Updated Title',
+      });
       expect(result.title).toBe('Updated Title');
     });
 
@@ -425,14 +501,22 @@ describe('EventsService', () => {
         imageUrl: 'old-url',
         imagePublicId: 'old-public-id',
       });
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
-      mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: [] });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: [],
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
       mockUploadService.deleteImage.mockResolvedValue({});
 
       await service.update('event-1', 'user-1', { image_url: 'new-url' });
-      expect(mockUploadService.deleteImage).toHaveBeenCalledWith('old-public-id');
+      expect(mockUploadService.deleteImage).toHaveBeenCalledWith(
+        'old-public-id',
+      );
     });
 
     it('should not fail if deleteImage throws', async () => {
@@ -441,13 +525,21 @@ describe('EventsService', () => {
         imageUrl: 'old-url',
         imagePublicId: 'old-public-id',
       });
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
-      mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: [] });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: [],
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
       mockUploadService.deleteImage.mockRejectedValue(new Error('CDN error'));
 
-      await expect(service.update('event-1', 'user-1', { image_url: 'new-url' })).resolves.toBeDefined();
+      await expect(
+        service.update('event-1', 'user-1', { image_url: 'new-url' }),
+      ).resolves.toBeDefined();
     });
 
     it('should throw BadRequestException for PROFESSIONAL event with end_date <= event_date', async () => {
@@ -480,13 +572,19 @@ describe('EventsService', () => {
 
     it('should update ticket categories when no paid tickets', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.ticketCategory.findMany.mockResolvedValue([
         { initialStock: 20, currentStock: 20 },
       ]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({});
-      mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: [] });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: [],
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
       await service.update('event-1', 'user-1', {
@@ -497,22 +595,37 @@ describe('EventsService', () => {
 
     it('should not touch ticket categories when paid tickets exist', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(5);
-      mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: mockEvent.ticketCategories });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: mockEvent.ticketCategories,
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
       await service.update('event-1', 'user-1', {
         ticket_categories: [{ name: 'VIP', price: 50, initial_stock: 20 }],
       });
-      expect(mockPrismaService.ticketCategory.deleteMany).not.toHaveBeenCalled();
+      expect(
+        mockPrismaService.ticketCategory.deleteMany,
+      ).not.toHaveBeenCalled();
     });
 
     it('should notify participants when significant changes occur', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
-      mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, title: 'New Title', ticketCategories: [] });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...mockEvent,
+        title: 'New Title',
+        ticketCategories: [],
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([
         { order: { userId: 'user-2' } },
       ]);
@@ -524,17 +637,25 @@ describe('EventsService', () => {
 
     it('should apply already-sold count to initial stock for categories', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
       mockPrismaService.ticketCategory.findMany.mockResolvedValue([
         { initialStock: 100, currentStock: 95 },
       ]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({});
-      mockPrismaService.event.update.mockResolvedValue({ ...mockEvent, ticketCategories: [] });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: [],
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
       await service.update('event-1', 'user-1', {
-        ticket_categories: [{ name: 'Standard', price: 20, initial_stock: 100 }],
+        ticket_categories: [
+          { name: 'Standard', price: 20, initial_stock: 100 },
+        ],
       });
       const call = mockPrismaService.event.update.mock.calls[0][0];
       expect(call.data.ticketCategories.create[0].currentStock).toBe(95);
@@ -543,7 +664,10 @@ describe('EventsService', () => {
     it('should preserve accepted community participation stock (no Ticket rows) on update', async () => {
       const communityEvent = { ...mockEvent, type: 'COMMUNITY' };
       mockPrismaService.event.findUnique.mockResolvedValue(communityEvent);
-      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.$transaction.mockImplementation(
+        (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
+          fn(mockPrismaService),
+      );
       mockPrismaService.ticket.count.mockResolvedValue(0);
       // 5 accepted participation requests already decremented currentStock from 20 to 15,
       // with no Ticket rows created at all.
@@ -551,11 +675,16 @@ describe('EventsService', () => {
         { initialStock: 20, currentStock: 15 },
       ]);
       mockPrismaService.ticketCategory.deleteMany.mockResolvedValue({});
-      mockPrismaService.event.update.mockResolvedValue({ ...communityEvent, ticketCategories: [] });
+      mockPrismaService.event.update.mockResolvedValue({
+        ...communityEvent,
+        ticketCategories: [],
+      });
       mockPrismaService.ticket.findMany.mockResolvedValue([]);
 
       await service.update('event-1', 'user-1', {
-        ticket_categories: [{ name: 'Participation', price: 0.5, initial_stock: 20 }],
+        ticket_categories: [
+          { name: 'Participation', price: 0.5, initial_stock: 20 },
+        ],
       });
       const call = mockPrismaService.event.update.mock.calls[0][0];
       expect(call.data.ticketCategories.create[0].currentStock).toBe(15);
@@ -565,12 +694,16 @@ describe('EventsService', () => {
   describe('cancelEvent', () => {
     it('should throw NotFoundException if event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
-      await expect(service.cancelEvent('user-1', 'nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.cancelEvent('user-1', 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if not organizer', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      await expect(service.cancelEvent('other-user', 'event-1')).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.cancelEvent('other-user', 'event-1'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should throw BadRequestException if already cancelled', async () => {
@@ -578,7 +711,9 @@ describe('EventsService', () => {
         ...mockEvent,
         cancelledAt: new Date(),
       });
-      await expect(service.cancelEvent('user-1', 'event-1')).rejects.toThrow(BadRequestException);
+      await expect(service.cancelEvent('user-1', 'event-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if event already started', async () => {
@@ -586,7 +721,9 @@ describe('EventsService', () => {
         ...mockEvent,
         eventDate: new Date(Date.now() - 1000),
       });
-      await expect(service.cancelEvent('user-1', 'event-1')).rejects.toThrow(BadRequestException);
+      await expect(service.cancelEvent('user-1', 'event-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should cancel event with refunds and notifications', async () => {
@@ -600,20 +737,26 @@ describe('EventsService', () => {
         },
       ]);
       mockPaymentService.refundPayment.mockResolvedValue({ amount: 20 });
-      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
-        mockPrismaService.order.update.mockResolvedValue({});
-        mockPrismaService.ticket.updateMany.mockResolvedValue({});
-        mockPrismaService.booking.findMany.mockResolvedValue([]);
-        mockPrismaService.event.update.mockResolvedValue({});
-        return fn(mockPrismaService);
-      });
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
+          mockPrismaService.order.update.mockResolvedValue({});
+          mockPrismaService.ticket.updateMany.mockResolvedValue({});
+          mockPrismaService.booking.findMany.mockResolvedValue([]);
+          mockPrismaService.event.update.mockResolvedValue({});
+          return fn(mockPrismaService);
+        },
+      );
       mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
       mockNotificationsService.createForManyUsers.mockResolvedValue({});
       mockMailService.sendEventCancellation.mockResolvedValue({});
       mockPrismaService.staffInvitation.findMany.mockResolvedValue([]);
       mockPrismaService.event.delete.mockResolvedValue({});
 
-      const result = await service.cancelEvent('user-1', 'event-1', 'Test reason');
+      const result = await service.cancelEvent(
+        'user-1',
+        'event-1',
+        'Test reason',
+      );
       expect(result.cancelledOrders).toBe(1);
       expect(result.totalRefunded).toBe(20);
     });
@@ -628,13 +771,15 @@ describe('EventsService', () => {
           user: { id: 'user-2', email: 'user@test.com', username: 'user2' },
         },
       ]);
-      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
-        mockPrismaService.order.update.mockResolvedValue({});
-        mockPrismaService.ticket.updateMany.mockResolvedValue({});
-        mockPrismaService.booking.findMany.mockResolvedValue([]);
-        mockPrismaService.event.update.mockResolvedValue({});
-        return fn(mockPrismaService);
-      });
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
+          mockPrismaService.order.update.mockResolvedValue({});
+          mockPrismaService.ticket.updateMany.mockResolvedValue({});
+          mockPrismaService.booking.findMany.mockResolvedValue([]);
+          mockPrismaService.event.update.mockResolvedValue({});
+          return fn(mockPrismaService);
+        },
+      );
       mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
       mockNotificationsService.createForManyUsers.mockResolvedValue({});
       mockMailService.sendEventCancellation.mockResolvedValue({});
@@ -656,12 +801,16 @@ describe('EventsService', () => {
           user: { id: 'user-2', email: 'user@test.com', username: 'user2' },
         },
       ]);
-      mockPaymentService.refundPayment.mockRejectedValue(new Error('Stripe error'));
-      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
-        mockPrismaService.booking.findMany.mockResolvedValue([]);
-        mockPrismaService.event.update.mockResolvedValue({});
-        return fn(mockPrismaService);
-      });
+      mockPaymentService.refundPayment.mockRejectedValue(
+        new Error('Stripe error'),
+      );
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
+          mockPrismaService.booking.findMany.mockResolvedValue([]);
+          mockPrismaService.event.update.mockResolvedValue({});
+          return fn(mockPrismaService);
+        },
+      );
       mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
       mockNotificationsService.createForManyUsers.mockResolvedValue({});
       mockMailService.sendEventCancellation.mockResolvedValue({});
@@ -676,37 +825,42 @@ describe('EventsService', () => {
     it('should cancel pending bookings and restore stock', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
       mockPrismaService.order.findMany.mockResolvedValue([]);
-      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
-        mockPrismaService.booking.findMany.mockResolvedValue([
-          { id: 'booking-1', ticketCategoryId: 'cat-1', quantity: 2 },
-        ]);
-        mockPrismaService.booking.update.mockResolvedValue({});
-        mockPrismaService.ticketCategory.update.mockResolvedValue({});
-        mockPrismaService.event.update.mockResolvedValue({});
-        return fn(mockPrismaService);
-      });
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
+          mockPrismaService.booking.findMany.mockResolvedValue([
+            { id: 'booking-1', ticketCategoryId: 'cat-1', quantity: 2 },
+          ]);
+          mockPrismaService.booking.update.mockResolvedValue({});
+          mockPrismaService.ticketCategory.update.mockResolvedValue({});
+          mockPrismaService.event.update.mockResolvedValue({});
+          return fn(mockPrismaService);
+        },
+      );
       mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
       mockNotificationsService.createForManyUsers.mockResolvedValue({});
-      mockPrismaService.staffInvitation.findMany.mockResolvedValue([{ token: 'token-1' }]);
+      mockPrismaService.staffInvitation.findMany.mockResolvedValue([
+        { token: 'token-1' },
+      ]);
       mockNotificationsService.deleteByTypeAndRelatedIds.mockResolvedValue({});
       mockPrismaService.event.delete.mockResolvedValue({});
 
       await service.cancelEvent('user-1', 'event-1');
-      expect(mockNotificationsService.deleteByTypeAndRelatedIds).toHaveBeenCalledWith(
-        'STAFF_INVITATION',
-        ['token-1'],
-      );
+      expect(
+        mockNotificationsService.deleteByTypeAndRelatedIds,
+      ).toHaveBeenCalledWith('STAFF_INVITATION', ['token-1']);
     });
 
     it('should notify accepted participants of COMMUNITY event', async () => {
       const communityEvent = { ...mockEvent, type: 'COMMUNITY' };
       mockPrismaService.event.findUnique.mockResolvedValue(communityEvent);
       mockPrismaService.order.findMany.mockResolvedValue([]);
-      mockPrismaService.$transaction.mockImplementation(async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
-        mockPrismaService.booking.findMany.mockResolvedValue([]);
-        mockPrismaService.event.update.mockResolvedValue({});
-        return fn(mockPrismaService);
-      });
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
+          mockPrismaService.booking.findMany.mockResolvedValue([]);
+          mockPrismaService.event.update.mockResolvedValue({});
+          return fn(mockPrismaService);
+        },
+      );
       mockPrismaService.participationRequest.findMany.mockResolvedValue([
         { user: { id: 'user-3', email: 'user3@test.com', username: 'user3' } },
       ]);
@@ -723,26 +877,31 @@ describe('EventsService', () => {
   describe('remove', () => {
     it('should throw NotFoundException if event not found', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(null);
-      await expect(service.remove('nonexistent', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent', 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException if not organizer', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      await expect(service.remove('event-1', 'other-user')).rejects.toThrow(ForbiddenException);
+      await expect(service.remove('event-1', 'other-user')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should delete event and clean up staff invitations', async () => {
       mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
-      mockPrismaService.staffInvitation.findMany.mockResolvedValue([{ token: 'tok-1' }]);
+      mockPrismaService.staffInvitation.findMany.mockResolvedValue([
+        { token: 'tok-1' },
+      ]);
       mockNotificationsService.deleteByTypeAndRelatedIds.mockResolvedValue({});
       mockPrismaService.event.delete.mockResolvedValue({});
 
       const result = await service.remove('event-1', 'user-1');
       expect(result.message).toContain('supprimé');
-      expect(mockNotificationsService.deleteByTypeAndRelatedIds).toHaveBeenCalledWith(
-        'STAFF_INVITATION',
-        ['tok-1'],
-      );
+      expect(
+        mockNotificationsService.deleteByTypeAndRelatedIds,
+      ).toHaveBeenCalledWith('STAFF_INVITATION', ['tok-1']);
     });
 
     it('should skip deleteByTypeAndRelatedIds if no staff invitations', async () => {
@@ -751,7 +910,9 @@ describe('EventsService', () => {
       mockPrismaService.event.delete.mockResolvedValue({});
 
       await service.remove('event-1', 'user-1');
-      expect(mockNotificationsService.deleteByTypeAndRelatedIds).not.toHaveBeenCalled();
+      expect(
+        mockNotificationsService.deleteByTypeAndRelatedIds,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -781,13 +942,19 @@ describe('EventsService', () => {
 
     it('should return empty for followedOnly when no following', async () => {
       mockFollowsService.getFollowingIds.mockResolvedValue([]);
-      const result = await service.searchEvents({ followedOnly: true } as any, 'user-1');
+      const result = await service.searchEvents(
+        { followedOnly: true } as any,
+        'user-1',
+      );
       expect(result.events).toHaveLength(0);
     });
 
     it('should return empty for friendsOnly when no friends', async () => {
       mockFollowsService.getFriendIds.mockResolvedValue([]);
-      const result = await service.searchEvents({ friendsOnly: true } as any, 'user-1');
+      const result = await service.searchEvents(
+        { friendsOnly: true } as any,
+        'user-1',
+      );
       expect(result.events).toHaveLength(0);
     });
 
@@ -802,7 +969,10 @@ describe('EventsService', () => {
     it('should filter by myEvents with userId', async () => {
       mockPrismaService.event.findMany.mockResolvedValue([mockSearchResult]);
       mockPrismaService.event.count.mockResolvedValue(1);
-      const result = await service.searchEvents({ myEvents: true } as any, 'user-1');
+      const result = await service.searchEvents(
+        { myEvents: true } as any,
+        'user-1',
+      );
       expect(result.events).toHaveLength(1);
     });
 
@@ -810,7 +980,10 @@ describe('EventsService', () => {
       mockFollowsService.getFollowingIds.mockResolvedValue(['organizer-1']);
       mockPrismaService.event.findMany.mockResolvedValue([mockSearchResult]);
       mockPrismaService.event.count.mockResolvedValue(1);
-      const result = await service.searchEvents({ followedOnly: true } as any, 'user-1');
+      const result = await service.searchEvents(
+        { followedOnly: true } as any,
+        'user-1',
+      );
       expect(result.events).toHaveLength(1);
     });
 
@@ -818,21 +991,26 @@ describe('EventsService', () => {
       mockFollowsService.getFriendIds.mockResolvedValue(['friend-1']);
       mockPrismaService.event.findMany.mockResolvedValue([mockSearchResult]);
       mockPrismaService.event.count.mockResolvedValue(1);
-      const result = await service.searchEvents({ friendsOnly: true } as any, 'user-1');
+      const result = await service.searchEvents(
+        { friendsOnly: true } as any,
+        'user-1',
+      );
       expect(result.events).toHaveLength(1);
     });
 
     it('should use distance path when lat/lon + DISTANCE_ASC', async () => {
-      const eventsRaw = [{
-        ...mockSearchResult,
-        latitude: 48.87,
-        longitude: 2.33,
-        endDate: null,
-        cancelledAt: null,
-        cancelReason: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }];
+      const eventsRaw = [
+        {
+          ...mockSearchResult,
+          latitude: 48.87,
+          longitude: 2.33,
+          endDate: null,
+          cancelledAt: null,
+          cancelReason: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
       mockPrismaService.event.findMany.mockResolvedValue(eventsRaw);
 
       const result = await service.searchEvents({
@@ -877,16 +1055,18 @@ describe('EventsService', () => {
     });
 
     it('should include distance in non-distance search when user coords provided', async () => {
-      mockPrismaService.event.findMany.mockResolvedValue([{
-        ...mockSearchResult,
-        latitude: 48.87,
-        longitude: 2.33,
-        endDate: null,
-        cancelledAt: null,
-        cancelReason: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }]);
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockSearchResult,
+          latitude: 48.87,
+          longitude: 2.33,
+          endDate: null,
+          cancelledAt: null,
+          cancelReason: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
       mockPrismaService.event.count.mockResolvedValue(1);
 
       const result = await service.searchEvents({
@@ -901,7 +1081,13 @@ describe('EventsService', () => {
       mockPrismaService.event.findMany.mockResolvedValue([]);
       mockPrismaService.event.count.mockResolvedValue(0);
       await service.searchEvents({
-        priceRanges: [PriceRange.FREE, PriceRange.LOW, PriceRange.MEDIUM, PriceRange.HIGH, PriceRange.PREMIUM],
+        priceRanges: [
+          PriceRange.FREE,
+          PriceRange.LOW,
+          PriceRange.MEDIUM,
+          PriceRange.HIGH,
+          PriceRange.PREMIUM,
+        ],
       } as any);
       expect(mockPrismaService.event.findMany).toHaveBeenCalled();
     });
@@ -931,22 +1117,27 @@ describe('EventsService', () => {
     it('should clamp page and limit values', async () => {
       mockPrismaService.event.findMany.mockResolvedValue([]);
       mockPrismaService.event.count.mockResolvedValue(0);
-      const result = await service.searchEvents({ page: -1, limit: 200 } as any);
+      const result = await service.searchEvents({
+        page: -1,
+        limit: 200,
+      } as any);
       expect(result.pagination.limit).toBe(100);
       expect(result.pagination.page).toBe(1);
     });
 
     it('should filter events without coordinates in distance path', async () => {
-      mockPrismaService.event.findMany.mockResolvedValue([{
-        ...mockSearchResult,
-        latitude: null,
-        longitude: null,
-        endDate: null,
-        cancelledAt: null,
-        cancelReason: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }]);
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockSearchResult,
+          latitude: null,
+          longitude: null,
+          endDate: null,
+          cancelledAt: null,
+          cancelReason: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
 
       const result = await service.searchEvents({
         latitude: 48.87,
