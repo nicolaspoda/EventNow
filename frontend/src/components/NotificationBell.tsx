@@ -387,7 +387,7 @@ export function NotificationBell() {
                                 type="button"
                                 disabled={!!staffActionLoading}
                                 onClick={(e) => handleStaffInvitationAccept(notification, e)}
-                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
+                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
                               >
                                 {staffActionLoading === notification.id ? '...' : 'Accepter'}
                               </button>

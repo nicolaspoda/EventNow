@@ -41,33 +41,33 @@ const MyParticipatedEventsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
             Mes participations
           </h1>
           <LoadingState message="Chargement de vos événements..." />
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
             Mes participations
           </h1>
           <ErrorState message={error} onRetry={fetchEvents} />
         </div>
-      </main>
+      </div>
     );
   }
 
   if (events.length === 0) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
             Mes participations
@@ -94,12 +94,12 @@ const MyParticipatedEventsPage: React.FC = () => {
             onAction={() => navigate('/events')}
           />
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
@@ -164,7 +164,7 @@ const MyParticipatedEventsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 };
 

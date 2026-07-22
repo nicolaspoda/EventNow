@@ -86,20 +86,20 @@ const PaymentReturnPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
           <LoadingState />
           <p className="text-neutral-600 dark:text-neutral-400 mt-4">
             Vérification de votre paiement...
           </p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (success) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
           <div className="mx-auto h-16 w-16 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mb-4">
             <svg
@@ -126,12 +126,12 @@ const PaymentReturnPage: React.FC = () => {
             Voir mes billets
           </Button>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full glass-card p-8 text-center">
         <svg
           className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4"
@@ -159,7 +159,7 @@ const PaymentReturnPage: React.FC = () => {
           </Button>
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 

@@ -113,7 +113,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               onClick={() => onFilterChange('type', 'PROFESSIONAL')}
               className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                 filters.type === 'PROFESSIONAL'
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-neutral-100 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 border border-transparent dark:border-neutral-600'
               }`}
             >
@@ -124,7 +124,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               onClick={() => onFilterChange('type', 'COMMUNITY')}
               className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                 filters.type === 'COMMUNITY'
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-neutral-100 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 border border-transparent dark:border-neutral-600'
               }`}
             >
@@ -135,7 +135,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
               onClick={() => onFilterChange('type', null)}
               className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                 !filters.type
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-neutral-100 dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-600 border border-transparent dark:border-neutral-600'
               }`}
             >

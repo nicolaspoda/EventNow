@@ -38,29 +38,29 @@ const MyOrdersPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Mes commandes</h1>
           <LoadingState message="Chargement de vos commandes..." />
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Mes commandes</h1>
           <ErrorState message={error} onRetry={fetchOrders} />
         </div>
-      </main>
+      </div>
     );
   }
 
   if (orders.length === 0) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Mes commandes</h1>
           <EmptyState
@@ -85,12 +85,12 @@ const MyOrdersPage: React.FC = () => {
             onAction={() => navigate('/events')}
           />
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Mes commandes</h1>
@@ -115,7 +115,7 @@ const MyOrdersPage: React.FC = () => {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 

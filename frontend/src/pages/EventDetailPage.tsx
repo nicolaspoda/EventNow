@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import type { Event } from '../types/event.types';
 import type { ParticipationRequest } from '../types/participation.types';
@@ -18,6 +18,7 @@ import ReportModal from '../components/ReportModal';
 import EventItemListTab from '../components/events/EventItemListTab';
 import EventPollsTab from '../components/events/EventPollsTab';
 import ShareButton from '../components/events/ShareButton';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface CancelModalState {
   open: boolean;
@@ -41,6 +42,14 @@ const EventDetailPage: React.FC = () => {
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [alreadyReported, setAlreadyReported] = useState(false);
+  const cancelModalRef = useRef<HTMLDivElement>(null);
+
+  const closeCancelModal = () => {
+    if (cancelModal.loading) return;
+    setCancelModal((prev) => ({ ...prev, open: false }));
+  };
+
+  useModalFocusTrap(cancelModalRef, cancelModal.open, closeCancelModal);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -182,18 +191,18 @@ const EventDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center" role="status" aria-live="polite">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 dark:border-primary-800 border-t-primary-600 dark:border-t-primary-400 mx-auto mb-4" aria-hidden="true" />
           <p className="text-neutral-600 dark:text-neutral-300">Chargement de l'événement...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error || !event) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <nav className="mb-6" aria-label="Fil d'Ariane">
             <ol className="flex items-center space-x-2 text-sm text-neutral-600 dark:text-neutral-400">
@@ -233,12 +242,12 @@ const EventDetailPage: React.FC = () => {
             </Button>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <nav className="mb-6" aria-label="Fil d'Ariane">
           <ol className="flex items-center space-x-2 text-sm text-neutral-600 dark:text-neutral-400">
@@ -328,7 +337,7 @@ const EventDetailPage: React.FC = () => {
                         onClick={() => setActiveTab(tab.id)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-neutral-100 dark:focus:ring-offset-neutral-900 ${
                           activeTab === tab.id
-                            ? 'bg-primary-600 text-white dark:bg-primary-500'
+                            ? 'bg-primary-600 text-white'
                             : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-600'
                         }`}
                       >
@@ -466,8 +475,8 @@ const EventDetailPage: React.FC = () => {
 
       {/* Cancel confirmation modal */}
       {cancelModal.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !cancelModal.loading && setCancelModal((prev) => ({ ...prev, open: false }))} />
+        <div ref={cancelModalRef} className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeCancelModal} />
           <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-md w-full p-6">
             <h2 id="cancel-modal-title" className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-3">
               Annuler l'événement
@@ -518,7 +527,7 @@ const EventDetailPage: React.FC = () => {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 };
 

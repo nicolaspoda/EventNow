@@ -61,17 +61,17 @@ const BookingsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center" role="status" aria-live="polite">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mx-auto mb-4" aria-hidden="true"></div>
           <p className="text-neutral-600 dark:text-neutral-400">Chargement de vos réservations...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <header className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -96,7 +96,7 @@ const BookingsPage: React.FC = () => {
               onClick={() => setFilter('all')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === 'all'
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-white dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600'
               }`}
             >
@@ -106,7 +106,7 @@ const BookingsPage: React.FC = () => {
               onClick={() => setFilter('pending')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === 'pending'
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-white dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600'
               }`}
             >
@@ -116,7 +116,7 @@ const BookingsPage: React.FC = () => {
               onClick={() => setFilter('confirmed')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === 'confirmed'
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-white dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600'
               }`}
             >
@@ -126,7 +126,7 @@ const BookingsPage: React.FC = () => {
               onClick={() => setFilter('cancelled')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 filter === 'cancelled'
-                  ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-white dark:bg-neutral-700/50 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-600'
               }`}
             >
@@ -186,7 +186,7 @@ const BookingsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 };
 

@@ -52,7 +52,7 @@ export const StaffScanPage: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <header className="bg-white dark:bg-neutral-800/80 shadow border-b border-neutral-200 dark:border-neutral-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -193,6 +193,6 @@ export const StaffScanPage: React.FC = () => {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   );
 };

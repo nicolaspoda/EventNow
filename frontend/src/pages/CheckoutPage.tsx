@@ -175,7 +175,7 @@ const CheckoutPage: React.FC = () => {
 
   if (error && !bookingId) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
           <svg className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -184,24 +184,24 @@ const CheckoutPage: React.FC = () => {
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">{error}</p>
           <Button variant="primary" onClick={() => navigate('/events')}>Retour aux événements</Button>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (initiating) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400 mx-auto mb-4" />
           <p className="text-neutral-600 dark:text-neutral-400">Préparation du paiement...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error && !clientSecret) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
           <svg className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -210,14 +210,14 @@ const CheckoutPage: React.FC = () => {
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">{error}</p>
           <Button variant="primary" onClick={() => navigate('/events')}>Retour aux événements</Button>
         </div>
-      </main>
+      </div>
     );
   }
 
   const displayAmount = promoResult ? promoResult.finalAmount : (originalAmount ?? 0);
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full glass-card p-8">
         <div className="text-center mb-8">
           <div className="mx-auto h-16 w-16 bg-primary-100 dark:bg-primary-900/40 rounded-full flex items-center justify-center mb-4">
@@ -328,7 +328,7 @@ const CheckoutPage: React.FC = () => {
           </Elements>
         )}
       </div>
-    </main>
+    </div>
   );
 };
 
