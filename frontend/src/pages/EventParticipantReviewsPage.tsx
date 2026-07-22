@@ -124,7 +124,10 @@ export default function EventParticipantReviewsPage() {
               <Card key={participant.id} className="p-6">
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
-                  <Link to={`/user/${participant.id}/profile`}>
+                  <Link
+                    to={`/user/${participant.id}/profile`}
+                    aria-label={participant.username ?? participant.email ?? 'Participant'}
+                  >
                     {participant.avatarUrl ? (
                       <img
                         src={participant.avatarUrl}

@@ -256,6 +256,7 @@ export function NavbarLinks({ mobile = false }: NavbarLinksProps) {
             to="/profile"
             className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity"
             title={user?.username ? `@${user.username}` : 'Mon profil'}
+            aria-label={user?.username ? `@${user.username}` : 'Mon profil'}
           >
             <span className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 dark:hover:ring-offset-neutral-900">
               {user?.username?.charAt(0)?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}

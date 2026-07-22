@@ -44,7 +44,9 @@ describe('ParticipationRequestCard', () => {
   it('shows the requester name, formatted date and message', () => {
     renderCard({ request: makeRequest({ message: 'Hâte d’y être !' }) });
 
-    expect(screen.getByRole('link', { name: 'bob' })).toHaveAttribute('href', '/user/u1/profile');
+    for (const link of screen.getAllByRole('link', { name: 'bob' })) {
+      expect(link).toHaveAttribute('href', '/user/u1/profile');
+    }
     expect(screen.getByText(/1 janvier 2026/)).toBeInTheDocument();
     expect(screen.getByText('Hâte d’y être !')).toBeInTheDocument();
   });
@@ -52,7 +54,7 @@ describe('ParticipationRequestCard', () => {
   it('falls back to the email when there is no username', () => {
     renderCard({ request: makeRequest({ user: { id: 'u1', email: 'carol@example.com' } }) });
 
-    expect(screen.getByRole('link', { name: 'carol@example.com' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'carol@example.com' }).length).toBeGreaterThan(0);
   });
 
   it('shows accept/refuse actions for a pending request', async () => {

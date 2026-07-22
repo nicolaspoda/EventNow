@@ -100,6 +100,7 @@ export function EventParticipantReviewsSection({
                 <div className="flex items-start gap-4">
                   <Link
                     to={`/user/${participant.id}/profile`}
+                    aria-label={displayName(participant)}
                     className="flex-shrink-0"
                   >
                     {participant.avatarUrl ? (
