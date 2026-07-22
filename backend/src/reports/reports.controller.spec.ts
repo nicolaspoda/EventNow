@@ -9,6 +9,8 @@ describe('ReportsController', () => {
   const mockReportsService = {
     createReport: jest.fn(),
     getMyReports: jest.fn(),
+    getAllReports: jest.fn(),
+    updateReportStatus: jest.fn(),
   };
 
   const mockUser = { id: 'user-1', email: 'alice@example.com', role: 'USER' };
@@ -67,6 +69,45 @@ describe('ReportsController', () => {
 
       expect(result).toEqual([mockReport]);
       expect(mockReportsService.getMyReports).toHaveBeenCalledWith('user-1');
+    });
+  });
+
+  describe('getAllReports', () => {
+    it('delegates to reportsService.getAllReports with the status filter', async () => {
+      mockReportsService.getAllReports.mockResolvedValue([mockReport]);
+
+      const result = await controller.getAllReports(ReportStatus.PENDING);
+
+      expect(result).toEqual([mockReport]);
+      expect(mockReportsService.getAllReports).toHaveBeenCalledWith(
+        ReportStatus.PENDING,
+      );
+    });
+
+    it('delegates to reportsService.getAllReports without a status filter', async () => {
+      mockReportsService.getAllReports.mockResolvedValue([mockReport]);
+
+      const result = await controller.getAllReports();
+
+      expect(result).toEqual([mockReport]);
+      expect(mockReportsService.getAllReports).toHaveBeenCalledWith(undefined);
+    });
+  });
+
+  describe('updateReportStatus', () => {
+    it('delegates to reportsService.updateReportStatus with id and status', async () => {
+      const updatedReport = { ...mockReport, status: ReportStatus.RESOLVED };
+      mockReportsService.updateReportStatus.mockResolvedValue(updatedReport);
+
+      const result = await controller.updateReportStatus('report-1', {
+        status: ReportStatus.RESOLVED,
+      });
+
+      expect(result).toEqual(updatedReport);
+      expect(mockReportsService.updateReportStatus).toHaveBeenCalledWith(
+        'report-1',
+        ReportStatus.RESOLVED,
+      );
     });
   });
 });

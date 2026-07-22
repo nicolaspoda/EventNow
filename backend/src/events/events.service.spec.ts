@@ -172,6 +172,36 @@ describe('EventsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException for a past event date in production', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+      const pastEventDate = new Date(Date.now() - 3600000);
+      await expect(
+        service.create('user-1', {
+          ...mockCreateDto,
+          event_date: pastEventDate.toISOString(),
+          end_date: new Date(pastEventDate.getTime() + 3600000).toISOString(),
+        }, 'ORGANIZER'),
+      ).rejects.toThrow(BadRequestException);
+      process.env.NODE_ENV = originalEnv;
+    });
+
+    it('should default category to OTHER when not provided', async () => {
+      mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
+      mockPrismaService.event.create.mockResolvedValue(mockEvent);
+      mockFollowsService.getFollowerIds.mockResolvedValue([]);
+      mockFollowsService.getFriendIds.mockResolvedValue([]);
+
+      const { category, ...dtoWithoutCategory } = mockCreateDto;
+      await service.create('user-1', dtoWithoutCategory as any, 'ORGANIZER');
+
+      expect(mockPrismaService.event.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ category: 'OTHER' }),
+        }),
+      );
+    });
+
     it('should create event and notify followers/friends', async () => {
       mockPrismaService.$transaction.mockImplementation((fn: (tx: typeof mockPrismaService) => Promise<unknown>) => fn(mockPrismaService));
       mockPrismaService.event.create.mockResolvedValue(mockEvent);

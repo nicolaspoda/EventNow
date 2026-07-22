@@ -59,6 +59,13 @@ describe('MessagesController', () => {
     expect(mockLogger.warn).toHaveBeenCalled();
   });
 
+  it('should return empty array when P2021 error occurs without a message', async () => {
+    mockMessagesService.getUserConversations.mockRejectedValue({ code: 'P2021' });
+    const result = await controller.getUserConversations('user-1');
+    expect(result).toEqual([]);
+    expect(mockLogger.warn).toHaveBeenCalled();
+  });
+
   it('should return empty array when "does not exist" message', async () => {
     mockMessagesService.getUserConversations.mockRejectedValue({ message: 'relation does not exist' });
     const result = await controller.getUserConversations('user-1');

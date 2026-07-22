@@ -140,6 +140,19 @@ describe('MailService', () => {
       );
     });
 
+    it('should send cancellation without cancelReason', async () => {
+      mockMailerService.sendMail.mockResolvedValue({});
+      await service.sendEventCancellation({
+        ...cancellationData,
+        cancelReason: undefined,
+      });
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: expect.objectContaining({ cancelReason: null }),
+        }),
+      );
+    });
+
     it('should handle send failure gracefully', async () => {
       mockMailerService.sendMail.mockRejectedValue(new Error('SMTP fail'));
       await expect(service.sendEventCancellation(cancellationData)).resolves.toBeUndefined();

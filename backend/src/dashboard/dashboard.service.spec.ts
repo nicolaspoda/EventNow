@@ -224,6 +224,75 @@ describe('DashboardService', () => {
       const result = await service.getClientEvents('user-1');
       expect(result[0].stats.fillRate).toBe(0);
     });
+
+    it('should mark event COMPLETED once its end date has passed', async () => {
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockEvent,
+          type: 'COMMUNITY',
+          eventDate: pastDate,
+          endDate: pastDate,
+          ticketCategories: [],
+        },
+      ]);
+      const result = await service.getClientEvents('user-1');
+      expect(result[0].stats.status).toBe('COMPLETED');
+    });
+
+    it('should mark event ONGOING once it has started but not ended', async () => {
+      const startedTwoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockEvent,
+          type: 'COMMUNITY',
+          eventDate: startedTwoHoursAgo,
+          endDate: null,
+          ticketCategories: [],
+        },
+      ]);
+      const result = await service.getClientEvents('user-1');
+      expect(result[0].stats.status).toBe('ONGOING');
+    });
+
+    it('should mark a fully-booked future event SOLD_OUT', async () => {
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockEvent,
+          type: 'COMMUNITY',
+          eventDate: futureDate,
+          ticketCategories: [{ ...mockTicketCategory, initialStock: 10, currentStock: 0 }],
+        },
+      ]);
+      const result = await service.getClientEvents('user-1');
+      expect(result[0].stats.status).toBe('SOLD_OUT');
+    });
+
+    it('should mark an event starting within 7 days UPCOMING', async () => {
+      const soonDate = new Date(now.getTime() + 86400000 * 3);
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockEvent,
+          type: 'COMMUNITY',
+          eventDate: soonDate,
+          ticketCategories: [{ ...mockTicketCategory, initialStock: 10, currentStock: 5 }],
+        },
+      ]);
+      const result = await service.getClientEvents('user-1');
+      expect(result[0].stats.status).toBe('UPCOMING');
+    });
+
+    it('should mark a far-out, near-full event ALMOST_FULL', async () => {
+      mockPrismaService.event.findMany.mockResolvedValue([
+        {
+          ...mockEvent,
+          type: 'COMMUNITY',
+          eventDate: futureDate,
+          ticketCategories: [{ ...mockTicketCategory, initialStock: 10, currentStock: 1 }],
+        },
+      ]);
+      const result = await service.getClientEvents('user-1');
+      expect(result[0].stats.status).toBe('ALMOST_FULL');
+    });
   });
 
   describe('getEventParticipants', () => {
@@ -335,6 +404,59 @@ describe('DashboardService', () => {
       const result = await service.getEventParticipants('event-1', 'user-1');
       expect(result.participants).toHaveLength(1);
     });
+
+    it('should not re-flag an already-CONFIRMED ticket participant', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: [{
+          ...mockTicketCategory,
+          bookings: [],
+          tickets: [
+            { order: { user: { id: 'user-2', email: 'u@t.com', username: 'u2' }, createdAt: new Date() } },
+            { order: { user: { id: 'user-2', email: 'u@t.com', username: 'u2' }, createdAt: new Date() } },
+          ],
+        }],
+        participationRequests: [],
+      });
+      const result = await service.getEventParticipants('event-1', 'user-1');
+      expect(result.participants).toHaveLength(1);
+      expect(result.participants[0].status).toBe('CONFIRMED');
+      expect(result.participants[0].quantity).toBe(2);
+    });
+
+    it('should aggregate a participation request for an already-known participant', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({
+        ...mockEvent,
+        ticketCategories: [{
+          ...mockTicketCategory,
+          bookings: [{ user: { id: 'user-2', email: 'u@t.com', username: 'u2' }, quantity: 1, status: 'CONFIRMED', createdAt: new Date() }],
+          tickets: [],
+        }],
+        participationRequests: [{
+          user: { id: 'user-2', email: 'u@t.com', username: 'u2' },
+          createdAt: new Date(),
+        }],
+      });
+      const result = await service.getEventParticipants('event-1', 'user-1');
+      expect(result.participants).toHaveLength(1);
+      expect(result.participants[0].quantity).toBe(2);
+    });
+
+    it('should fall back to null for missing bookedAt/eventDate', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({
+        ...mockEvent,
+        eventDate: null,
+        ticketCategories: [{
+          ...mockTicketCategory,
+          bookings: [{ user: { id: 'user-2', email: 'u@t.com', username: 'u2' }, quantity: 1, status: 'CONFIRMED', createdAt: null }],
+          tickets: [],
+        }],
+        participationRequests: [],
+      });
+      const result = await service.getEventParticipants('event-1', 'user-1');
+      expect(result.participants[0].bookedAt).toBeNull();
+      expect(result.event.eventDate).toBeNull();
+    });
   });
 
   describe('getMyUpcomingEvents', () => {
@@ -368,6 +490,33 @@ describe('DashboardService', () => {
       }]);
       const result = await service.getMyUpcomingEvents('user-1');
       expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should keep already-serialized eventDate strings and sort multiple ticket/community events', async () => {
+      const ticketEvent = { ...futureEvent, id: 'event-B', eventDate: new Date(futureDate.getTime() + 86400000).toISOString() as unknown as Date };
+      const communityEvent = { ...futureEvent, id: 'event-A', type: 'COMMUNITY', eventDate: futureDate.toISOString() as unknown as Date };
+      mockPrismaService.ticket.findMany.mockResolvedValue([{
+        ticketCategory: { name: 'Standard', event: ticketEvent },
+      }]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([{
+        event: communityEvent,
+        respondedAt: new Date(),
+      }]);
+      const result = await service.getMyUpcomingEvents('user-1');
+      expect(result).toHaveLength(2);
+      expect(typeof result[0].eventDate).toBe('string');
+    });
+
+    it('should keep already-serialized eventDate strings for organizer and staff events', async () => {
+      const organizerEvent = { ...futureEvent, id: 'event-C', eventDate: futureDate.toISOString() as unknown as Date };
+      const staffEvent = { ...futureEvent, id: 'event-D', eventDate: new Date(futureDate.getTime() + 86400000).toISOString() as unknown as Date };
+      mockPrismaService.ticket.findMany.mockResolvedValue([]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.event.findMany.mockResolvedValue([organizerEvent]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([{ event: staffEvent }]);
+      const result = await service.getMyUpcomingEvents('user-1');
+      expect(result).toHaveLength(2);
+      expect(typeof result[0].eventDate).toBe('string');
     });
 
     it('should skip events that have ended', async () => {
@@ -489,6 +638,89 @@ describe('DashboardService', () => {
       const result = await service.getMyParticipatedEvents('user-1');
       expect(result).toHaveLength(1);
       expect(result[0].participationType).toBe('STAFF');
+    });
+
+    it('should not duplicate a staff event already found via a ticket', async () => {
+      const event = {
+        id: 'event-1', title: 'E', description: 'D', eventDate: pastDate,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      mockPrismaService.ticket.findMany.mockResolvedValue([{ ticketCategory: { name: 'Std', event } }]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([{ event }]);
+      const result = await service.getMyParticipatedEvents('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].participationType).toBe('TICKET');
+    });
+
+    it('should keep already-serialized eventDate strings and sort multiple events', async () => {
+      const eventA = {
+        id: 'event-A', title: 'A', description: 'D', eventDate: pastDate.toISOString() as unknown as Date,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      const eventB = {
+        id: 'event-B', title: 'B', description: 'D',
+        eventDate: new Date(pastDate.getTime() + 3600000).toISOString() as unknown as Date,
+        location: 'L', imageUrl: null, type: 'COMMUNITY', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      const eventC = {
+        id: 'event-C', title: 'C', description: 'D',
+        eventDate: new Date(pastDate.getTime() + 7200000).toISOString() as unknown as Date,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      mockPrismaService.ticket.findMany.mockResolvedValue([{ ticketCategory: { name: 'Std', event: eventA } }]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([{ event: eventB, respondedAt: new Date() }]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([{ event: eventC }]);
+      const result = await service.getMyParticipatedEvents('user-1');
+      expect(result).toHaveLength(3);
+      expect(typeof result[0].eventDate).toBe('string');
+      expect(result[0].id).toBe('event-C');
+    });
+  });
+
+  describe('getMyCalendarEvents', () => {
+    it('should merge participated and organized events, preferring the participation entry', async () => {
+      const sharedEvent = {
+        id: 'event-1', title: 'Shared', description: 'D', eventDate: pastDate,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      mockPrismaService.ticket.findMany.mockResolvedValue([{ ticketCategory: { name: 'Std', event: sharedEvent } }]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([]);
+      mockPrismaService.event.findMany.mockResolvedValue([sharedEvent]);
+
+      const result = await service.getMyCalendarEvents('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].participationType).toBe('TICKET');
+    });
+
+    it('should include organized-only events and sort with participated ones', async () => {
+      const participatedEvent = {
+        id: 'event-1', title: 'Participated', description: 'D', eventDate: pastDate,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'o', email: 'e', username: 'o' },
+      };
+      const organizedEvent = {
+        id: 'event-2', title: 'Organized', description: 'D',
+        eventDate: new Date(pastDate.getTime() + 3600000).toISOString() as unknown as Date,
+        location: 'L', imageUrl: null, type: 'PROFESSIONAL', category: 'ART',
+        organizer: { id: 'user-1', email: 'e', username: 'o' },
+      };
+      mockPrismaService.ticket.findMany.mockResolvedValue([{ ticketCategory: { name: 'Std', event: participatedEvent } }]);
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockPrismaService.eventStaff.findMany.mockResolvedValue([]);
+      mockPrismaService.event.findMany.mockResolvedValue([organizedEvent]);
+
+      const result = await service.getMyCalendarEvents('user-1');
+      expect(result).toHaveLength(2);
+      expect(result.map((e: any) => e.id)).toEqual(expect.arrayContaining(['event-1', 'event-2']));
+      expect(result[0].id).toBe('event-2');
+      expect(typeof result[0].eventDate).toBe('string');
     });
   });
 });

@@ -76,6 +76,49 @@ describe('JwtStrategy', () => {
       );
     });
 
+    it('should throw UnauthorizedException if payload is missing sub', async () => {
+      await expect(
+        strategy.validate({
+          sub: '',
+          email: 'test@test.com',
+          role: 'USER',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException if payload is missing email', async () => {
+      await expect(
+        strategy.validate({
+          sub: 'user-123',
+          email: '',
+          role: 'USER',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException if user is banned', async () => {
+      const bannedUser = {
+        id: 'user-123',
+        email: 'test@test.com',
+        role: 'USER',
+        isBanned: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue(bannedUser);
+
+      await expect(
+        strategy.validate({
+          sub: 'user-123',
+          email: 'test@test.com',
+          role: 'USER',
+        }),
+      ).rejects.toThrow('Votre compte a été suspendu');
+    });
+
     it('should handle different user roles', async () => {
       const mockOrganizer = {
         id: 'organizer-123',

@@ -17,6 +17,8 @@ describe('ReportsService', () => {
     report: {
       create: jest.fn(),
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -202,6 +204,60 @@ describe('ReportsService', () => {
       mockPrismaService.report.findMany.mockResolvedValue([]);
       const result = await service.getMyReports('user-1');
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe('getAllReports', () => {
+    it('should filter by status when provided', async () => {
+      mockPrismaService.report.findMany.mockResolvedValue([mockReport]);
+
+      const result = await service.getAllReports('PENDING' as any);
+
+      expect(result).toEqual([mockReport]);
+      expect(mockPrismaService.report.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { status: 'PENDING' } }),
+      );
+    });
+
+    it('should return all reports when no status is provided', async () => {
+      mockPrismaService.report.findMany.mockResolvedValue([mockReport]);
+
+      const result = await service.getAllReports();
+
+      expect(result).toEqual([mockReport]);
+      expect(mockPrismaService.report.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: undefined }),
+      );
+    });
+  });
+
+  describe('updateReportStatus', () => {
+    it('should throw NotFoundException if report does not exist', async () => {
+      mockPrismaService.report.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateReportStatus('report-1', 'RESOLVED' as any),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrismaService.report.update).not.toHaveBeenCalled();
+    });
+
+    it('should update the report status', async () => {
+      mockPrismaService.report.findUnique.mockResolvedValue(mockReport);
+      mockPrismaService.report.update.mockResolvedValue({
+        ...mockReport,
+        status: 'RESOLVED',
+      });
+
+      const result = await service.updateReportStatus(
+        'report-1',
+        'RESOLVED' as any,
+      );
+
+      expect(result.status).toBe('RESOLVED');
+      expect(mockPrismaService.report.update).toHaveBeenCalledWith({
+        where: { id: 'report-1' },
+        data: { status: 'RESOLVED' },
+      });
     });
   });
 });
