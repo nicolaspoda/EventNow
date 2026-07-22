@@ -1,9 +1,10 @@
-describe('mailConfig', () => {
+import { buildMailConfig } from './mail.config';
+
+describe('buildMailConfig', () => {
   const originalEnv = { ...process.env };
 
   afterEach(() => {
     process.env = { ...originalEnv };
-    jest.resetModules();
   });
 
   it('should use default host/port and no auth when env vars are unset', () => {
@@ -12,9 +13,8 @@ describe('mailConfig', () => {
     delete process.env.MAIL_USER;
     delete process.env.MAIL_PASSWORD;
     delete process.env.MAIL_FROM;
-    jest.resetModules();
 
-    const { mailConfig } = require('./mail.config');
+    const mailConfig = buildMailConfig();
 
     expect(mailConfig.transport).toMatchObject({
       host: 'smtp.gmail.com',
@@ -30,9 +30,8 @@ describe('mailConfig', () => {
     process.env.MAIL_USER = 'user@custom.com';
     process.env.MAIL_PASSWORD = 'secret';
     process.env.MAIL_FROM = 'custom@eventnow.com';
-    jest.resetModules();
 
-    const { mailConfig } = require('./mail.config');
+    const mailConfig = buildMailConfig();
 
     expect(mailConfig.transport).toMatchObject({
       host: 'smtp.custom.com',
