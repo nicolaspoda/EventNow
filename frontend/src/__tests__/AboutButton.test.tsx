@@ -17,7 +17,7 @@ describe('AboutButton', () => {
 
     expect(screen.getByRole('button')).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText('v1.1')).toBeInTheDocument();
+    expect(screen.getByText('v1.2.2')).toBeInTheDocument();
   });
 
   it('closes the panel when the toggle button is clicked again', () => {
