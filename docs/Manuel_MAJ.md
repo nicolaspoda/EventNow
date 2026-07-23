@@ -30,7 +30,7 @@ Le schéma vit dans `backend/prisma/schema.prisma`. Pour une modification (nouve
 docker-compose exec backend npx prisma migrate dev --name description_du_changement
 ```
 
-Ça génère un dossier horodaté dans `backend/prisma/migrations/` (le projet en compte une quinzaine à ce jour, par exemple `20260701110000_add_event_status` ou `20260516120000_add_promo_codes`) avec le SQL de la migration, et régénère le client Prisma. Ce dossier est versionné comme n'importe quel fichier du repo, il fait partie du commit de la fonctionnalité, pas d'une étape séparée.
+Ça génère un dossier horodaté dans `backend/prisma/migrations/` (le projet en compte une trentaine à ce jour, par exemple `20260701110000_add_event_status` ou `20260516120000_add_promo_codes`) avec le SQL de la migration, et régénère le client Prisma. Ce dossier est versionné comme n'importe quel fichier du repo, il fait partie du commit de la fonctionnalité, pas d'une étape séparée.
 
 Il n'y a rien de plus à faire pour que la migration arrive en production. Le `Dockerfile` du backend (stage `prod`) exécute `npx prisma migrate deploy && npm run start:prod` comme commande de démarrage du conteneur : à chaque déploiement, les migrations non encore appliquées sur la base de prod le sont automatiquement, dans l'ordre, avant que l'application ne démarre. Aucune commande manuelle sur le serveur, aucun script d'admin à lancer à la main.
 

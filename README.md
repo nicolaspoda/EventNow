@@ -1,10 +1,10 @@
-# EventNow - Plateforme d'événements et de billetterie
+# EventNow, plateforme d'événements et de billetterie
 
 [![CI Pipeline](https://github.com/nicolaspoda/EventNow/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolaspoda/EventNow/actions/workflows/ci.yml)
 
 ## Description
 
-EventNow est une plateforme d'événements avec deux usages qui cohabitent : la billetterie classique (concerts, conférences, festivals...) et les événements communautaires, où on ne paie pas mais où on demande à participer. Autour de ça s'est greffé tout un côté social - suivre des gens, voir qui va au même événement que soi, discuter en messagerie temps réel, laisser des avis après coup - plus les outils qu'un organisateur attend (tableau de bord, stats de vente, gestion du staff, remboursements) et un peu de modération côté admin.
+EventNow est une plateforme d'événements avec deux usages qui cohabitent : la billetterie classique (concerts, conférences, festivals...) et les événements communautaires, où on ne paie pas mais où on demande à participer. Autour de ça s'est greffé tout un côté social (suivre des gens, voir qui va au même événement que soi, discuter en messagerie temps réel, laisser des avis après coup), plus les outils qu'un organisateur attend (tableau de bord, stats de vente, gestion du staff, remboursements) et un peu de modération côté admin.
 
 Trois rôles cohabitent : **Utilisateur**, **Organisateur**, et **Admin**. À côté de ça, "être staff" n'est pas un rôle global mais une affectation par événement : n'importe quel compte peut se faire inviter comme staff sur un événement précis pour scanner les billets à l'entrée, sans en être l'organisateur.
 
@@ -36,29 +36,29 @@ N'importe quel Utilisateur ou Organisateur peut être invité comme staff sur un
 
 ## Fonctionnalités
 
-**Découverte** - recherche et filtres par catégorie, type, date, ville ; carte des événements (Leaflet) et autocomplétion d'adresse.
+**Découverte** : recherche et filtres par catégorie, type, date, ville ; carte des événements (Leaflet) et autocomplétion d'adresse.
 
-**Billetterie** - QR code unique par place, PDF téléchargeable, validation à l'entrée par le staff, statistiques de validation, codes promo.
+**Billetterie** : QR code unique par place, PDF téléchargeable, validation à l'entrée par le staff, statistiques de validation, codes promo.
 
-**Communautaire** - demandes de participation, sondages et liste d'objets à apporter par événement.
+**Communautaire** : demandes de participation, sondages et liste d'objets à apporter par événement.
 
-**Social** - abonnements, amis (suivi mutuel), messagerie temps réel, avis sur les événements et entre participants, profils publics, notifications in-app.
+**Social** : abonnements, amis (suivi mutuel), messagerie temps réel, avis sur les événements et entre participants, profils publics, notifications in-app.
 
-**Modération** - signalements d'événements ou d'utilisateurs, suspension d'événement, bannissement de compte (rôle Admin).
+**Modération** : signalements d'événements ou d'utilisateurs, suspension d'événement, bannissement de compte (rôle Admin).
 
-**Emails et tâches planifiées** - confirmation de commande, rappels J-7/J-1, nettoyage automatique du staff après un événement.
+**Emails et tâches planifiées** : confirmation de commande, rappels J-7/J-1, nettoyage automatique du staff après un événement.
 
-**Sécurité** - rate limiting (renforcé sur le paiement), Helmet, sanitization anti-XSS, CORS, CSRF, validation des DTO, logs Winston, accessibilité (tests axe), mode sombre.
+**Sécurité** : rate limiting (renforcé sur le paiement), Helmet, sanitization anti-XSS, CORS, CSRF, validation des DTO, logs Winston, accessibilité (tests axe), mode sombre.
 
 ---
 
 ## Stack technique
 
-**Backend** - NestJS (TypeScript), PostgreSQL via Prisma, Redis pour les locks de réservation et les codes OAuth. Auth par JWT (email/mot de passe ou Google), paiement Stripe, upload d'images Cloudinary, emails via Nodemailer/Handlebars, PDF des billets avec PDFKit, messagerie temps réel en Socket.io. Sécurité standard (Helmet, rate limiting, validation des DTO, sanitization) et logs Winston.
+**Backend** : NestJS (TypeScript), PostgreSQL via Prisma, Redis pour les locks de réservation et les codes OAuth. Auth par JWT (email/mot de passe ou Google), paiement Stripe, upload d'images Cloudinary, emails via Nodemailer/Handlebars, PDF des billets avec PDFKit, messagerie temps réel en Socket.io. Sécurité standard (Helmet, rate limiting, validation des DTO, sanitization) et logs Winston.
 
-**Frontend** - React 19 + TypeScript sur Vite, Tailwind pour le design system et le thème sombre, React Router. Stripe.js pour le paiement côté client, Leaflet pour la carte, Chart.js pour les stats des tableaux de bord, html5-qrcode pour le scan des billets à l'entrée. Tests avec Vitest et Testing Library, accessibilité vérifiée avec jest-axe.
+**Frontend** : React 19 + TypeScript sur Vite, Tailwind pour le design system et le thème sombre, React Router. Stripe.js pour le paiement côté client, Leaflet pour la carte, Chart.js pour les stats des tableaux de bord, html5-qrcode pour le scan des billets à l'entrée. Tests avec Vitest et Testing Library, accessibilité vérifiée avec jest-axe.
 
-**Infrastructure** - tout tourne en Docker Compose (frontend, backend, PostgreSQL, Redis), CI/CD sur GitHub Actions. En production, reverse-proxy Nginx devant le frontend et l'API (configs dans [`deploy/`](deploy)).
+**Infrastructure** : tout tourne en Docker Compose (frontend, backend, PostgreSQL, Redis), CI/CD sur GitHub Actions. En production, reverse-proxy Nginx devant le frontend et l'API (configs dans [`deploy/`](deploy)).
 
 ## Prérequis
 
@@ -106,7 +106,7 @@ La suite est identique dans les deux cas.
 cp backend/.env.example backend/.env
 ```
 
-À éditer si besoin : `GOOGLE_CLIENT_ID`/`SECRET` pour l'auth Google, `STRIPE_SECRET_KEY`/`STRIPE_PUBLISHABLE_KEY` pour le paiement, `CLOUDINARY_*` pour l'upload. Les variables de base (`DATABASE_URL`, `REDIS_HOST`, `CORS_ORIGINS`) sont redéfinies dans `docker-compose.yml` - inutile d'y toucher pour un usage Docker.
+À éditer si besoin : `GOOGLE_CLIENT_ID`/`SECRET` pour l'auth Google, `STRIPE_SECRET_KEY`/`STRIPE_PUBLISHABLE_KEY` pour le paiement, `CLOUDINARY_*` pour l'upload. Les variables de base (`DATABASE_URL`, `REDIS_HOST`, `CORS_ORIGINS`) sont redéfinies dans `docker-compose.yml`, inutile d'y toucher pour un usage Docker.
 
 ### 3. Démarrer l'application
 
@@ -158,9 +158,9 @@ Inscription en tant qu'Utilisateur ou en tant qu'Organisateur (formulaire sépar
 
 Trois manuels plus détaillés vivent dans [`docs/`](docs) :
 
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — déploiement local et production, variables d'environnement, ce qui a posé problème en pratique (CORS, CSP Stripe)
-- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — parcours concrets par profil (participant, organisateur, staff, admin)
-- [`docs/UPDATING.md`](docs/UPDATING.md) — ajouter une fonctionnalité, migrations Prisma, flux de branches et CI/CD
+- [`docs/Manuel_Deploiement.md`](docs/Manuel_Deploiement.md) : déploiement local et production, variables d'environnement, ce qui a posé problème en pratique (CORS, CSP Stripe)
+- [`docs/Manuel_Utilisation.md`](docs/Manuel_Utilisation.md) : parcours concrets par profil (participant, organisateur, staff, admin)
+- [`docs/Manuel_MAJ.md`](docs/Manuel_MAJ.md) : ajouter une fonctionnalité, migrations Prisma, flux de branches et CI/CD
 
 ## Auteur
 
