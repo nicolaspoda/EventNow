@@ -15,6 +15,20 @@ Quatre services tiers interviennent, et tous sont optionnels au sens où l'appli
 - **Google OAuth** (Google Cloud Console) pour la connexion via Google
 - **SMTP** : Gmail avec un mot de passe d'application, ou Mailtrap en dev pour ne pas envoyer de vrais mails
 
+## Choix technologiques
+
+Ces choix ne sont pas arbitraires, même si je ne les ai pas tous comparés formellement avant de trancher, alors autant expliquer ici pourquoi chaque brique est celle-là et pas une autre.
+
+Côté backend, NestJS plutôt qu'un Express nu s'est imposé dès que le nombre de modules métier a commencé à grossir (events, bookings, orders, tickets, staff-invitations...). La structure imposée par les modules, l'injection de dépendances et les decorators évitent que chaque développeur réinvente sa propre organisation de dossiers, ce qui compte dès qu'on n'est plus tout seul sur le projet. Prisma comme ORM plutôt que TypeORM vient de la même logique : le client généré est typé de bout en bout à partir du schéma, et les migrations sont déclaratives et versionnées automatiquement, ce qui réduit le risque d'un décalage silencieux entre le code et la base.
+
+PostgreSQL s'est imposé naturellement face à une base NoSQL parce que le domaine est fortement relationnel : un billet appartient à une commande, une commande à un événement, un événement à des catégories de billets avec du stock, et plusieurs de ces écritures doivent rester atomiques entre elles (réserver une place et décrémenter le stock disponible, par exemple). Une base relationnelle avec de vraies transactions évite d'avoir à recoder ces garanties à la main. Redis, lui, ne sert pas de base de données mais de mémoire à durée de vie limitée : le verrou de dix minutes posé sur le stock au moment d'une réservation s'appuie directement sur l'expiration native de Redis (TTL), ce qui évite d'écrire une tâche planifiée pour nettoyer des réservations abandonnées.
+
+Côté frontend, React avec Vite plutôt que Create React App ou un framework plus contraignant comme Angular donne un serveur de développement rapide et un écosystème large, tout en restant cohérent avec un choix TypeScript de bout en bout partagé avec le backend. Tailwind pour le style suit la même idée d'aller vite sans sacrifier la cohérence visuelle, en s'appuyant sur le système de design du projet plutôt que sur des composants CSS écrits au cas par cas.
+
+Pour les services tiers, Stripe plutôt qu'un autre prestataire de paiement décharge le projet de toute la conformité PCI : la carte bancaire ne transite jamais par mon serveur, Stripe Elements s'en occupe directement dans le navigateur, et le 3D Secure est géré nativement. Cloudinary pour les images d'événements évite de gérer moi-même du stockage et du redimensionnement, l'upload et les transformations (recadrage, format) se font à la volée sans infrastructure supplémentaire à maintenir.
+
+Enfin, Docker avec un stage dev et un stage prod distincts dans chaque Dockerfile garantit que l'environnement de développement et celui de production partagent la même base d'image plutôt que de diverger au fil du temps, et GitHub Actions pour la CI/CD s'est imposé simplement parce que le dépôt est déjà hébergé sur GitHub, sans service tiers supplémentaire à configurer ni credentials à faire circuler ailleurs.
+
 ## Déploiement en local
 
 Le fichier `docker-compose.yml` définit quatre services : `postgres`, `redis`, `backend`, `frontend`. Chacun a son `Dockerfile` avec un stage `dev` et un stage `prod`, et c'est le stage `dev` qui est utilisé en local, avec le code monté en volume pour le hot-reload.
