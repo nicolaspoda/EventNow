@@ -63,6 +63,28 @@ describe('GoogleAuthGuard', () => {
       );
     });
 
+    it('should throw ServiceUnavailableException if GOOGLE_CLIENT_ID is the .env.example placeholder', async () => {
+      process.env.GOOGLE_CLIENT_ID = 'your-google-client-id';
+      process.env.GOOGLE_CLIENT_SECRET = 'secret';
+
+      const context = createMockContext();
+
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ServiceUnavailableException,
+      );
+    });
+
+    it('should throw ServiceUnavailableException if GOOGLE_CLIENT_SECRET is the .env.example placeholder', async () => {
+      process.env.GOOGLE_CLIENT_ID = 'client-id';
+      process.env.GOOGLE_CLIENT_SECRET = 'your-google-client-secret';
+
+      const context = createMockContext();
+
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ServiceUnavailableException,
+      );
+    });
+
     it('should call super.canActivate if credentials configured', async () => {
       process.env.GOOGLE_CLIENT_ID = 'client-id';
       process.env.GOOGLE_CLIENT_SECRET = 'client-secret';
@@ -122,7 +144,11 @@ describe('GoogleAuthGuard', () => {
       process.env.GOOGLE_CLIENT_ID = 'client-id';
       process.env.GOOGLE_CLIENT_SECRET = 'client-secret';
 
-      const tokenError = { name: 'TokenError', message: 'invalid_grant', code: 'invalid_grant' };
+      const tokenError = {
+        name: 'TokenError',
+        message: 'invalid_grant',
+        code: 'invalid_grant',
+      };
       const parentProto = Object.getPrototypeOf(GoogleAuthGuard.prototype) as {
         canActivate: (ctx: ExecutionContext) => Promise<boolean>;
       };
@@ -138,7 +164,10 @@ describe('GoogleAuthGuard', () => {
 
       const oauthErr = Object.assign(new Error('exchange failed'), {
         oauthError: {
-          data: JSON.stringify({ error: 'access_denied', error_description: 'User denied' }),
+          data: JSON.stringify({
+            error: 'access_denied',
+            error_description: 'User denied',
+          }),
           statusCode: 400,
         },
       });
@@ -164,21 +193,28 @@ describe('GoogleAuthGuard', () => {
       jest.spyOn(parentProto, 'canActivate').mockRejectedValue(oauthErr);
 
       const context = createMockContext();
-      await expect(guard.canActivate(context)).rejects.toThrow('plain text error');
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        'plain text error',
+      );
     });
 
     it('should format object with data string using JSON', async () => {
       process.env.GOOGLE_CLIENT_ID = 'client-id';
       process.env.GOOGLE_CLIENT_SECRET = 'client-secret';
 
-      const errObj = { data: JSON.stringify({ error: 'invalid_client' }), statusCode: 401 };
+      const errObj = {
+        data: JSON.stringify({ error: 'invalid_client' }),
+        statusCode: 401,
+      };
       const parentProto = Object.getPrototypeOf(GoogleAuthGuard.prototype) as {
         canActivate: (ctx: ExecutionContext) => Promise<boolean>;
       };
       jest.spyOn(parentProto, 'canActivate').mockRejectedValue(errObj);
 
       const context = createMockContext();
-      await expect(guard.canActivate(context)).rejects.toThrow('invalid_client');
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        'invalid_client',
+      );
     });
 
     it('should format object with data string using plain text fallback', async () => {
@@ -192,7 +228,9 @@ describe('GoogleAuthGuard', () => {
       jest.spyOn(parentProto, 'canActivate').mockRejectedValue(errObj);
 
       const context = createMockContext();
-      await expect(guard.canActivate(context)).rejects.toThrow('raw error text');
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        'raw error text',
+      );
     });
   });
 });

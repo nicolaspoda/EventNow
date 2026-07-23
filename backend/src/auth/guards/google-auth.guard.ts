@@ -68,12 +68,23 @@ function formatGoogleOAuthError(err: unknown): string {
   return 'Erreur inconnue (Google OAuth)';
 }
 
+/** Valeurs d'exemple copiées telles quelles depuis backend/.env.example. */
+const PLACEHOLDER_VALUES = new Set([
+  'your-google-client-id',
+  'your-google-client-secret',
+]);
+
 @Injectable()
 export class GoogleAuthGuard extends AuthGuard('google') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const clientID = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    if (!clientID || !clientSecret) {
+    if (
+      !clientID ||
+      !clientSecret ||
+      PLACEHOLDER_VALUES.has(clientID) ||
+      PLACEHOLDER_VALUES.has(clientSecret)
+    ) {
       throw new ServiceUnavailableException(
         'Google OAuth non configuré : définir GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET dans backend/.env',
       );
