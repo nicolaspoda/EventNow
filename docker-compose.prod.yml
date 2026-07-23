@@ -1,8 +1,3 @@
-# Production : secrets + DATABASE_URL via env_file (défaut `.env.production`).
-# Autre fichier : export EVENTNOW_ENV_FILE=/chemin/vers/.env puis docker compose ...
-#
-# Déploiement : docker compose -f docker-compose.prod.yml up -d --build
-
 services:
   postgres:
     image: postgres:15-alpine
