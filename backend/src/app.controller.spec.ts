@@ -45,15 +45,6 @@ describe('AppController', () => {
     });
   });
 
-  // TEMPORARY — remove alongside AppController#debugSentry once Sentry capture is confirmed.
-  describe('debugSentry', () => {
-    it('should throw an error', () => {
-      expect(() => appController.debugSentry()).toThrow(
-        'Sentry test error - EventNow backend',
-      );
-    });
-  });
-
   describe('getStripeConfig', () => {
     it('should return the Stripe publishable key from the ConfigService', async () => {
       const app = await Test.createTestingModule({
