@@ -75,6 +75,16 @@ Les secrets SSH (`DEPLOY_HOST`, `DEPLOY_USER`, `DEPLOY_SSH_KEY`, `DEPLOY_APP_PAT
 
 Devant les conteneurs, Nginx route les requêtes : `/api/` et `/socket.io/` vers le backend (port 3000), le reste vers le frontend (port 5173), avec le certificat Let's Encrypt sur le 443 et une redirection HTTP → HTTPS. La config prête à déployer est dans `deploy/nginx-eventnow-complete.conf`.
 
+## Supervision
+
+Le healthcheck exposé sur `/api/v1/health` (`backend/src/health/health.controller.ts`, module `@nestjs/terminus`) ne se contente plus de répondre `200 OK` : il exécute un `SELECT 1` via Prisma et un `PING` Redis, et renvoie `503` si l'une des deux dépendances ne répond pas. C'est ce endpoint que le `healthcheck` de `docker-compose.prod.yml` interroge toutes les 10 secondes ; un retour 503 fait passer le conteneur backend en `unhealthy` et bloque le démarrage du frontend (`depends_on: condition: service_healthy`).
+
+Le suivi d'erreurs passe par Sentry (`@sentry/nestjs`), initialisé dans `backend/src/instrument.ts` — importé en toute première ligne de `main.ts`, avant même les imports NestJS, comme l'exige le SDK. L'initialisation est un no-op silencieux tant que `NODE_ENV` n'est pas `production` ou que `SENTRY_DSN` n'est pas renseignée, donc rien ne change en dev. Le `AllExceptionsFilter` existant continue de tout loguer dans Winston comme avant, et envoie en plus à Sentry les seules erreurs 500 (les rejets 4xx — validation, auth — sont un fonctionnement normal de l'API, pas des incidents).
+
+Pour activer Sentry : créer un compte gratuit sur https://sentry.io, créer un projet avec la plateforme "Node.js" (NestJS), copier le DSN affiché à la création et le renseigner dans `SENTRY_DSN` du fichier d'environnement de prod (`.env.production`).
+
+La CI (`.github/workflows/ci.yml`, job `deploy`) vérifie le déploiement après coup : une fois le `docker compose up -d` terminé, elle attend quelques secondes puis interroge `https://eventnow.fr/api/v1/health` depuis le runner GitHub et échoue explicitement si la réponse n'est pas `200`, pour distinguer un déploiement qui a démarré d'un déploiement qui fonctionne réellement.
+
 ## Ce qui a vraiment posé problème
 
 La CI/CD est en place depuis quasiment le début du projet, avant même la première fonctionnalité métier, mais le déploiement en continu, lui, est resté désactivé un bon moment : tant que l'application n'était pas fonctionnellement stable, mettre en prod à chaque push aurait juste automatisé la mise en ligne de bugs. Le job `deploy` n'a été activé qu'une fois le socle fonctionnel solide.

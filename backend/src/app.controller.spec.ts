@@ -21,12 +21,6 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('health', () => {
-    it('should return ok', () => {
-      expect(appController.health()).toEqual({ status: 'ok' });
-    });
-  });
-
   describe('root', () => {
     it('should return "Hello World!"', () => {
       expect(appController.getHello()).toBe('Hello World!');

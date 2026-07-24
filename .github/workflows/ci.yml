@@ -227,3 +227,15 @@ jobs:
             fi
             export EVENTNOW_ENV_FILE="${ENV_FILE}"
             docker compose -f docker-compose.prod.yml --env-file "${ENV_FILE}" up -d --build --remove-orphans
+
+      - name: Post-deploy health check
+        run: |
+          set -euo pipefail
+          echo "Checking https://eventnow.fr/api/v1/health ..."
+          curl -fsS \
+            --retry 15 \
+            --retry-delay 8 \
+            --retry-all-errors \
+            --retry-connrefused \
+            https://eventnow.fr/api/v1/health
+          echo "Health check passed: deployment is serving traffic."
