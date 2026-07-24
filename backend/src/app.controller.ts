@@ -24,10 +24,4 @@ export class AppController {
       publishableKey: this.configService.get<string>('STRIPE_PUBLISHABLE_KEY'),
     };
   }
-
-  // TEMPORARY — remove once Sentry capture is confirmed on the Sentry dashboard.
-  @Get('debug-sentry')
-  debugSentry(): never {
-    throw new Error('Sentry test error - EventNow backend');
-  }
 }
