@@ -105,6 +105,13 @@ const UpcomingEventCard: React.FC<UpcomingEventCardProps> = ({ event }) => {
               </svg>
               Organisateur
             </Badge>
+          ) : event.participationType === 'STAFF' ? (
+            <Badge variant="warning" size="sm">
+              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Staff
+            </Badge>
           ) : (
             <Badge variant="success" size="sm">
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,6 +234,11 @@ const UpcomingEventCard: React.FC<UpcomingEventCardProps> = ({ event }) => {
             {event.participationType === 'ORGANIZER' && (
               <div className="text-sm text-primary-600 dark:text-primary-400 font-medium">
                 Vous organisez cet événement
+              </div>
+            )}
+            {event.participationType === 'STAFF' && (
+              <div className="text-sm text-warning-600 dark:text-warning-400 font-medium">
+                Vous êtes staff sur cet événement
               </div>
             )}
           </div>

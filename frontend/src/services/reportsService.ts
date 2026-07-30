@@ -21,6 +21,7 @@ export interface CreateReportDto {
 export interface Report {
   id: string;
   reporterId: string;
+  reporter?: { id: string; username: string | null; email: string };
   type: ReportType;
   reason: ReportReason;
   description: string | null;
@@ -28,9 +29,18 @@ export interface Report {
   targetUserId: string | null;
   targetEventId: string | null;
   targetEvent: { id: string; title: string } | null;
-  targetUser: { id: string; username: string | null } | null;
+  targetUser:
+    | { id: string; username: string | null; email: string; isBanned: boolean }
+    | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BannedUser {
+  id: string;
+  username: string | null;
+  email: string;
+  bannedAt: string | null;
 }
 
 export const reportsService = {
@@ -41,6 +51,32 @@ export const reportsService = {
 
   async getMyReports(): Promise<Report[]> {
     const response = await api.get<Report[]>('/reports/my');
+    return response.data;
+  },
+
+  async getAllReports(status?: ReportStatus): Promise<Report[]> {
+    const params = status ? { status } : {};
+    const response = await api.get<Report[]>('/reports', { params });
+    return response.data;
+  },
+
+  async updateReportStatus(reportId: string, status: ReportStatus): Promise<Report> {
+    const response = await api.patch<Report>(`/reports/${reportId}/status`, { status });
+    return response.data;
+  },
+
+  async suspendEvent(eventId: string): Promise<{ id: string; title: string; status: string }> {
+    const response = await api.patch(`/events/${eventId}/suspend`);
+    return response.data;
+  },
+
+  async banUser(userId: string): Promise<{ id: string; username: string | null; email: string; isBanned: boolean }> {
+    const response = await api.patch(`/users/${userId}/ban`);
+    return response.data;
+  },
+
+  async getBannedUsers(): Promise<BannedUser[]> {
+    const response = await api.get<BannedUser[]>('/users/banned');
     return response.data;
   },
 };

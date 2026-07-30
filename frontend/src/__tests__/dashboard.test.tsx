@@ -33,6 +33,20 @@ describe('Dashboard Components - Accessibility', () => {
       expect(screen.getByText('Participants')).toBeInTheDocument();
       expect(screen.getByText('100')).toBeInTheDocument();
     });
+
+    it('should display a negative trend with a down arrow and matching aria-label', () => {
+      render(
+        <StatCard
+          title="Revenus"
+          value="800 €"
+          trend={{ value: 12, isPositive: false }}
+        />,
+      );
+      expect(screen.getByText('↓ 12%')).toBeInTheDocument();
+      expect(
+        screen.getByLabelText('Tendance négative de 12 pourcent'),
+      ).toBeInTheDocument();
+    });
   });
 
   describe('EventStatusBadge', () => {

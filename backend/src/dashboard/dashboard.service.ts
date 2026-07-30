@@ -86,7 +86,7 @@ export class DashboardService {
         totalCapacity > 0 ? (totalSold / totalCapacity) * 100 : 0;
       const status = event.cancelledAt
         ? 'CANCELLED'
-        : this.getEventStatus(event.eventDate, fillRate);
+        : this.getEventStatus(event, fillRate);
 
       return {
         ...event,
@@ -252,7 +252,7 @@ export class DashboardService {
 
       const fillRate =
         totalCapacity > 0 ? (totalParticipants / totalCapacity) * 100 : 0;
-      const status = this.getEventStatus(event.eventDate, fillRate);
+      const status = this.getEventStatus(event, fillRate);
 
       return {
         ...event,
@@ -581,13 +581,119 @@ export class DashboardService {
         acceptedAt: participation.respondedAt,
       }));
 
-    const allEvents = [...professionalEvents, ...communityEvents].sort(
-      (a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateA.getTime() - dateB.getTime();
+    const organizedEvents = await this.prisma.event.findMany({
+      where: {
+        organizerId: userId,
+        eventDate: { gte: oneDayAgo },
       },
-    );
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        eventDate: true,
+        endDate: true,
+        location: true,
+        imageUrl: true,
+        type: true,
+        category: true,
+        organizer: {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
+      orderBy: { eventDate: 'asc' },
+    });
+
+    const organizerEvents = organizedEvents
+      .filter((event) => this.getEventEndDate(event) > now)
+      .map((event) => ({
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        eventDate:
+          event.eventDate instanceof Date
+            ? event.eventDate.toISOString()
+            : event.eventDate,
+        location: event.location,
+        imageUrl: event.imageUrl,
+        type: event.type,
+        category: event.category,
+        organizer: (event as any).organizer,
+        participationType: 'ORGANIZER' as const,
+      }));
+
+    const staffAssignments = await this.prisma.eventStaff.findMany({
+      where: {
+        userId,
+        event: { eventDate: { gte: oneDayAgo } },
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventDate: true,
+            endDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+            organizer: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { event: { eventDate: 'asc' } },
+    });
+
+    const staffEvents = staffAssignments
+      .filter((assignment) => this.getEventEndDate(assignment.event) > now)
+      .map((assignment) => ({
+        id: assignment.event.id,
+        title: assignment.event.title,
+        description: assignment.event.description,
+        eventDate:
+          assignment.event.eventDate instanceof Date
+            ? assignment.event.eventDate.toISOString()
+            : assignment.event.eventDate,
+        location: assignment.event.location,
+        imageUrl: assignment.event.imageUrl,
+        type: assignment.event.type,
+        category: assignment.event.category,
+        organizer: (assignment.event as any).organizer,
+        participationType: 'STAFF' as const,
+      }));
+
+    const byId = new Map<
+      string,
+      | (typeof professionalEvents)[number]
+      | (typeof communityEvents)[number]
+      | (typeof organizerEvents)[number]
+      | (typeof staffEvents)[number]
+    >();
+    for (const event of [...professionalEvents, ...communityEvents]) {
+      byId.set(event.id, event);
+    }
+    for (const event of [...organizerEvents, ...staffEvents]) {
+      if (!byId.has(event.id)) {
+        byId.set(event.id, event);
+      }
+    }
+
+    const allEvents = Array.from(byId.values()).sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateA.getTime() - dateB.getTime();
+    });
 
     return allEvents;
   }
@@ -741,13 +847,72 @@ export class DashboardService {
       };
     });
 
-    const allEvents = [...professionalEvents, ...communityEvents].sort(
-      (a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateB.getTime() - dateA.getTime();
+    const staffAssignments = await this.prisma.eventStaff.findMany({
+      where: { userId },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            eventDate: true,
+            location: true,
+            imageUrl: true,
+            type: true,
+            category: true,
+            organizer: {
+              select: {
+                id: true,
+                email: true,
+                username: true,
+              },
+            },
+          },
+        },
       },
-    );
+      orderBy: { event: { eventDate: 'desc' } },
+    });
+
+    const staffEvents = staffAssignments.map((assignment) => {
+      const eventDate =
+        assignment.event.eventDate instanceof Date
+          ? assignment.event.eventDate.toISOString()
+          : assignment.event.eventDate;
+      return {
+        id: assignment.event.id,
+        title: assignment.event.title,
+        description: assignment.event.description,
+        eventDate,
+        location: assignment.event.location,
+        imageUrl: assignment.event.imageUrl,
+        type: assignment.event.type,
+        category: assignment.event.category,
+        organizer: (assignment.event as any).organizer,
+        participationType: 'STAFF' as const,
+        isPast: new Date(eventDate) < now,
+      };
+    });
+
+    const byId = new Map<
+      string,
+      | (typeof professionalEvents)[number]
+      | (typeof communityEvents)[number]
+      | (typeof staffEvents)[number]
+    >();
+    for (const event of [...professionalEvents, ...communityEvents]) {
+      byId.set(event.id, event);
+    }
+    for (const event of staffEvents) {
+      if (!byId.has(event.id)) {
+        byId.set(event.id, event);
+      }
+    }
+
+    const allEvents = Array.from(byId.values()).sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime();
+    });
 
     return allEvents;
   }
@@ -819,12 +984,20 @@ export class DashboardService {
     });
   }
 
-  private getEventStatus(eventDate: Date, fillRate: number): string {
+  private getEventStatus(
+    event: { eventDate: Date; endDate?: Date | null },
+    fillRate: number,
+  ): string {
     const now = new Date();
-    const eventDateObj = new Date(eventDate);
+    const eventDateObj = new Date(event.eventDate);
+    const endDateObj = this.getEventEndDate(event);
 
-    if (eventDateObj < now) {
+    if (endDateObj < now) {
       return 'COMPLETED';
+    }
+
+    if (eventDateObj <= now) {
+      return 'ONGOING';
     }
 
     if (fillRate >= 100) {

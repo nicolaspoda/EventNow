@@ -11,6 +11,7 @@ import {
   ParticipationRequestStatus,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 
@@ -25,7 +26,10 @@ const ITEM_INCLUDE = {
 
 @Injectable()
 export class EventItemsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: MessagesGateway,
+  ) {}
 
   private async checkAccess(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
@@ -92,6 +96,15 @@ export class EventItemsService {
     };
   }
 
+  private neutralizeList<T extends { items: { isClaimedByMe: boolean }[] }>(
+    list: T,
+  ) {
+    return {
+      ...list,
+      items: list.items.map((item) => ({ ...item, isClaimedByMe: false })),
+    };
+  }
+
   async getList(userId: string, eventId: string) {
     await this.checkAccess(userId, eventId);
     const list = await this.getOrCreateList(eventId);
@@ -114,7 +127,9 @@ export class EventItemsService {
     });
 
     const updated = await this.getOrCreateList(eventId);
-    return this.formatList(updated, userId);
+    const formatted = this.formatList(updated, userId);
+    this.gateway.notifyItemListUpdated(eventId, this.neutralizeList(formatted));
+    return formatted;
   }
 
   async updateItem(
@@ -156,7 +171,9 @@ export class EventItemsService {
     });
 
     const updated = await this.getOrCreateList(eventId);
-    return this.formatList(updated, userId);
+    const formatted = this.formatList(updated, userId);
+    this.gateway.notifyItemListUpdated(eventId, this.neutralizeList(formatted));
+    return formatted;
   }
 
   async deleteItem(userId: string, eventId: string, itemId: string) {
@@ -180,7 +197,9 @@ export class EventItemsService {
     await this.prisma.eventItem.delete({ where: { id: itemId } });
 
     const updated = await this.getOrCreateList(eventId);
-    return this.formatList(updated, userId);
+    const formatted = this.formatList(updated, userId);
+    this.gateway.notifyItemListUpdated(eventId, this.neutralizeList(formatted));
+    return formatted;
   }
 
   async claimItem(userId: string, eventId: string, itemId: string) {
@@ -210,6 +229,8 @@ export class EventItemsService {
     });
 
     const updated = await this.getOrCreateList(eventId);
-    return this.formatList(updated, userId);
+    const formatted = this.formatList(updated, userId);
+    this.gateway.notifyItemListUpdated(eventId, this.neutralizeList(formatted));
+    return formatted;
   }
 }

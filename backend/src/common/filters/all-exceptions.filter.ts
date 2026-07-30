@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { CustomLoggerService } from '../../logger/logger.service';
 
 @Catch()
@@ -44,6 +45,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception),
       'ExceptionFilter',
     );
+
+    // Erreurs inattendues uniquement (5xx) : les 4xx sont des rejets métier
+    // normaux (validation, auth...) et noieraient Sentry sous du bruit.
+    if (status === 500) {
+      Sentry.captureException(exception);
+    }
 
     const errorResponse = {
       statusCode: status,

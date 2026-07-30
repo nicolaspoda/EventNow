@@ -57,9 +57,13 @@ export function NotificationBell() {
         fetchNotifications();
       }
     };
+    // Resynchronise après une reconnexion socket (veille d'onglet, coupure réseau,
+    // redémarrage backend) pour ne pas rater une notification arrivée pendant la coupure.
     socketService.on('newNotification', handleNewNotification);
+    socketService.on('socketReconnected', handleNewNotification);
     return () => {
       socketService.off('newNotification', handleNewNotification);
+      socketService.off('socketReconnected', handleNewNotification);
     };
   }, [isOpen]);
 
@@ -383,7 +387,7 @@ export function NotificationBell() {
                                 type="button"
                                 disabled={!!staffActionLoading}
                                 onClick={(e) => handleStaffInvitationAccept(notification, e)}
-                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
+                                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
                               >
                                 {staffActionLoading === notification.id ? '...' : 'Accepter'}
                               </button>

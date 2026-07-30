@@ -27,7 +27,7 @@ export class ParticipationRequestsController {
   ) {}
 
   @Post()
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: { id: string },
@@ -37,7 +37,7 @@ export class ParticipationRequestsController {
   }
 
   @Get('event/:eventId')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getByEvent(
     @Param('eventId') eventId: string,
@@ -47,7 +47,7 @@ export class ParticipationRequestsController {
   }
 
   @Get('resolve-event-id/:relatedId')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   resolveEventIdForNotification(
     @Param('relatedId') relatedId: string,
@@ -60,14 +60,14 @@ export class ParticipationRequestsController {
   }
 
   @Get('my')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getMyRequests(@CurrentUser() user: { id: string }) {
     return this.participationRequestsService.getMyRequests(user.id);
   }
 
   @Get('my/event/:eventId')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getMyRequestForEvent(
     @Param('eventId') eventId: string,
@@ -80,7 +80,7 @@ export class ParticipationRequestsController {
   }
 
   @Get('pending-for-organizer')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   getPendingForOrganizer(@CurrentUser() user: { id: string }) {
     return this.participationRequestsService.getPendingRequestsForOrganizer(
@@ -89,7 +89,7 @@ export class ParticipationRequestsController {
   }
 
   @Patch(':id/respond')
-  @Roles('CLIENT', 'ORGANIZER')
+  @Roles('USER', 'ORGANIZER')
   @HttpCode(HttpStatus.OK)
   respond(
     @Param('id') id: string,

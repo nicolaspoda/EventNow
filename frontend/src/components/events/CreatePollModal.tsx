@@ -189,6 +189,7 @@ const CreatePollModal: React.FC<Props> = ({ eventId, onClose, onCreate }) => {
                     disabled={loading}
                     maxLength={100}
                     placeholder={`Option ${index + 1}`}
+                    aria-label={`Option ${index + 1}`}
                     className="flex-1 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   />

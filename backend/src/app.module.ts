@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
+import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { EventsModule } from './events/events.module';
 import { BookingsModule } from './bookings/bookings.module';
@@ -30,6 +31,7 @@ import { PromoCodesModule } from './promo-codes/promo-codes.module';
 import { ReportsModule } from './reports/reports.module';
 import { EventItemsModule } from './event-items/event-items.module';
 import { PollsModule } from './polls/polls.module';
+import { UsersModule } from './users/users.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -56,6 +58,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     SecurityModule,
     PrismaModule,
     RedisModule,
+    HealthModule,
     AuthModule,
     EventsModule,
     BookingsModule,
@@ -77,6 +80,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     ReportsModule,
     EventItemsModule,
     PollsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [

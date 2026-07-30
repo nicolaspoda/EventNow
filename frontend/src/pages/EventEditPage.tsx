@@ -6,7 +6,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
 import { ImageUpload } from '../components/upload/ImageUpload';
 import { AddressAutocomplete } from '../components/location/AddressAutocomplete';
-import type { AddressSuggestion } from '../services/geocodingService';
+import { geocodingService, type AddressSuggestion } from '../services/geocodingService';
 import type {
   Event,
   EventTypeCreate,
@@ -163,8 +163,14 @@ export function EventEditPage() {
     );
   };
 
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    setLatitude(undefined);
+    setLongitude(undefined);
+  };
+
   const handleAddressSelect = (suggestion: AddressSuggestion) => {
-    setAddress(suggestion.label);
+    setAddress(suggestion.name);
     setCity(suggestion.city);
     setPostalCode(suggestion.postcode);
     setLatitude(suggestion.coordinates.lat);
@@ -178,14 +184,30 @@ export function EventEditPage() {
     e.preventDefault();
     if (!id) return;
 
-    if (!title.trim()) return;
-    if (!address.trim()) return;
-    if (!city.trim()) return;
-    if (!eventDate) return;
+    if (!title.trim()) {
+      setLoadError('Le titre est obligatoire');
+      return;
+    }
+    if (!address.trim()) {
+      setLoadError('L\'adresse est obligatoire');
+      return;
+    }
+    if (!city.trim()) {
+      setLoadError('La ville est obligatoire');
+      return;
+    }
+    if (!eventDate) {
+      setLoadError('La date de l\'événement est obligatoire');
+      return;
+    }
 
-    if (event?.type === 'PROFESSIONAL') {
-      if (!eventEndDate) return;
-      if (new Date(eventEndDate) <= new Date(eventDate)) return;
+    if (event?.type === 'PROFESSIONAL' && !eventEndDate) {
+      setLoadError('La date et heure de fin sont obligatoires pour un événement professionnel');
+      return;
+    }
+    if (eventEndDate && new Date(eventEndDate) <= new Date(eventDate)) {
+      setLoadError('La date de fin doit être postérieure à la date de début');
+      return;
     }
 
     const isCommunity = event?.type === 'COMMUNITY';
@@ -215,7 +237,12 @@ export function EventEditPage() {
         (c) =>
           c.name.trim() && c.initial_stock >= 1 && Number(c.price) >= minTicketPrice,
       );
-      if (validCategories.length === 0) return;
+      if (validCategories.length === 0) {
+        setLoadError(
+          `Ajoutez au moins une catégorie de billets avec un nom, un stock et un prix ≥ ${minTicketPrice.toFixed(2)} €`,
+        );
+        return;
+      }
 
       ticketCategoriesPayload = validCategories.map((c) => ({
         name: c.name.trim(),
@@ -226,29 +253,45 @@ export function EventEditPage() {
       }));
     }
 
-    const payload: UpdateEventPayload = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      location: location.trim() || `${city}, ${postalCode}`,
-      address: address.trim(),
-      city: city.trim(),
-      postal_code: postalCode.trim(),
-      country: country.trim(),
-      latitude,
-      longitude,
-      image_url: imageUrl.trim() || undefined,
-      ...(imagePublicId && { image_public_id: imagePublicId }),
-      event_date: toISOString(eventDate),
-      ...(event?.type === 'PROFESSIONAL' && eventEndDate
-        ? { end_date: toISOString(eventEndDate) }
-        : {}),
-      ticket_categories: ticketCategoriesPayload,
-    };
-
     setSubmitLoading(true);
     try {
+      let eventLatitude = latitude;
+      let eventLongitude = longitude;
+      if (eventLatitude === undefined || eventLongitude === undefined) {
+        const fullAddress = `${address.trim()} ${postalCode.trim()} ${city.trim()}`.trim();
+        const geocoded = await geocodingService.searchAddress(fullAddress);
+        if (geocoded.length > 0) {
+          eventLatitude = geocoded[0].coordinates.lat;
+          eventLongitude = geocoded[0].coordinates.lon;
+          setLatitude(eventLatitude);
+          setLongitude(eventLongitude);
+        } else {
+          setLoadError(
+            'Impossible de localiser cette adresse automatiquement. Vérifiez son orthographe ou sélectionnez une suggestion dans la liste qui s\'affiche pendant la saisie.',
+          );
+          return;
+        }
+      }
+
+      const payload: UpdateEventPayload = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        location: location.trim() || `${city}, ${postalCode}`,
+        address: address.trim(),
+        city: city.trim(),
+        postal_code: postalCode.trim(),
+        country: country.trim(),
+        latitude: eventLatitude,
+        longitude: eventLongitude,
+        image_url: imageUrl.trim() || undefined,
+        ...(imagePublicId && { image_public_id: imagePublicId }),
+        event_date: toISOString(eventDate),
+        ...(eventEndDate ? { end_date: toISOString(eventEndDate) } : {}),
+        ticket_categories: ticketCategoriesPayload,
+      };
+
       await eventService.updateEvent(id, payload);
-      navigate(`/events/${id}`, { replace: true });
+      navigate(-1);
     } catch (err: unknown) {
       const msg =
         err instanceof Error && 'response' in err
@@ -356,7 +399,7 @@ export function EventEditPage() {
             <AddressAutocomplete
               id="event-address"
               value={address}
-              onChange={setAddress}
+              onChange={handleAddressChange}
               onAddressSelect={handleAddressSelect}
               label="Adresse de l'événement"
               placeholder="Commencez à taper une adresse (ex: Tou...)"
@@ -364,7 +407,7 @@ export function EventEditPage() {
               compact
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 id="event-city"
                 label="Ville"
@@ -419,17 +462,19 @@ export function EventEditPage() {
               required
               compact
             />
-            {event?.type === 'PROFESSIONAL' && (
-              <FormField
-                id="event-end-date"
-                label="Date et heure de fin"
-                type="datetime-local"
-                value={eventEndDate}
-                onChange={(e) => setEventEndDate(e.target.value)}
-                required
-                compact
-              />
-            )}
+            <FormField
+              id="event-end-date"
+              label={
+                event?.type === 'COMMUNITY'
+                  ? 'Date et heure de fin (optionnel)'
+                  : 'Date et heure de fin'
+              }
+              type="datetime-local"
+              value={eventEndDate}
+              onChange={(e) => setEventEndDate(e.target.value)}
+              required={event?.type === 'PROFESSIONAL'}
+              compact
+            />
 
             {event?.type === 'COMMUNITY' ? (
               <>
@@ -503,7 +548,7 @@ export function EventEditPage() {
                       placeholder="Ex: Place assise"
                       compact
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         id={`cat-price-${index}`}
                         label="Prix (€)"
@@ -572,12 +617,13 @@ export function EventEditPage() {
           <PrimaryButton type="submit" loading={submitLoading}>
             {submitLoading ? 'Enregistrement...' : 'Enregistrer les modifications'}
           </PrimaryButton>
-          <Link
-            to={`/events/${id}`}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
             className="inline-flex items-center justify-center px-4 py-3 border border-neutral-300 dark:border-neutral-600 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             Annuler
-          </Link>
+          </button>
         </div>
       </form>
     </div>

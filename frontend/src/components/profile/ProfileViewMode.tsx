@@ -9,13 +9,13 @@ import { StarRating } from '../reviews/StarRating';
 import ReportModal from '../ReportModal';
 
 const roleLabels: Record<string, string> = {
-  CLIENT: 'Client',
+  USER: 'Utilisateur',
   ORGANIZER: 'Organisateur',
   STAFF: 'Staff',
 };
 
 const roleColors: Record<string, string> = {
-  CLIENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  USER: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   ORGANIZER: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   STAFF: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
 };
@@ -90,6 +90,7 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <h1 className="sr-only">Profil de {displayName}</h1>
       <div className="mb-4">
         <Button variant="ghost" onClick={() => navigate(-1)}>← Retour</Button>
       </div>
@@ -272,7 +273,7 @@ export function ProfileViewMode({ profile, userId, onProfileUpdate }: { profile:
         <div className="lg:col-span-8 space-y-4">
           <div className="glass-card p-5">
             <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Informations</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Nom d'utilisateur</p>
                 <p className="text-neutral-900 dark:text-neutral-100">{localProfile.username || '—'}</p>

@@ -24,7 +24,7 @@ export const EventsTable: React.FC<EventsTableProps> = ({
         <p className="text-neutral-500 dark:text-neutral-400 mb-4">Aucun événement créé</p>
         <button
           onClick={() => navigate('/events/create')}
-          className="px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           Créer mon premier événement
         </button>

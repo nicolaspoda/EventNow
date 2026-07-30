@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { profileService } from '../services/profile.service';
 import { followService } from '../services/followService';
+import { socketService } from '../services/socketService';
 import type { PublicUserProfile } from '../services/profile.service';
 import { useAuth } from '../utils/useAuth';
 import { Card } from '../components/ui/Card';
@@ -58,6 +59,17 @@ export default function UserPublicProfilePage() {
 
     fetchProfile();
   }, [userId]);
+
+  useEffect(() => {
+    // Rafraîchit les compteurs en direct si ce profil est le mien et que quelqu'un
+    // vient de me suivre/ne plus me suivre (event émis uniquement vers ma propre room).
+    if (!isOwnProfile) return;
+    const handleFollowsChanged = () => refreshProfile();
+    socketService.on('followsChanged', handleFollowsChanged);
+    return () => {
+      socketService.off('followsChanged', handleFollowsChanged);
+    };
+  }, [isOwnProfile]);
 
   const handleFollow = async () => {
     if (!userId || !currentUser || followLoading || profile?.isFollowing === undefined) return;

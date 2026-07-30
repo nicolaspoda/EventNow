@@ -70,7 +70,7 @@ describe('GoogleStrategy', () => {
       const mockUser = {
         id: 'user-123',
         email: 'test@gmail.com',
-        role: 'CLIENT',
+        role: 'USER',
       };
 
       mockAuthService.validateGoogleUser.mockResolvedValue(mockUser);
@@ -104,7 +104,7 @@ describe('GoogleStrategy', () => {
       const mockUser = {
         id: 'user-456',
         email: 'test2@gmail.com',
-        role: 'CLIENT',
+        role: 'USER',
       };
 
       mockAuthService.validateGoogleUser.mockResolvedValue(mockUser);

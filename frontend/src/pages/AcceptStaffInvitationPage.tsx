@@ -69,7 +69,7 @@ export const AcceptStaffInvitationPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <div
             className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-primary-200 dark:border-primary-800 border-t-primary-600 dark:border-t-primary-400"
@@ -78,13 +78,13 @@ export const AcceptStaffInvitationPage: React.FC = () => {
           />
           <p className="mt-4 text-neutral-600 dark:text-neutral-400">Chargement de l'invitation...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error && !invitation) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="glass-card p-8 max-w-md text-center">
           <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
             Invitation staff
@@ -97,7 +97,7 @@ export const AcceptStaffInvitationPage: React.FC = () => {
             Retour à l'accueil
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -107,7 +107,7 @@ export const AcceptStaffInvitationPage: React.FC = () => {
   const eventTitle = invitation.event?.title;
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="glass-card p-8 max-w-md w-full">
         <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
           Invitation staff
@@ -128,7 +128,7 @@ export const AcceptStaffInvitationPage: React.FC = () => {
             <Link
               to="/login"
               state={{ from: `/invite/staff/${token}` }}
-              className="block w-full py-3 px-4 text-center rounded-xl font-medium bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600"
+              className="block w-full py-3 px-4 text-center rounded-xl font-medium bg-primary-600 text-white hover:bg-primary-700 dark:hover:bg-primary-600"
             >
               Se connecter
             </Link>
@@ -162,7 +162,7 @@ export const AcceptStaffInvitationPage: React.FC = () => {
               type="button"
               onClick={handleAccept}
               disabled={actionLoading !== null}
-              className="w-full py-3 px-4 rounded-xl font-medium bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-xl font-medium bg-primary-600 text-white hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50"
             >
               {actionLoading === 'accept' ? 'Acceptation...' : 'Accepter l\'invitation'}
             </button>
@@ -183,6 +183,6 @@ export const AcceptStaffInvitationPage: React.FC = () => {
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 };

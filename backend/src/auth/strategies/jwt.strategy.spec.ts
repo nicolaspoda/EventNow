@@ -34,7 +34,7 @@ describe('JwtStrategy', () => {
       const mockUser = {
         id: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
         passwordHash: 'hashed-password',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -43,7 +43,7 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
@@ -53,7 +53,7 @@ describe('JwtStrategy', () => {
       expect(result).toEqual({
         id: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
         username: undefined,
         createdAt: mockUser.createdAt,
       });
@@ -66,7 +66,7 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 'user-123',
         email: 'test@test.com',
-        role: 'CLIENT',
+        role: 'USER',
       };
 
       mockPrisma.user.findUnique.mockResolvedValue(null);
@@ -74,6 +74,49 @@ describe('JwtStrategy', () => {
       await expect(strategy.validate(payload)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+
+    it('should throw UnauthorizedException if payload is missing sub', async () => {
+      await expect(
+        strategy.validate({
+          sub: '',
+          email: 'test@test.com',
+          role: 'USER',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException if payload is missing email', async () => {
+      await expect(
+        strategy.validate({
+          sub: 'user-123',
+          email: '',
+          role: 'USER',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should throw UnauthorizedException if user is banned', async () => {
+      const bannedUser = {
+        id: 'user-123',
+        email: 'test@test.com',
+        role: 'USER',
+        isBanned: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrisma.user.findUnique.mockResolvedValue(bannedUser);
+
+      await expect(
+        strategy.validate({
+          sub: 'user-123',
+          email: 'test@test.com',
+          role: 'USER',
+        }),
+      ).rejects.toThrow('Votre compte a été suspendu');
     });
 
     it('should handle different user roles', async () => {

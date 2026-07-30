@@ -62,7 +62,7 @@ export function EventParticipantsPage() {
           <p className="text-sm">{error || 'Données introuvables'}</p>
         </div>
         <Link
-          to="/dashboard/client"
+          to="/dashboard/user"
           className="mt-4 inline-block text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
         >
           Retour au tableau de bord

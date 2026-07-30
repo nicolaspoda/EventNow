@@ -7,7 +7,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Alert } from '../components/Alert';
 import { ImageUpload } from '../components/upload/ImageUpload';
 import { AddressAutocomplete } from '../components/location/AddressAutocomplete';
-import type { AddressSuggestion } from '../services/geocodingService';
+import { geocodingService, type AddressSuggestion } from '../services/geocodingService';
 import type {
   CreateEventPayload,
   CreateTicketCategoryPayload,
@@ -30,7 +30,7 @@ function toISOString(dateStr: string): string {
 export function CreateEventPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isCommunity = user?.role === 'CLIENT';
+  const isCommunity = user?.role === 'USER';
   const minTicketPrice = 0.5;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -73,8 +73,14 @@ export function CreateEventPage() {
     );
   };
 
+  const handleAddressChange = (value: string) => {
+    setAddress(value);
+    setLatitude(undefined);
+    setLongitude(undefined);
+  };
+
   const handleAddressSelect = (suggestion: AddressSuggestion) => {
-    setAddress(suggestion.label);
+    setAddress(suggestion.name);
     setCity(suggestion.city);
     setPostalCode(suggestion.postcode);
     setLatitude(suggestion.coordinates.lat);
@@ -103,15 +109,13 @@ export function CreateEventPage() {
       return;
     }
 
-    if (!isCommunity) {
-      if (!eventEndDate) {
-        setError('La date et heure de fin sont obligatoires pour un événement professionnel');
-        return;
-      }
-      if (new Date(eventEndDate) <= new Date(eventDate)) {
-        setError('La date de fin doit être postérieure à la date de début');
-        return;
-      }
+    if (!isCommunity && !eventEndDate) {
+      setError('La date et heure de fin sont obligatoires pour un événement professionnel');
+      return;
+    }
+    if (eventEndDate && new Date(eventEndDate) <= new Date(eventDate)) {
+      setError('La date de fin doit être postérieure à la date de début');
+      return;
     }
 
     const eventType: EventTypeCreate = isCommunity ? 'COMMUNITY' : 'PROFESSIONAL';
@@ -150,26 +154,44 @@ export function CreateEventPage() {
       }));
     }
 
-    const payload: CreateEventPayload = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      location: location.trim() || `${city}, ${postalCode}`,
-      address: address.trim(),
-      city: city.trim(),
-      postal_code: postalCode.trim(),
-      country: country.trim(),
-      latitude,
-      longitude,
-      image_url: imageUrl.trim() || undefined,
-      image_public_id: imagePublicId.trim() || undefined,
-      event_date: toISOString(eventDate),
-      ...(isCommunity ? {} : { end_date: toISOString(eventEndDate) }),
-      type: eventType,
-      ticket_categories: ticketCategories,
-    };
-
     setLoading(true);
     try {
+      let eventLatitude = latitude;
+      let eventLongitude = longitude;
+      if (eventLatitude === undefined || eventLongitude === undefined) {
+        const fullAddress = `${address.trim()} ${postalCode.trim()} ${city.trim()}`.trim();
+        const geocoded = await geocodingService.searchAddress(fullAddress);
+        if (geocoded.length > 0) {
+          eventLatitude = geocoded[0].coordinates.lat;
+          eventLongitude = geocoded[0].coordinates.lon;
+          setLatitude(eventLatitude);
+          setLongitude(eventLongitude);
+        } else {
+          setError(
+            'Impossible de localiser cette adresse automatiquement. Vérifiez son orthographe ou sélectionnez une suggestion dans la liste qui s\'affiche pendant la saisie.',
+          );
+          return;
+        }
+      }
+
+      const payload: CreateEventPayload = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        location: location.trim() || `${city}, ${postalCode}`,
+        address: address.trim(),
+        city: city.trim(),
+        postal_code: postalCode.trim(),
+        country: country.trim(),
+        latitude: eventLatitude,
+        longitude: eventLongitude,
+        image_url: imageUrl.trim() || undefined,
+        image_public_id: imagePublicId.trim() || undefined,
+        event_date: toISOString(eventDate),
+        ...(eventEndDate ? { end_date: toISOString(eventEndDate) } : {}),
+        type: eventType,
+        ticket_categories: ticketCategories,
+      };
+
       const created = await eventService.createEvent(payload);
       const eventId = created?.id ?? (created as { id?: string } | undefined)?.id;
       if (eventId) {
@@ -179,7 +201,7 @@ export function CreateEventPage() {
       if (user?.role === 'ORGANIZER') {
         navigate('/dashboard/organizer');
       } else {
-        navigate('/dashboard/client');
+        navigate('/dashboard/user');
       }
     } catch (err: unknown) {
       const res = err && typeof err === 'object' && 'response' in err
@@ -242,7 +264,7 @@ export function CreateEventPage() {
             <AddressAutocomplete
               id="event-address"
               value={address}
-              onChange={setAddress}
+              onChange={handleAddressChange}
               onAddressSelect={handleAddressSelect}
               label="Adresse de l'événement"
               placeholder=""
@@ -250,7 +272,7 @@ export function CreateEventPage() {
               compact
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 id="event-city"
                 label="Ville"
@@ -303,17 +325,15 @@ export function CreateEventPage() {
               required
               compact
             />
-            {!isCommunity && (
-              <FormField
-                id="event-end-date"
-                label="Date et heure de fin"
-                type="datetime-local"
-                value={eventEndDate}
-                onChange={(e) => setEventEndDate(e.target.value)}
-                required
-                compact
-              />
-            )}
+            <FormField
+              id="event-end-date"
+              label={isCommunity ? 'Date et heure de fin (optionnel)' : 'Date et heure de fin'}
+              type="datetime-local"
+              value={eventEndDate}
+              onChange={(e) => setEventEndDate(e.target.value)}
+              required={!isCommunity}
+              compact
+            />
 
             {isCommunity ? (
               <FormField
@@ -374,7 +394,7 @@ export function CreateEventPage() {
                       }
                       compact
                     />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
                         id={`cat-price-${index}`}
                         label="Prix (€)"

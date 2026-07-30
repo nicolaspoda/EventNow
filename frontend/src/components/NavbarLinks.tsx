@@ -11,7 +11,11 @@ import { useIsStaff } from '../hooks/useIsStaff';
 const navLinkClass =
   'px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1';
 
-export function NavbarLinks() {
+interface NavbarLinksProps {
+  mobile?: boolean;
+}
+
+export function NavbarLinks({ mobile = false }: NavbarLinksProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
@@ -46,27 +50,32 @@ export function NavbarLinks() {
   const isPurchasesPage = location.pathname === '/my-tickets' || location.pathname === '/my-orders' || location.pathname === '/bookings';
   const isOrganizerPage = location.pathname.startsWith('/dashboard/organizer');
   const isStaffPage = location.pathname.startsWith('/staff');
+  const isAdminPage = location.pathname.startsWith('/admin');
 
-  const dropdownPanelClass =
-    'absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50';
+  const dropdownPanelClass = mobile
+    ? 'static mt-1 py-1 w-full bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700 rounded-lg'
+    : 'absolute top-full left-0 mt-1 py-1 min-w-[200px] bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-lg z-50';
   const dropdownItemClass =
     'block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-200 hover:bg-primary-50 dark:hover:bg-primary-900/30';
+  const menuButtonClass = mobile ? `${navLinkClass} flex items-center justify-between w-full` : `${navLinkClass} flex items-center gap-1`;
 
   if (isAuthenticated) {
     return (
-      <div className="flex items-center flex-nowrap gap-2">
-        <DarkModeToggle />
-        <div className="hidden sm:block w-48 lg:w-56 flex-shrink-0">
-          <UserSearchAutocomplete
-            placeholder="Rechercher un utilisateur..."
-            navigateOnSelect
-            inputClassName="py-1.5 text-sm"
-          />
+      <div className={mobile ? 'flex flex-col items-stretch gap-2 w-full' : 'flex items-center flex-nowrap gap-2'}>
+        <div className={mobile ? 'flex items-center gap-2' : 'contents'}>
+          <DarkModeToggle />
+          <div className={mobile ? 'block w-full' : 'hidden sm:block w-48 lg:w-56 flex-shrink-0'}>
+            <UserSearchAutocomplete
+              placeholder="Rechercher un utilisateur..."
+              navigateOnSelect
+              inputClassName="py-1.5 text-sm"
+            />
+          </div>
+          <MessageBell />
+          <NotificationBell />
         </div>
-        <MessageBell />
-        <NotificationBell />
-        <div className="flex flex-nowrap items-center gap-1 flex-shrink-0" ref={menusRef}>
-          <div className="relative">
+        <div className={mobile ? 'flex flex-col items-stretch gap-1 w-full' : 'flex flex-nowrap items-center gap-1 flex-shrink-0'} ref={menusRef}>
+          <div className={mobile ? 'relative w-full' : 'relative'}>
             <button
               type="button"
               onClick={() => {
@@ -75,7 +84,7 @@ export function NavbarLinks() {
                 setStaffMenuOpen(false);
                 setEventsMenuOpen((o) => !o);
               }}
-              className={`${navLinkClass} flex items-center gap-1 ${
+              className={`${menuButtonClass} ${
                 isEventsPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
               }`}
               aria-expanded={eventsMenuOpen}
@@ -108,7 +117,7 @@ export function NavbarLinks() {
           </div>
 
           {/* Mes achats */}
-          <div className="relative">
+          <div className={mobile ? 'relative w-full' : 'relative'}>
             <button
               type="button"
               onClick={() => {
@@ -117,7 +126,7 @@ export function NavbarLinks() {
                 setStaffMenuOpen(false);
                 setPurchasesMenuOpen((o) => !o);
               }}
-              className={`${navLinkClass} flex items-center gap-1 ${
+              className={`${menuButtonClass} ${
                 isPurchasesPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
               }`}
               aria-expanded={purchasesMenuOpen}
@@ -150,7 +159,7 @@ export function NavbarLinks() {
           </div>
 
           {user?.role === 'ORGANIZER' && (
-            <div className="relative">
+            <div className={mobile ? 'relative w-full' : 'relative'}>
               <button
                 type="button"
                 onClick={() => {
@@ -159,7 +168,7 @@ export function NavbarLinks() {
                   setStaffMenuOpen(false);
                   setOrganizerMenuOpen((o) => !o);
                 }}
-                className={`${navLinkClass} flex items-center gap-1 ${isOrganizerPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''}`}
+                className={`${menuButtonClass} ${isOrganizerPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''}`}
                 aria-expanded={organizerMenuOpen}
                 aria-haspopup="true"
                 aria-label="Espace organisateur"
@@ -180,7 +189,7 @@ export function NavbarLinks() {
           )}
 
           {isStaff && (
-            <div className="relative">
+            <div className={mobile ? 'relative w-full' : 'relative'}>
               <button
                 type="button"
                 onClick={() => {
@@ -189,7 +198,7 @@ export function NavbarLinks() {
                   setOrganizerMenuOpen(false);
                   setStaffMenuOpen((o) => !o);
                 }}
-                className={`${navLinkClass} flex items-center gap-1 ${isStaffPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''}`}
+                className={`${menuButtonClass} ${isStaffPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''}`}
                 aria-expanded={staffMenuOpen}
                 aria-haspopup="true"
                 aria-label="Espace staff"
@@ -209,13 +218,24 @@ export function NavbarLinks() {
           )}
         </div>
 
-        {user?.role === 'CLIENT' && (
-          <Link to="/dashboard/client" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
+        {user?.role === 'USER' && (
+          <Link to="/dashboard/user" className={`${navLinkClass} flex-shrink-0 flex items-center`}>
             Mon tableau de bord
           </Link>
         )}
 
-        {(user?.role === 'ORGANIZER' || user?.role === 'CLIENT') && (
+        {user?.role === 'ADMIN' && (
+          <Link
+            to="/admin/reports"
+            className={`${navLinkClass} flex-shrink-0 flex items-center ${
+              isAdminPage ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
+            }`}
+          >
+            Admin
+          </Link>
+        )}
+
+        {(user?.role === 'ORGANIZER' || user?.role === 'USER') && (
           <Link
             to="/events/create"
             className="flex-shrink-0 flex items-center px-3 py-2 rounded-lg text-sm font-medium text-accent-600 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/30 hover:text-accent-700 dark:hover:text-accent-300 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1"
@@ -225,11 +245,18 @@ export function NavbarLinks() {
         )}
 
         {/* Avatar + Profile + logout */}
-        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700 flex-shrink-0">
+        <div
+          className={
+            mobile
+              ? 'flex items-center gap-2 mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700 w-full'
+              : 'flex items-center gap-2 ml-2 pl-2 border-l border-neutral-200 dark:border-neutral-700 flex-shrink-0'
+          }
+        >
           <Link
             to="/profile"
             className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity"
             title={user?.username ? `@${user.username}` : 'Mon profil'}
+            aria-label={user?.username ? `@${user.username}` : 'Mon profil'}
           >
             <span className="w-8 h-8 bg-gradient-to-br from-primary-400 to-accent-400 rounded-full flex items-center justify-center text-white font-semibold text-sm hover:ring-2 hover:ring-primary-500 hover:ring-offset-2 dark:hover:ring-offset-neutral-900">
               {user?.username?.charAt(0)?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? '?'}

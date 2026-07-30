@@ -8,7 +8,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { RegisterOrganizerPage } from './pages/RegisterOrganizerPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { OrganizerDashboardPage } from './pages/OrganizerDashboardPage';
-import { ClientDashboardPage } from './pages/ClientDashboardPage';
+import { UserDashboardPage } from './pages/UserDashboardPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
@@ -39,6 +39,7 @@ import { MessagesPage } from './pages/messages/MessagesPage';
 import { ConversationPage } from './pages/messages/ConversationPage';
 import { ConversationMembersPage } from './pages/messages/ConversationMembersPage';
 import { PromoCodesPage } from './pages/PromoCodesPage';
+import { AdminReportsPage } from './pages/AdminReportsPage';
 import { useSocket } from './hooks/useSocket';
 
 function AppContent() {
@@ -180,10 +181,10 @@ function AppContent() {
           element={<AcceptStaffInvitationPage />}
         />
         <Route
-          path="/dashboard/client"
+          path="/dashboard/user"
           element={
-            <ProtectedRoute roles={['CLIENT']}>
-              <ClientDashboardPage />
+            <ProtectedRoute roles={['USER']}>
+              <UserDashboardPage />
             </ProtectedRoute>
           }
         />
@@ -206,7 +207,7 @@ function AppContent() {
         <Route
           path="/dashboard/events/:id/participants"
           element={
-            <ProtectedRoute roles={['CLIENT']}>
+            <ProtectedRoute roles={['USER']}>
               <EventParticipantsPage />
             </ProtectedRoute>
           }
@@ -272,6 +273,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <ConversationMembersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute roles={['ADMIN']}>
+              <AdminReportsPage />
             </ProtectedRoute>
           }
         />

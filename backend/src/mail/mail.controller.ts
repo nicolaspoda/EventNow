@@ -1,11 +1,22 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  BadRequestException,
+  UseGuards,
+} from '@nestjs/common';
 import { MailService } from './mail.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('mail')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
   @Post('test')
+  @Roles('ADMIN')
   async sendTestEmail(@Body('email') email: string) {
     if (!email) {
       throw new BadRequestException('Email requis');

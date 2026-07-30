@@ -39,6 +39,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
+    if (user.isBanned) {
+      throw new UnauthorizedException('Votre compte a été suspendu');
+    }
+
     return {
       id: user.id,
       email: user.email,

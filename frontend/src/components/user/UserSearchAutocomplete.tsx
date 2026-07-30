@@ -90,6 +90,7 @@ export function UserSearchAutocomplete({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim().length >= MIN_QUERY_LENGTH && suggestions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
+          aria-label={placeholder}
           autoComplete="off"
           aria-autocomplete="list"
           aria-expanded={isOpen}

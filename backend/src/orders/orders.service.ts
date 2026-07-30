@@ -10,6 +10,7 @@ import { MailService } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PromoCodesService } from '../promo-codes/promo-codes.service';
 import { CustomLoggerService } from '../logger/logger.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import { BookingStatus, OrderStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import Stripe from 'stripe';
@@ -21,6 +22,7 @@ export class OrdersService {
   private readonly mailService: MailService;
   private readonly notificationsService: NotificationsService;
   private readonly promoCodesService: PromoCodesService;
+  private readonly messagesGateway: MessagesGateway;
   private readonly stripe: Stripe;
   private readonly webhookSecret: string;
 
@@ -30,6 +32,7 @@ export class OrdersService {
     mailService: MailService,
     notificationsService: NotificationsService,
     promoCodesService: PromoCodesService,
+    messagesGateway: MessagesGateway,
     private readonly configService: ConfigService,
     private readonly logger: CustomLoggerService,
   ) {
@@ -38,6 +41,7 @@ export class OrdersService {
     this.mailService = mailService;
     this.notificationsService = notificationsService;
     this.promoCodesService = promoCodesService;
+    this.messagesGateway = messagesGateway;
 
     const stripeSecretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
@@ -53,13 +57,9 @@ export class OrdersService {
     userId: string,
     promoCodeId?: string,
   ) {
-    if (!promoCodeId) {
-      return this.paymentService.createPaymentIntent(bookingId, userId);
-    }
-
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { ticketCategory: true },
+      include: { ticketCategory: { include: { event: true } } },
     });
 
     if (!booking || booking.userId !== userId) {
@@ -68,10 +68,38 @@ export class OrdersService {
 
     const originalAmount =
       Number(booking.ticketCategory.price) * booking.quantity;
-    const { finalAmount } = await this.promoCodesService.validatePromoCodeById(
-      promoCodeId,
-      originalAmount,
-    );
+
+    let finalAmount = originalAmount;
+    if (promoCodeId) {
+      const promo = await this.promoCodesService.validatePromoCodeById(
+        promoCodeId,
+        originalAmount,
+      );
+      finalAmount = promo.finalAmount;
+    }
+
+    // Stripe refuse tout paiement sous 0,50€ : les réservations gratuites
+    // (catégorie à prix 0, ou promo ramenant le total à 0) sont confirmées
+    // directement, sans passer par Stripe.
+    if (finalAmount < 0.5) {
+      const { order } = await this.confirmPayment(
+        bookingId,
+        'FREE_ORDER',
+        userId,
+        promoCodeId,
+      );
+
+      return {
+        free: true,
+        bookingId,
+        amount: finalAmount,
+        originalAmount,
+        eventId: booking.ticketCategory.event.id,
+        orderId: order.id,
+        currency: 'EUR',
+        status: 'confirmed',
+      };
+    }
 
     return this.paymentService.createPaymentIntent(
       bookingId,
@@ -131,6 +159,7 @@ export class OrdersService {
             ticketCategory:
               existingOrder.tickets[0]?.ticketCategory ??
               booking.ticketCategory,
+            alreadyConfirmed: true,
           };
         }
 
@@ -192,8 +221,13 @@ export class OrdersService {
         tickets,
         event: booking.ticketCategory.event,
         ticketCategory: booking.ticketCategory,
+        alreadyConfirmed: false,
       };
     });
+
+    if (result.alreadyConfirmed) {
+      return result;
+    }
 
     if (promoCodeId) {
       await this.promoCodesService
@@ -530,6 +564,8 @@ export class OrdersService {
       return updatedOrder;
     });
 
+    this.messagesGateway.emitNewNotificationToUser(order.userId);
+
     return this.mapOrderDecimalToNumber(updated);
   }
 
@@ -582,6 +618,8 @@ export class OrdersService {
 
       return updatedOrder;
     });
+
+    this.messagesGateway.emitNewNotificationToUser(order.userId);
 
     return this.mapOrderDecimalToNumber(updated);
   }

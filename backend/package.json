@@ -9,8 +9,6 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "certs:dev": "sh scripts/ensure-dev-certs.sh",
-    "prestart:dev": "sh scripts/ensure-dev-certs.sh",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
@@ -33,20 +31,21 @@
     "@nestjs/platform-socket.io": "^11.1.16",
     "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "^11.2.6",
+    "@nestjs/terminus": "^11.1.1",
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/websockets": "^11.1.16",
     "@prisma/client": "^6.19.2",
+    "@sentry/nestjs": "^10.67.0",
+    "@sentry/node": "^10.67.0",
     "@types/passport-google-oauth20": "^2.0.17",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "cloudinary": "^2.9.0",
-    "csurf": "^1.11.0",
     "handlebars": "^4.7.8",
     "helmet": "^8.1.0",
     "ioredis": "^5.9.2",
-    "nodemailer": "^8.0.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
@@ -63,6 +62,11 @@
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\",\"moduleResolution\":\"node\"} prisma/seed.ts"
+  },
+  "overrides": {
+    "nodemailer": "9.0.3",
+    "linkify-it": "6.0.0",
+    "uuid": "11.1.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -107,6 +111,7 @@
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
+      "!coverage/**",
       "!main.ts",
       "!**/*.module.ts",
       "!**/index.ts"

@@ -46,7 +46,7 @@ export function ParticipationRequestCard({ request, onRespond }: ParticipationRe
     <Card className="hover:shadow-lg transition-shadow p-6">
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <Link to={`/user/${request.userId}/profile`}>
+        <Link to={`/user/${request.userId}/profile`} aria-label={displayName}>
           {request.user?.avatarUrl ? (
             <img
               src={request.user.avatarUrl}

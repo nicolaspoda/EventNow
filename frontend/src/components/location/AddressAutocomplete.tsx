@@ -107,7 +107,7 @@ export function AddressAutocomplete({
               ? 'border-red-500 focus:ring-red-500'
               : 'border-neutral-300 dark:border-neutral-600 focus:ring-primary-500'
           } bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 transition-colors`}
-          autoComplete="off"
+          autoComplete="street-address"
         />
         
         {isLoading && (

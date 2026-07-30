@@ -70,18 +70,18 @@ export const RefundRequestsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Demandes de remboursement</h1>
           <p className="text-neutral-600 dark:text-neutral-400">Chargement...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">Demandes de remboursement</h1>
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 px-4 py-3 rounded">
@@ -90,17 +90,17 @@ export const RefundRequestsPage: React.FC = () => {
           <button
             type="button"
             onClick={() => fetchRequests()}
-            className="mt-4 px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600"
+            className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600"
           >
             Réessayer
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Demandes de remboursement</h1>
@@ -168,6 +168,6 @@ export const RefundRequestsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 };
