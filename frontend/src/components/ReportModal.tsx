@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { reportsService } from '../services/reportsService';
 import type { ReportReason } from '../services/reportsService';
 import Button from './ui/Button';
+import { useModalFocusTrap } from '../hooks/useModalFocusTrap';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -43,6 +44,9 @@ const ReportModal: React.FC<ReportModalProps> = ({
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useModalFocusTrap(containerRef, isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -81,6 +85,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"

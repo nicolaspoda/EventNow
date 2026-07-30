@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { EventType, ParticipationRequestStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 import {
   CreateParticipationRequestDto,
   RespondToParticipationRequestDto,
@@ -13,7 +15,11 @@ import {
 
 @Injectable()
 export class ParticipationRequestsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+    private readonly messagesGateway: MessagesGateway,
+  ) {}
 
   async create(userId: string, dto: CreateParticipationRequestDto) {
     const event = await this.prisma.event.findUnique({
@@ -85,14 +91,12 @@ export class ParticipationRequestsService {
 
     const requesterLabel = request.user.username ?? request.user.email;
 
-    await this.prisma.notification.create({
-      data: {
-        userId: event.organizerId,
-        type: 'PARTICIPATION_REQUEST',
-        title: 'Nouvelle demande de participation',
-        body: `${requesterLabel} a demandé à participer à « ${request.event.title} ».`,
-        relatedId: request.eventId,
-      },
+    await this.notificationsService.create({
+      userId: event.organizerId,
+      type: 'PARTICIPATION_REQUEST',
+      title: 'Nouvelle demande de participation',
+      body: `${requesterLabel} a demandé à participer à « ${request.event.title} ».`,
+      relatedId: request.eventId,
     });
 
     return request;
@@ -256,7 +260,7 @@ export class ParticipationRequestsService {
       (c) => c.name === 'Participation',
     );
 
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       if (dto.action === 'ACCEPT' && participationCategory) {
         if (participationCategory.currentStock < 1) {
           throw new BadRequestException(
@@ -300,5 +304,9 @@ export class ParticipationRequestsService {
 
       return updated;
     });
+
+    this.messagesGateway.emitNewNotificationToUser(request.userId);
+
+    return updated;
   }
 }

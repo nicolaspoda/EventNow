@@ -39,6 +39,18 @@ describe('RegisterOrganizerDto', () => {
     expect(errors).toHaveLength(0);
   });
 
+  it('should validate when confirmOrganizer is the string "true"', async () => {
+    const plain = {
+      username: 'organizer1',
+      email: 'org@test.com',
+      password: 'password123',
+      confirmOrganizer: 'true',
+    };
+    const dto = plainToClass(RegisterOrganizerDto, plain);
+    const errors = await validate(dto);
+    expect(errors).toHaveLength(0);
+  });
+
   it('should fail without confirmOrganizer', async () => {
     const plain = {
       username: 'organizer1',

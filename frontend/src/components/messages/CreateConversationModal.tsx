@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Button from '../ui/Button';
 import { Input } from '../ui/Input';
 import { UserSearchAutocomplete } from '../user/UserSearchAutocomplete';
 import type { SearchUserResult } from '../../types/auth';
+import { useModalFocusTrap } from '../../hooks/useModalFocusTrap';
 
 interface CreateConversationModalProps {
   isOpen: boolean;
@@ -22,6 +23,17 @@ export const CreateConversationModal: React.FC<
   const [groupName, setGroupName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<SearchUserResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleClose = () => {
+    setConversationType('direct');
+    setSelectedUser(null);
+    setGroupName('');
+    setSelectedMembers([]);
+    onClose();
+  };
+
+  useModalFocusTrap(containerRef, isOpen, handleClose);
 
   if (!isOpen) return null;
 
@@ -68,18 +80,10 @@ export const CreateConversationModal: React.FC<
     }
   };
 
-  const handleClose = () => {
-    setConversationType('direct');
-    setSelectedUser(null);
-    setGroupName('');
-    setSelectedMembers([]);
-    onClose();
-  };
-
   const displayName = (u: SearchUserResult) => u.username ?? '—';
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div ref={containerRef} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center justify-between mb-4">

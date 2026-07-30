@@ -83,4 +83,80 @@ describe('AllExceptionsFilter', () => {
     );
     expect(mockLogger.error).toHaveBeenCalled();
   });
+
+  it('should join array message from HttpException object response', () => {
+    const mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const mockRequest = { method: 'POST', url: '/test' };
+    const mockHost = {
+      switchToHttp: () => ({ getResponse: () => mockResponse, getRequest: () => mockRequest }),
+    } as ArgumentsHost;
+
+    const exception = new HttpException({ message: ['Field required', 'Too short'] }, HttpStatus.BAD_REQUEST);
+    filter.catch(exception, mockHost);
+
+    const jsonArg = mockResponse.json.mock.calls[0][0];
+    expect(jsonArg.message).toBe('Field required, Too short');
+  });
+
+  it('should return string message from HttpException object response', () => {
+    const mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const mockRequest = { method: 'GET', url: '/test' };
+    const mockHost = {
+      switchToHttp: () => ({ getResponse: () => mockResponse, getRequest: () => mockRequest }),
+    } as ArgumentsHost;
+
+    const exception = new HttpException({ message: 'Single error string' }, HttpStatus.BAD_REQUEST);
+    filter.catch(exception, mockHost);
+
+    const jsonArg = mockResponse.json.mock.calls[0][0];
+    expect(jsonArg.message).toBe('Single error string');
+  });
+
+  it('should return Erreur serveur when message is non-string non-array', () => {
+    const mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const mockRequest = { method: 'GET', url: '/test' };
+    const mockHost = {
+      switchToHttp: () => ({ getResponse: () => mockResponse, getRequest: () => mockRequest }),
+    } as ArgumentsHost;
+
+    const exception = new HttpException({ message: 42 }, HttpStatus.BAD_REQUEST);
+    filter.catch(exception, mockHost);
+
+    const jsonArg = mockResponse.json.mock.calls[0][0];
+    expect(jsonArg.message).toBe('Erreur serveur');
+  });
+
+  it('should mask 500 message in production', () => {
+    const origEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    const mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const mockRequest = { method: 'GET', url: '/test' };
+    const mockHost = {
+      switchToHttp: () => ({ getResponse: () => mockResponse, getRequest: () => mockRequest }),
+    } as ArgumentsHost;
+
+    filter.catch(new Error('secret db error'), mockHost);
+
+    const jsonArg = mockResponse.json.mock.calls[0][0];
+    expect(jsonArg.message).toBe('Internal server error');
+
+    process.env.NODE_ENV = origEnv;
+  });
+
+  it('should log non-Error exception as string', () => {
+    const mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    const mockRequest = { method: 'GET', url: '/test' };
+    const mockHost = {
+      switchToHttp: () => ({ getResponse: () => mockResponse, getRequest: () => mockRequest }),
+    } as ArgumentsHost;
+
+    filter.catch('string exception', mockHost);
+
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'GET /test',
+      'string exception',
+      'ExceptionFilter',
+    );
+  });
 });

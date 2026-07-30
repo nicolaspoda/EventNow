@@ -1,13 +1,20 @@
 import {
   Injectable,
+  Inject,
+  forwardRef,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => MessagesGateway))
+    private readonly messagesGateway: MessagesGateway,
+  ) {}
 
   async getForUser(userId: string, unreadOnly = false) {
     return this.prisma.notification.findMany({
@@ -82,7 +89,7 @@ export class NotificationsService {
     body: string;
     relatedId?: string;
   }) {
-    return this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId: data.userId,
         type: data.type,
@@ -91,6 +98,8 @@ export class NotificationsService {
         relatedId: data.relatedId ?? null,
       },
     });
+    this.messagesGateway.emitNewNotificationToUser(data.userId);
+    return notification;
   }
 
   async createNotification(data: {
@@ -108,7 +117,7 @@ export class NotificationsService {
     data: { type: string; title: string; body: string; relatedId?: string },
   ) {
     if (userIds.length === 0) return [];
-    return this.prisma.notification.createMany({
+    const result = await this.prisma.notification.createMany({
       data: userIds.map((userId) => ({
         userId,
         type: data.type,
@@ -117,6 +126,14 @@ export class NotificationsService {
         relatedId: data.relatedId ?? null,
       })),
     });
+    userIds.forEach((userId) =>
+      this.messagesGateway.emitNewNotificationToUser(userId),
+    );
+    return result;
+  }
+
+  notifyFollowsChanged(userId: string) {
+    this.messagesGateway.emitFollowsChanged(userId);
   }
 
   async deleteByTypeAndRelatedId(

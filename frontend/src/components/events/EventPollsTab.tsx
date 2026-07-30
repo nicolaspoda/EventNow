@@ -36,9 +36,20 @@ const EventPollsTab: React.FC<Props> = ({ eventId, currentUserId, isOrganizer })
 
   // Socket.io real-time updates
   useEffect(() => {
-    if (!socketService.isConnected()) return;
-
-    socketService.joinEventRoom(eventId).catch(() => {});
+    const joinRoom = async () => {
+      try {
+        if (!socketService.isConnected()) {
+          const token = sessionStorage.getItem('accessToken');
+          if (token) {
+            await socketService.connect(token);
+          }
+        }
+        await socketService.joinEventRoom(eventId);
+      } catch {
+        // Ignoré : les mises à jour temps réel ne fonctionneront pas mais le reste de la page reste utilisable.
+      }
+    };
+    joinRoom();
 
     const handlePollCreated = (poll: Poll) => {
       setPolls((prev) => {

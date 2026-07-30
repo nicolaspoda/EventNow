@@ -38,7 +38,7 @@ export class EventsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: AuthUser,
@@ -96,13 +96,14 @@ export class EventsController {
   @Get(':id')
   @SkipThrottle()
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: string) {
-    return this.eventsService.findOne(id);
+  @UseGuards(OptionalJwtAuthGuard)
+  findOne(@Param('id') id: string, @CurrentUser() user?: AuthUser) {
+    return this.eventsService.findOne(id, user?.id);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: string,
@@ -114,7 +115,7 @@ export class EventsController {
 
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.OK)
   cancelEvent(
     @Param('id') id: string,
@@ -126,9 +127,17 @@ export class EventsController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @HttpCode(HttpStatus.OK)
   remove(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.eventsService.remove(id, user.id);
+  }
+
+  @Patch(':id/suspend')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @HttpCode(HttpStatus.OK)
+  suspendEvent(@Param('id') id: string) {
+    return this.eventsService.suspendEvent(id);
   }
 }

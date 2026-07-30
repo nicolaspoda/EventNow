@@ -37,15 +37,15 @@ const OrderSuccessPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingState />
-      </main>
+      </div>
     );
   }
 
   if (error || !order) {
     return (
-      <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="max-w-md w-full glass-card p-8 text-center">
           <svg
             className="mx-auto h-12 w-12 text-red-400 dark:text-red-500 mb-4"
@@ -66,12 +66,12 @@ const OrderSuccessPage: React.FC = () => {
             Retour aux événements
           </Button>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-2xl w-full glass-card p-8">
         <div className="text-center mb-8">
           <div className="mx-auto h-20 w-20 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mb-4">
@@ -113,7 +113,7 @@ const OrderSuccessPage: React.FC = () => {
               />
             </svg>
             <div>
-              <h3 className="text-sm font-medium text-primary-900 dark:text-primary-200 mb-1">Prochaines étapes</h3>
+              <h2 className="text-sm font-medium text-primary-900 dark:text-primary-200 mb-1">Prochaines étapes</h2>
               <p className="text-sm text-primary-800 dark:text-primary-300">
                 Vos billets avec QR codes sont maintenant disponibles dans votre espace "Mes billets".
                 Présentez-les à l'entrée de l'événement pour validation.
@@ -147,7 +147,7 @@ const OrderSuccessPage: React.FC = () => {
           Un email de confirmation a été envoyé à votre adresse
         </p>
       </div>
-    </main>
+    </div>
   );
 };
 

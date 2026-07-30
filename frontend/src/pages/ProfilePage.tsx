@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../utils/useAuth';
 import { profileService } from '../services/profile.service';
+import { socketService } from '../services/socketService';
 import type { PublicUserProfile } from '../services/profile.service';
 import Button from '../components/ui/Button';
 import { AvatarUpload } from '../components/upload/AvatarUpload';
@@ -11,13 +12,13 @@ import { ProfileStatsRow } from '../components/profile/ProfileStatsRow';
 import type { UserProfile } from '../types/auth';
 
 const roleLabels: Record<string, string> = {
-  CLIENT: 'Client',
+  USER: 'Utilisateur',
   ORGANIZER: 'Organisateur',
   STAFF: 'Staff',
 };
 
 const roleColors: Record<string, string> = {
-  CLIENT: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  USER: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   ORGANIZER: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   STAFF: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
 };
@@ -63,6 +64,17 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    // Rafraîchit les compteurs abonnés/abonnements/amis en direct quand quelqu'un
+    // me suit/ne me suit plus (event émis uniquement vers ma propre room socket).
+    if (isViewMode) return;
+    const handleFollowsChanged = () => fetchProfile();
+    socketService.on('followsChanged', handleFollowsChanged);
+    return () => {
+      socketService.off('followsChanged', handleFollowsChanged);
+    };
+  }, [isViewMode]);
 
   useEffect(() => {
     if (success) {

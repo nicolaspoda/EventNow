@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { dashboardService } from '../services/dashboardService';
 import { getApiErrorMessage } from '../utils/getApiErrorMessage';
 import { safeFormat } from '../utils/date';
 import { formatPrice } from '../utils/price';
+import Button from '../components/ui/Button';
 import type { EventStatsDetail } from '../types/dashboard.types';
 
 export function EventStatsPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [data, setData] = useState<EventStatsDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +73,16 @@ export function EventStatsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          aria-label="Retour à la page précédente"
+        >
+          ← Retour
+        </Button>
+      </div>
+
       <nav className="mb-6" aria-label="Fil d'Ariane">
         <Link
           to="/dashboard/organizer"

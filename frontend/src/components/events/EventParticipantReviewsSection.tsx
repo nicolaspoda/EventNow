@@ -100,6 +100,7 @@ export function EventParticipantReviewsSection({
                 <div className="flex items-start gap-4">
                   <Link
                     to={`/user/${participant.id}/profile`}
+                    aria-label={displayName(participant)}
                     className="flex-shrink-0"
                   >
                     {participant.avatarUrl ? (
@@ -173,6 +174,7 @@ export function EventParticipantReviewsSection({
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             placeholder="Votre avis sur ce participant..."
+                            aria-label="Avis (optionnel)"
                             rows={2}
                             maxLength={1000}
                             className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"

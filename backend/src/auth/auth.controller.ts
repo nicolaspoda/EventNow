@@ -12,6 +12,7 @@ import {
   Res,
   UnauthorizedException,
   InternalServerErrorException,
+  Optional,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Throttle } from '@nestjs/throttler';
@@ -29,15 +30,22 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user.type';
+import { CustomLoggerService } from '../logger/logger.service';
 
 @Controller('auth')
 export class AuthController {
   private readonly authService: AuthService;
   private readonly redis: RedisService;
+  private readonly securityLogger?: CustomLoggerService;
 
-  constructor(authService: AuthService, redis: RedisService) {
+  constructor(
+    authService: AuthService,
+    redis: RedisService,
+    @Optional() securityLogger?: CustomLoggerService,
+  ) {
     this.authService = authService;
     this.redis = redis;
+    this.securityLogger = securityLogger;
   }
 
   private resolveFrontendUrl(): string {
@@ -70,8 +78,19 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(@Body() dto: LoginDto, @Req() req: Request) {
+    try {
+      return await this.authService.login(dto);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        this.securityLogger?.logSecurityEvent({
+          type: 'AUTH_FAILED',
+          ip: req.ip,
+          details: { email: dto.email, path: req.url },
+        });
+      }
+      throw error;
+    }
   }
 
   @Post('refresh')

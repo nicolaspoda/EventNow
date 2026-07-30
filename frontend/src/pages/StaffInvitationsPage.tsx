@@ -96,19 +96,19 @@ export const StaffInvitationsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen">
+      <div className="min-h-screen">
         <div className="max-w-3xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-8">
             Inviter du staff
           </h1>
           <p className="text-neutral-600 dark:text-neutral-400">Chargement...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen">
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -187,7 +187,7 @@ export const StaffInvitationsPage: React.FC = () => {
             <button
               type="submit"
               disabled={submitLoading || events.length === 0}
-              className="px-4 py-2 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50 font-medium"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 disabled:opacity-50 font-medium"
             >
               {submitLoading ? 'Envoi...' : 'Inviter'}
             </button>
@@ -254,6 +254,6 @@ export const StaffInvitationsPage: React.FC = () => {
           )}
         </section>
       </div>
-    </main>
+    </div>
   );
 };

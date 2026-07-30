@@ -2,14 +2,16 @@ import { api } from './api';
 import type { Order, OrderWithUser, ConfirmPaymentResponse } from '../types/order.types';
 
 export interface InitiatePaymentResponse {
-  paymentId: string;
-  clientSecret: string;
+  paymentId?: string;
+  clientSecret?: string;
   bookingId: string;
   amount: number;
   originalAmount: number;
   eventId: string;
   currency?: string;
   status?: string;
+  free?: boolean;
+  orderId?: string;
 }
 
 export const orderService = {

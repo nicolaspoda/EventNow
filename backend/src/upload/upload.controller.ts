@@ -40,7 +40,7 @@ export class UploadController {
   ) {}
 
   @Post('image')
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @UseInterceptors(FileInterceptor('image', multerOpts))
   async uploadSingleImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
@@ -70,7 +70,7 @@ export class UploadController {
   }
 
   @Post('images')
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   @UseInterceptors(FilesInterceptor('images', 5, multerOpts))
   async uploadMultipleImages(@UploadedFiles() files: Express.Multer.File[]) {
     if (!files || files.length === 0) {
@@ -90,7 +90,7 @@ export class UploadController {
   }
 
   @Delete('image')
-  @Roles('ORGANIZER', 'CLIENT')
+  @Roles('ORGANIZER', 'USER')
   async deleteImage(@Body('publicId') publicId: string) {
     if (!publicId) {
       throw new BadRequestException('publicId requis');

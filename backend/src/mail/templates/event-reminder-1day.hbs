@@ -19,9 +19,6 @@
       text-align: center;
       border-radius: 10px 10px 0 0;
     }
-    .urgent {
-      font-size: 64px;
-    }
     .content {
       background: #f9f9f9;
       padding: 30px;
@@ -46,44 +43,43 @@
 </head>
 <body>
   <div class="header">
-    <div class="urgent">⏰</div>
     <h1>C'est DEMAIN !</h1>
   </div>
 
   <div class="content">
     <p>Bonjour <strong>{{userName}}</strong>,</p>
-    
+
     <p style="font-size: 18px; font-weight: bold; color: #fa709a;">
-      Votre événement a lieu DEMAIN ! 🎉
+      Votre événement a lieu DEMAIN !
     </p>
 
     <div class="event-info">
       <h2>{{eventTitle}}</h2>
       <p style="font-size: 16px;">
-        📅 <strong>{{eventDate}}</strong><br>
-        📍 {{eventLocation}}<br>
-        🎫 {{ticketsCount}} billet(s)
+        <strong>{{eventDate}}</strong><br>
+        {{eventLocation}}<br>
+        {{ticketsCount}} billet(s)
       </p>
     </div>
 
     <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;">
-      <h3 style="margin-top: 0;">✅ Dernière vérification</h3>
+      <h3 style="margin-top: 0;">Dernière vérification</h3>
       <ul>
-        <li>✓ Billets téléchargés sur votre smartphone</li>
-        <li>✓ Batterie chargée pour scanner le QR code</li>
-        <li>✓ Itinéraire vérifié</li>
-        <li>✓ Heure d'arrivée anticipée</li>
+        <li>Billets téléchargés sur votre smartphone</li>
+        <li>Batterie chargée pour scanner le QR code</li>
+        <li>Itinéraire vérifié</li>
+        <li>Heure d'arrivée anticipée</li>
       </ul>
     </div>
 
     <p style="text-align: center; margin-top: 30px;">
       <a href="{{ticketsUrl}}" class="button">
-        🎫 Mes billets
+        Mes billets
       </a>
     </p>
 
     <p style="text-align: center; margin-top: 20px; font-size: 24px;">
-      Profitez bien ! 🎉
+      Profitez bien !
     </p>
   </div>
 </body>
