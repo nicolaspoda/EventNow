@@ -40,6 +40,7 @@ describe('BookingsService', () => {
       id: 'event-1',
       title: 'Test Event',
       eventDate: new Date('2026-12-31'),
+      cancelledAt: null,
     },
   };
 
@@ -155,6 +156,28 @@ describe('BookingsService', () => {
       await expect(service.createBooking('user-1', createDto)).rejects.toThrow(
         'Stock épuisé pendant la réservation',
       );
+    });
+
+    it('should throw BadRequestException if the event is cancelled', async () => {
+      mockRedisService.withLock.mockImplementation((key, callback) =>
+        callback(),
+      );
+      mockPrismaService.$transaction.mockImplementation((callback) =>
+        callback(mockPrismaService),
+      );
+      mockPrismaService.ticketCategory.findUnique.mockResolvedValue({
+        ...mockCategory,
+        event: { ...mockCategory.event, cancelledAt: new Date() },
+      });
+      mockPrismaService.ticketCategory.update.mockResolvedValue({
+        ...mockCategory,
+        currentStock: 8,
+      });
+
+      await expect(
+        service.createBooking('user-1', createDto),
+      ).rejects.toThrow('Cet événement a été annulé');
+      expect(mockPrismaService.ticketCategory.update).not.toHaveBeenCalled();
     });
   });
 
