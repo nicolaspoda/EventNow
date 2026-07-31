@@ -37,6 +37,10 @@ export class ParticipationRequestsService {
       );
     }
 
+    if (event.cancelledAt) {
+      throw new BadRequestException('Cet événement a été annulé');
+    }
+
     if (event.organizerId === userId) {
       throw new BadRequestException(
         "L'organisateur ne peut pas demander à participer à son propre événement.",

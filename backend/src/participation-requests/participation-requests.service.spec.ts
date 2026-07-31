@@ -113,6 +113,16 @@ describe('ParticipationRequestsService', () => {
       await expect(service.create('user-1', { eventId: 'event-1', message: 'Hi' })).rejects.toThrow(BadRequestException);
     });
 
+    it('should throw BadRequestException if the event is cancelled', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue({
+        ...mockCommunityEvent,
+        cancelledAt: new Date(),
+      });
+      await expect(
+        service.create('user-1', { eventId: 'event-1', message: 'Hi' }),
+      ).rejects.toThrow('Cet événement a été annulé');
+    });
+
     it('should throw BadRequestException if no more spots available', async () => {
       const eventWithCategory = {
         ...mockCommunityEvent,

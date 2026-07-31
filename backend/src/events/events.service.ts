@@ -791,7 +791,9 @@ export class EventsService {
       }),
     );
 
-    // Clean up staff invitation notifications then delete the event (cascades all related data)
+    // Clean up staff invitation notifications; the event itself is kept in
+    // database (cancelledAt/cancelReason already set above) so it can still
+    // be displayed as cancelled instead of disappearing.
     const staffInvitations = await this.prisma.staffInvitation.findMany({
       where: { eventId },
       select: { token: true },
@@ -803,7 +805,6 @@ export class EventsService {
         tokens,
       );
     }
-    await this.prisma.event.delete({ where: { id: eventId } });
 
     return {
       cancelledOrders: successfulRefunds.length,
