@@ -8,8 +8,15 @@ describe('MailService', () => {
   let service: MailService;
 
   const mockMailerService = { sendMail: jest.fn() };
-  const mockConfigService = { get: jest.fn().mockReturnValue('http://localhost:3000') };
-  const mockLogger = { log: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() };
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue('http://localhost:3000'),
+  };
+  const mockLogger = {
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -31,7 +38,14 @@ describe('MailService', () => {
       userName: 'User',
       orderId: 'order-1',
       totalAmount: 50,
-      tickets: [{ eventTitle: 'Concert', eventDate: '2026-01-01', category: 'VIP', quantity: 1 }],
+      tickets: [
+        {
+          eventTitle: 'Concert',
+          eventDate: '2026-01-01',
+          category: 'VIP',
+          quantity: 1,
+        },
+      ],
     };
 
     it('should send order confirmation email', async () => {
@@ -48,7 +62,9 @@ describe('MailService', () => {
 
     it('should log error and not throw when mailer fails', async () => {
       mockMailerService.sendMail.mockRejectedValue(new Error('SMTP error'));
-      await expect(service.sendOrderConfirmation(orderData)).resolves.toBeUndefined();
+      await expect(
+        service.sendOrderConfirmation(orderData),
+      ).resolves.toBeUndefined();
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -77,7 +93,9 @@ describe('MailService', () => {
 
     it('should handle send failure gracefully', async () => {
       mockMailerService.sendMail.mockRejectedValue(new Error('SMTP fail'));
-      await expect(service.sendEventReminder7Days(reminderData)).resolves.toBeUndefined();
+      await expect(
+        service.sendEventReminder7Days(reminderData),
+      ).resolves.toBeUndefined();
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -103,7 +121,9 @@ describe('MailService', () => {
 
     it('should handle send failure gracefully', async () => {
       mockMailerService.sendMail.mockRejectedValue(new Error('SMTP fail'));
-      await expect(service.sendEventReminder1Day(reminderData)).resolves.toBeUndefined();
+      await expect(
+        service.sendEventReminder1Day(reminderData),
+      ).resolves.toBeUndefined();
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -155,7 +175,71 @@ describe('MailService', () => {
 
     it('should handle send failure gracefully', async () => {
       mockMailerService.sendMail.mockRejectedValue(new Error('SMTP fail'));
-      await expect(service.sendEventCancellation(cancellationData)).resolves.toBeUndefined();
+      await expect(
+        service.sendEventCancellation(cancellationData),
+      ).resolves.toBeUndefined();
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('sendContactMessage', () => {
+    const contactData = {
+      name: 'Jean Dupont',
+      email: 'jean@test.com',
+      subject: 'Question sur un événement',
+      message: 'Bonjour, les billets sont-ils remboursables ?',
+    };
+
+    it('should send the contact message to CONTACT_EMAIL when configured', async () => {
+      mockConfigService.get.mockImplementation((key: string) =>
+        key === 'CONTACT_EMAIL' ? 'owner@eventnow.com' : undefined,
+      );
+      mockMailerService.sendMail.mockResolvedValue({});
+
+      await service.sendContactMessage(contactData);
+
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({
+          to: 'owner@eventnow.com',
+          replyTo: contactData.email,
+          template: 'contact-message',
+          context: contactData,
+        }),
+      );
+      expect(mockLogger.log).toHaveBeenCalled();
+    });
+
+    it('should fall back to MAIL_USER when CONTACT_EMAIL is not set', async () => {
+      mockConfigService.get.mockImplementation((key: string) =>
+        key === 'MAIL_USER' ? 'fallback@eventnow.com' : undefined,
+      );
+      mockMailerService.sendMail.mockResolvedValue({});
+
+      await service.sendContactMessage(contactData);
+
+      expect(mockMailerService.sendMail).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'fallback@eventnow.com' }),
+      );
+    });
+
+    it('should throw when neither CONTACT_EMAIL nor MAIL_USER are configured', async () => {
+      mockConfigService.get.mockReturnValue(undefined);
+
+      await expect(service.sendContactMessage(contactData)).rejects.toThrow(
+        'CONTACT_EMAIL must be configured',
+      );
+      expect(mockMailerService.sendMail).not.toHaveBeenCalled();
+    });
+
+    it('should log and rethrow when the mailer fails', async () => {
+      mockConfigService.get.mockImplementation((key: string) =>
+        key === 'CONTACT_EMAIL' ? 'owner@eventnow.com' : undefined,
+      );
+      mockMailerService.sendMail.mockRejectedValue(new Error('SMTP fail'));
+
+      await expect(service.sendContactMessage(contactData)).rejects.toThrow(
+        'SMTP fail',
+      );
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
@@ -171,7 +255,9 @@ describe('MailService', () => {
 
     it('should throw when test email fails', async () => {
       mockMailerService.sendMail.mockRejectedValue(new Error('SMTP fail'));
-      await expect(service.sendTestEmail('test@test.com')).rejects.toThrow('SMTP fail');
+      await expect(service.sendTestEmail('test@test.com')).rejects.toThrow(
+        'SMTP fail',
+      );
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
