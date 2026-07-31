@@ -872,6 +872,35 @@ describe('EventsService', () => {
       const result = await service.cancelEvent('user-1', 'event-1');
       expect(result.notifiedUsers).toBeGreaterThan(0);
     });
+
+    it('should keep the event in database with cancelledAt set instead of deleting it', async () => {
+      mockPrismaService.event.findUnique.mockResolvedValue(mockEvent);
+      mockPrismaService.order.findMany.mockResolvedValue([]);
+      mockPrismaService.$transaction.mockImplementation(
+        async (fn: (tx: typeof mockPrismaService) => Promise<unknown>) => {
+          mockPrismaService.booking.findMany.mockResolvedValue([]);
+          mockPrismaService.event.update.mockResolvedValue({});
+          return fn(mockPrismaService);
+        },
+      );
+      mockPrismaService.participationRequest.findMany.mockResolvedValue([]);
+      mockNotificationsService.createForManyUsers.mockResolvedValue({});
+      mockMailService.sendEventCancellation.mockResolvedValue({});
+      mockPrismaService.staffInvitation.findMany.mockResolvedValue([]);
+
+      await service.cancelEvent('user-1', 'event-1', 'Test reason');
+
+      expect(mockPrismaService.event.delete).not.toHaveBeenCalled();
+      expect(mockPrismaService.event.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'event-1' },
+          data: expect.objectContaining({
+            cancelledAt: expect.any(Date),
+            cancelReason: 'Test reason',
+          }),
+        }),
+      );
+    });
   });
 
   describe('remove', () => {

@@ -32,6 +32,10 @@ export class BookingsService {
           throw new NotFoundException('Catégorie de billet introuvable');
         }
 
+        if (category.event.cancelledAt) {
+          throw new BadRequestException('Cet événement a été annulé');
+        }
+
         if (category.currentStock < dto.quantity) {
           throw new BadRequestException(
             `Stock insuffisant. Disponible : ${category.currentStock}, Demandé : ${dto.quantity}`,
