@@ -32,6 +32,7 @@ import { ReportsModule } from './reports/reports.module';
 import { EventItemsModule } from './event-items/event-items.module';
 import { PollsModule } from './polls/polls.module';
 import { UsersModule } from './users/users.module';
+import { ContactModule } from './contact/contact.module';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard';
@@ -81,6 +82,7 @@ import { ThrottlerOverrideGuard } from './common/guards/throttler-override.guard
     EventItemsModule,
     PollsModule,
     UsersModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [

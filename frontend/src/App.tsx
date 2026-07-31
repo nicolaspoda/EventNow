@@ -40,6 +40,7 @@ import { ConversationPage } from './pages/messages/ConversationPage';
 import { ConversationMembersPage } from './pages/messages/ConversationMembersPage';
 import { PromoCodesPage } from './pages/PromoCodesPage';
 import { AdminReportsPage } from './pages/AdminReportsPage';
+import { ContactPage } from './pages/ContactPage';
 import { useSocket } from './hooks/useSocket';
 
 function AppContent() {
@@ -284,6 +285,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/" element={<LandingPage />} />
       </Route>
     </Routes>

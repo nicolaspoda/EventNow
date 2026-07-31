@@ -157,6 +157,47 @@ export class MailService {
     }
   }
 
+  async sendContactMessage(data: {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+  }) {
+    const contactEmail =
+      this.configService.get<string>('CONTACT_EMAIL') ||
+      this.configService.get<string>('MAIL_USER');
+
+    if (!contactEmail) {
+      throw new Error('CONTACT_EMAIL must be configured');
+    }
+
+    try {
+      await this.mailerService.sendMail({
+        to: contactEmail,
+        replyTo: data.email,
+        subject: `[Contact EventNow] ${data.subject}`,
+        template: 'contact-message',
+        context: {
+          name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+        },
+      });
+      this.logger.log(
+        `Message de contact envoyé par ${data.email}`,
+        'MailService',
+      );
+    } catch (error) {
+      this.logger.error(
+        `Erreur envoi message de contact de ${data.email}: ${(error as Error).message}`,
+        (error as Error).stack,
+        'MailService',
+      );
+      throw error;
+    }
+  }
+
   async sendTestEmail(to: string) {
     try {
       await this.mailerService.sendMail({
