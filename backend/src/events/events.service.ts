@@ -52,13 +52,6 @@ export class EventsService {
     const endDate = createEventDto.end_date
       ? new Date(createEventDto.end_date)
       : null;
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction && eventDate <= new Date()) {
-      throw new BadRequestException(
-        "La date de l'événement doit être dans le futur",
-      );
-    }
-
     if (requestedType === EventType.PROFESSIONAL && !endDate) {
       throw new BadRequestException(
         "L'heure de fin est obligatoire pour les événements professionnels",
@@ -404,13 +397,6 @@ export class EventsService {
       const newEnd = updateEventDto.end_date
         ? new Date(updateEventDto.end_date)
         : (event.endDate ?? null);
-
-      const isProduction = process.env.NODE_ENV === 'production';
-      if (isProduction && newStart <= new Date()) {
-        throw new BadRequestException(
-          "La date de l'événement doit être dans le futur",
-        );
-      }
 
       if (event.type === 'PROFESSIONAL' && !newEnd) {
         throw new BadRequestException(

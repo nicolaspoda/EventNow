@@ -191,24 +191,6 @@ describe('EventsService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw BadRequestException for a past event date in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-      const pastEventDate = new Date(Date.now() - 3600000);
-      await expect(
-        service.create(
-          'user-1',
-          {
-            ...mockCreateDto,
-            event_date: pastEventDate.toISOString(),
-            end_date: new Date(pastEventDate.getTime() + 3600000).toISOString(),
-          },
-          'ORGANIZER',
-        ),
-      ).rejects.toThrow(BadRequestException);
-      process.env.NODE_ENV = originalEnv;
-    });
-
     it('should default category to OTHER when not provided', async () => {
       mockPrismaService.$transaction.mockImplementation(
         (fn: (tx: typeof mockPrismaService) => Promise<unknown>) =>
