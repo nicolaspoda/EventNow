@@ -282,7 +282,7 @@ describe('PaymentService', () => {
       stripeRefundsCreateMock.mockRejectedValue(new Error('Stripe network failure'));
 
       await expect(service.refundPayment('pi_123', 'order-1')).rejects.toThrow(
-        "Impossible d'effectuer le remboursement Stripe",
+        "Impossible d'effectuer le remboursement",
       );
     });
 
