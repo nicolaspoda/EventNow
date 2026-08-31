@@ -76,7 +76,7 @@ export function AboutButton() {
               Version
             </span>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/40 text-primary-700 dark:text-primary-300">
-              v1.2.2
+              v1.2.3
             </span>
           </div>
         </div>
