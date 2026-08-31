@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { BookingStatus } from '@prisma/client';
@@ -6,6 +6,7 @@ import Stripe from 'stripe';
 
 @Injectable()
 export class PaymentService {
+  private readonly logger = new Logger(PaymentService.name);
   private readonly prisma: PrismaService;
   private readonly stripe: Stripe;
 
@@ -93,8 +94,9 @@ export class PaymentService {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Erreur Stripe inconnue';
+      this.logger.error(`Échec création PaymentIntent: ${message}`);
       throw new BadRequestException(
-        `Impossible d'initialiser le paiement: ${message}`,
+        "Impossible d'initialiser le paiement. Veuillez réessayer plus tard ou contacter le support.",
       );
     }
   }
@@ -179,8 +181,9 @@ export class PaymentService {
 
       const message =
         err instanceof Error ? err.message : 'Erreur Stripe inconnue';
+      this.logger.error(`Échec remboursement Stripe: ${message}`);
       throw new BadRequestException(
-        `Impossible d'effectuer le remboursement Stripe: ${message}`,
+        "Impossible d'effectuer le remboursement. Veuillez réessayer plus tard ou contacter le support.",
       );
     }
   }
